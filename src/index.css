@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/* ============================================
+   COLLIDE — Global Styles
+   ============================================ */
+
+:root {
+  --bg-primary: #050507;
+  --bg-surface: #111114;
+  --bg-elevated: #1A1A1F;
+  --border: #2A2A30;
+  --border-glow: #FF5E1A33;
+  --accent-primary: #FF5E1A;
+  --accent-hot: #FF2D05;
+  --accent-warm: #FFAA00;
+  --accent-cool: #4A4A52;
+  --accent-success: #00E676;
+  --accent-cam: #00B4FF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #8A8A95;
+  --text-muted: #55555F;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* ============================================
+   Venue Bubble Animations
+   ============================================ */
+
+@keyframes collide-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.bubble-pulse {
+  animation: collide-pulse var(--pulse-speed, 2s) ease-in-out infinite;
+}
+
+@keyframes count-flash {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.15); filter: brightness(1.3); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+.count-updated {
+  animation: count-flash 0.4s ease-out;
+}
+
+/* ============================================
+   Venue Sheet Animation
+   ============================================ */
+
+.venue-sheet {
+  animation: sheet-slide-up 250ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+@keyframes sheet-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* ============================================
+   Chat Fade In
+   ============================================ */
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 200ms ease-out;
+}
+
+/* ============================================
+   Mapbox Overrides
+   ============================================ */
+
+.mapboxgl-ctrl-logo,
+.mapboxgl-ctrl-attrib {
+  display: none !important;
+}
+
+.mapboxgl-canvas {
+  outline: none;
+}
+
+/* ============================================
+   Venue Bubble Wrapper
+   ============================================ */
+
+.venue-bubble-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.venue-bubble-wrapper:active .venue-bubble {
+  transform: translate(-50%, -50%) scale(0.92) !important;
+  transition: transform 100ms ease;
+}
+
+/* ============================================
+   Selection Styling
+   ============================================ */
+
+::selection {
+  background: rgba(255, 94, 26, 0.3);
+  color: white;
+}
