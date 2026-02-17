@@ -20,7 +20,7 @@ export function Header({ city, onCityChange, totalCount }: HeaderProps) {
         <div className="flex items-center justify-between">
           <h1 className="text-white font-black text-xl tracking-[0.05em]"
             style={{ fontFamily: 'Satoshi, sans-serif', textShadow: '0 0 20px rgba(255, 94, 26, 0.3)' }}>
-            VENYOU
+            ven<span className="text-[#FF5E1A]" style={{ fontSize: '24px' }}>U</span>e
           </h1>
           <CityToggle city={city} onChange={onCityChange} />
         </div>
@@ -31,7 +31,7 @@ export function Header({ city, onCityChange, totalCount }: HeaderProps) {
           <span>{nightDate}</span>
         </div>
         <div className="text-white font-bold text-lg" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-          {config.goingLabel(totalCount)}
+          {config.countLabel(totalCount)}
         </div>
       </div>
     </header>

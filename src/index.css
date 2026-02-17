@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================
-   VENYOU — Global Styles
+   venUe — Global Styles
    ============================================ */
 
 :root {
@@ -15,7 +15,8 @@
   --accent-warm: #FFAA00;
   --accent-cool: #4A4A52;
   --accent-success: #00E676;
-  --accent-cam: #00B4FF;
+  --accent-live: #00B4FF;
+  --accent-clicker: #FF5E1A;
   --text-primary: #FFFFFF;
   --text-secondary: #8A8A95;
   --text-muted: #55555F;
@@ -31,6 +32,7 @@
 html, body, #root {
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
@@ -75,13 +77,13 @@ body::before {
    Venue Bubble Animations
    ============================================ */
 
-@keyframes venyou-pulse {
+@keyframes venue-pulse {
   0%, 100% { transform: translate(-50%, -50%) scale(1); }
   50% { transform: translate(-50%, -50%) scale(1.1); }
 }
 
 .bubble-pulse {
-  animation: venyou-pulse var(--pulse-speed, 2s) ease-in-out infinite;
+  animation: venue-pulse var(--pulse-speed, 2s) ease-in-out infinite;
 }
 
 @keyframes count-flash {
@@ -92,6 +94,70 @@ body::before {
 
 .count-updated {
   animation: count-flash 0.4s ease-out;
+}
+
+/* ============================================
+   LIVE Badge Pulse
+   ============================================ */
+
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 180, 255, 0.4); }
+  50% { box-shadow: 0 0 8px 3px rgba(0, 180, 255, 0.2); }
+}
+
+.live-ring {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes live-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.live-dot {
+  animation: live-dot 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   Capacity Bar
+   ============================================ */
+
+.capacity-bar-fill {
+  transition: width 300ms ease;
+}
+
+/* ============================================
+   Clicker Animations
+   ============================================ */
+
+@keyframes clicker-flash-enter {
+  0% { background-color: rgba(0, 230, 118, 0); }
+  30% { background-color: rgba(0, 230, 118, 0.15); }
+  100% { background-color: rgba(0, 230, 118, 0); }
+}
+
+@keyframes clicker-flash-exit {
+  0% { background-color: rgba(139, 0, 0, 0); }
+  30% { background-color: rgba(139, 0, 0, 0.15); }
+  100% { background-color: rgba(139, 0, 0, 0); }
+}
+
+.clicker-flash-enter {
+  animation: clicker-flash-enter 400ms ease-out;
+}
+
+.clicker-flash-exit {
+  animation: clicker-flash-exit 400ms ease-out;
+}
+
+@keyframes count-bump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.count-bump {
+  animation: count-bump 200ms ease-out;
 }
 
 /* ============================================
@@ -118,6 +184,22 @@ body::before {
 
 .animate-fade-in {
   animation: fade-in 200ms ease-out;
+}
+
+/* ============================================
+   Shake Animation (invalid input)
+   ============================================ */
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+.shake {
+  animation: shake 400ms ease-out;
 }
 
 /* ============================================

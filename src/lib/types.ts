@@ -34,6 +34,9 @@ export interface Venue {
   cam_coming_soon: boolean;
   is_active: boolean;
   sort_order: number;
+  capacity: number | null;
+  is_clicker_live: boolean;
+  staff_code: string | null;
 }
 
 export interface Checkin {
@@ -62,4 +65,37 @@ export interface VenueCount {
 
 export interface CheckinHistory extends Checkin {
   venues: { name: string } | null;
+}
+
+export interface Headcount {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  venue_id: string;
+  city: string;
+  night_of: string;
+  current_count: number;
+  peak_count: number;
+  last_updated_by: string | null;
+  is_live: boolean;
+}
+
+export interface VenueStaff {
+  id: string;
+  created_at: string;
+  venue_id: string;
+  user_id: string;
+  role: string;
+  pin_code: string | null;
+  is_active: boolean;
+}
+
+export interface ClickerLog {
+  id: string;
+  created_at: string;
+  venue_id: string;
+  staff_id: string;
+  action: 'enter' | 'exit';
+  night_of: string;
+  count_after: number;
 }

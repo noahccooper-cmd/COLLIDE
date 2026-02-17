@@ -1,6 +1,6 @@
-# VENYOU
+# venUe
 
-Find your venue. See where everyone's heading. Check in with one tap.
+Real numbers. Every bar. Right now.
 
 ## Stack
 
@@ -10,6 +10,14 @@ Find your venue. See where everyone's heading. Check in with one tap.
 - **Supabase** (auth, database, realtime)
 - **Mapbox GL** (interactive map)
 - **Capacitor 8** (iOS + Android)
+
+## Features
+
+- **Live Map** — real-time venue bubbles with crowd counts
+- **Bouncer Portal** — door staff clicker for live headcounts
+- **Check-ins** — tap to say you're going
+- **City Chat** — real-time city-wide chat
+- **Data Hierarchy** — bouncer headcount > self-reported checkins
 
 ## Setup
 

@@ -6,7 +6,7 @@ export const CITIES = {
     mascot: 'Vols',
     center: { lat: 35.9580, lng: -83.9290 },
     zoom: 14.5,
-    goingLabel: (count: number) => `${count} Vol${count !== 1 ? 's' : ''} going out`,
+    countLabel: (count: number) => `${count.toLocaleString()} people out right now`,
   },
   tampa: {
     name: 'Tampa',
@@ -15,7 +15,7 @@ export const CITIES = {
     mascot: 'Bulls',
     center: { lat: 27.9540, lng: -82.4560 },
     zoom: 13.5,
-    goingLabel: (count: number) => `${count} going out tonight`,
+    countLabel: (count: number) => `${count.toLocaleString()} people out right now`,
   },
 } as const;
 
@@ -32,7 +32,8 @@ export const COLORS = {
   accentWarm: '#FFAA00',
   accentCool: '#4A4A52',
   accentSuccess: '#00E676',
-  accentCam: '#00B4FF',
+  accentLive: '#00B4FF',
+  accentClicker: '#FF5E1A',
   textPrimary: '#FFFFFF',
   textSecondary: '#8A8A95',
   textMuted: '#55555F',

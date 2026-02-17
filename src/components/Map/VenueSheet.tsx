@@ -1,10 +1,11 @@
 import { X, Camera, MapPin, Tag, Clock } from 'lucide-react';
-import { formatCount } from '../../lib/utils';
-import type { Venue } from '../../lib/types';
+import { formatCount, getCapacityPercent, getCapacityColor, formatTime } from '../../lib/utils';
+import type { Venue, Headcount } from '../../lib/types';
 
 interface VenueSheetProps {
   venue: Venue;
-  count: number;
+  checkinCount: number;
+  headcount: Headcount | null;
   userCheckinVenueId: string | null;
   isLoggedIn: boolean;
   onCheckIn: () => void;
@@ -14,7 +15,8 @@ interface VenueSheetProps {
 
 export function VenueSheet({
   venue,
-  count,
+  checkinCount,
+  headcount,
   userCheckinVenueId,
   isLoggedIn,
   onCheckIn,
@@ -23,7 +25,13 @@ export function VenueSheet({
 }: VenueSheetProps) {
   const isCheckedInHere = userCheckinVenueId === venue.id;
   const isCheckedInElsewhere = userCheckinVenueId !== null && userCheckinVenueId !== venue.id;
-  const showFire = count > 100;
+
+  const isLive = headcount?.is_live ?? false;
+  const liveCount = headcount?.current_count ?? 0;
+  const peakCount = headcount?.peak_count ?? 0;
+  const displayCount = isLive ? liveCount : checkinCount;
+  const showFire = displayCount > 100;
+  const capacityPercent = isLive ? getCapacityPercent(liveCount, venue.capacity) : null;
 
   const handleAction = () => {
     if (!isLoggedIn) {
@@ -46,7 +54,7 @@ export function VenueSheet({
       {/* Sheet */}
       <div className="venue-sheet fixed bottom-0 left-0 right-0 z-[70] bg-[#1A1A1F] rounded-t-2xl"
         style={{
-          maxHeight: '50vh',
+          maxHeight: '55vh',
           paddingBottom: 'env(safe-area-inset-bottom, 16px)',
           boxShadow: '0 -4px 24px rgba(255, 94, 26, 0.08)',
         }}>
@@ -76,11 +84,63 @@ export function VenueSheet({
             </div>
             <div className="flex items-center gap-1 ml-3 shrink-0">
               <span className="text-white font-bold text-2xl" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-                {formatCount(count)}
+                {formatCount(displayCount)}
               </span>
               {showFire && <span className="text-lg">🔥</span>}
             </div>
           </div>
+
+          {/* Live headcount card */}
+          {isLive && (
+            <div className="mb-4 p-3 bg-[#111114] rounded-xl border border-[#00B4FF33]">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#FF2D05] live-dot" />
+                  <span className="text-[#00B4FF] text-xs font-bold" style={{ fontFamily: 'Satoshi, sans-serif' }}>LIVE</span>
+                </div>
+                <span className="text-white font-bold text-lg" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                  {formatCount(liveCount)} inside
+                </span>
+              </div>
+
+              {/* Capacity bar */}
+              {capacityPercent !== null && (
+                <div className="mb-2">
+                  <div className="w-full h-2 bg-[#2A2A30] rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full capacity-bar-fill"
+                      style={{
+                        width: `${capacityPercent}%`,
+                        backgroundColor: getCapacityColor(capacityPercent),
+                      }}
+                    />
+                  </div>
+                  <p className="text-[#55555F] text-xs mt-1 text-right" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                    {capacityPercent}% full
+                  </p>
+                </div>
+              )}
+
+              {/* Peak */}
+              {peakCount > 0 && headcount?.updated_at && (
+                <p className="text-[#55555F] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                  Peak tonight: {formatCount(peakCount)} at {formatTime(headcount.updated_at)}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Non-live fallback */}
+          {!isLive && checkinCount > 0 && (
+            <div className="mb-4 p-3 bg-[#111114] rounded-xl border border-[#2A2A30]">
+              <span className="text-white font-medium text-sm" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                {checkinCount} planning to go
+              </span>
+              <p className="text-[#55555F] text-xs mt-0.5" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                No live count yet
+              </p>
+            </div>
+          )}
 
           {/* Info pills */}
           {(venue.cover_price || venue.deals) && (

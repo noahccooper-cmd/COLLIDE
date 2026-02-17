@@ -18,7 +18,7 @@ export function ChatPage({ city, messages, loading, userId, username, isLoggedIn
     <div className="absolute inset-0 flex flex-col" style={{ top: '108px', bottom: '64px' }}>
       <div className="px-4 py-2.5 border-b border-[#2A2A30] bg-[#050507]">
         <h2 className="text-white font-bold text-sm" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-          VENYOU Chat — {CITIES[city].name}
+          ven<span className="text-[#FF5E1A]">U</span>e Chat — {CITIES[city].name}
         </h2>
       </div>
       <div className="flex-1 overflow-hidden">

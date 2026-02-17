@@ -10,12 +10,13 @@ interface MapViewProps {
   city: CityKey;
   venues: Venue[];
   counts: Record<string, number>;
+  liveVenueIds: Set<string>;
   userCheckinVenueId: string | null;
   pulsedVenueId: string | null;
   onVenueClick: (venue: Venue) => void;
 }
 
-export function MapView({ city, venues, counts, userCheckinVenueId, pulsedVenueId, onVenueClick }: MapViewProps) {
+export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId, pulsedVenueId, onVenueClick }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -68,6 +69,7 @@ export function MapView({ city, venues, counts, userCheckinVenueId, pulsedVenueI
         <VenueBubble
           venue={venue}
           count={counts[venue.id] ?? 0}
+          isLive={liveVenueIds.has(venue.id)}
           isUserCheckedIn={userCheckinVenueId === venue.id}
           isPulsed={pulsedVenueId === venue.id}
           onClick={() => onVenueClick(venue)}
@@ -80,7 +82,7 @@ export function MapView({ city, venues, counts, userCheckinVenueId, pulsedVenueI
 
       markersRef.current.push(marker);
     });
-  }, [venues, counts, userCheckinVenueId, pulsedVenueId, onVenueClick, mapLoaded]);
+  }, [venues, counts, liveVenueIds, userCheckinVenueId, pulsedVenueId, onVenueClick, mapLoaded]);
 
   useEffect(() => {
     updateMarkers();

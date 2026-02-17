@@ -4,13 +4,14 @@ import type { Venue } from '../../lib/types';
 interface VenueBubbleProps {
   venue: Venue;
   count: number;
+  isLive: boolean;
   isUserCheckedIn: boolean;
   isPulsed: boolean;
   onClick: () => void;
 }
 
-export function VenueBubble({ venue, count, isUserCheckedIn, isPulsed, onClick }: VenueBubbleProps) {
-  const style = getBubbleStyle(count);
+export function VenueBubble({ venue, count, isLive, isUserCheckedIn, isPulsed, onClick }: VenueBubbleProps) {
+  const style = getBubbleStyle(count, isLive);
 
   return (
     <div
@@ -19,7 +20,7 @@ export function VenueBubble({ venue, count, isUserCheckedIn, isPulsed, onClick }
       style={{ cursor: 'pointer' }}
     >
       <div
-        className={`venue-bubble ${style.pulse ? 'bubble-pulse' : ''} ${isPulsed ? 'count-updated' : ''}`}
+        className={`venue-bubble ${style.pulse ? 'bubble-pulse' : ''} ${isPulsed ? 'count-updated' : ''} ${style.liveRing ? 'live-ring' : ''}`}
         style={{
           width: style.size,
           height: style.size,
@@ -32,7 +33,11 @@ export function VenueBubble({ venue, count, isUserCheckedIn, isPulsed, onClick }
           '--pulse-speed': style.pulseSpeed,
           transform: 'translate(-50%, -50%)',
           position: 'relative',
-          border: isUserCheckedIn ? '2px solid rgba(0, 230, 118, 0.6)' : '2px solid rgba(255,255,255,0.1)',
+          border: isLive
+            ? '2px solid rgba(0, 180, 255, 0.5)'
+            : isUserCheckedIn
+              ? '2px solid rgba(0, 230, 118, 0.6)'
+              : '2px solid rgba(255,255,255,0.1)',
         } as React.CSSProperties}
       >
         <span
@@ -42,9 +47,10 @@ export function VenueBubble({ venue, count, isUserCheckedIn, isPulsed, onClick }
             fontSize: style.size >= 56 ? '20px' : style.size >= 44 ? '16px' : '14px',
           }}
         >
-          {formatCount(count)}
+          {count > 0 ? formatCount(count) : '\u2014'}
         </span>
       </div>
+      {/* Venue name */}
       <div
         className="text-center mt-1 whitespace-nowrap"
         style={{
@@ -60,6 +66,22 @@ export function VenueBubble({ venue, count, isUserCheckedIn, isPulsed, onClick }
       >
         {venue.name}
       </div>
+      {/* LIVE badge below name */}
+      {isLive && (
+        <div
+          className="flex items-center justify-center gap-1 mt-0.5"
+          style={{
+            transform: 'translateX(-50%)',
+            position: 'relative',
+            left: '50%',
+          }}
+        >
+          <div className="w-1.5 h-1.5 rounded-full bg-[#00B4FF] live-dot" />
+          <span className="text-[#00B4FF] font-bold" style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '9px' }}>
+            LIVE
+          </span>
+        </div>
+      )}
     </div>
   );
 }

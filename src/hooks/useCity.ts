@@ -3,14 +3,14 @@ import type { CityKey } from '../lib/constants';
 
 export function useCity() {
   const [city, setCity] = useState<CityKey>(() => {
-    const stored = localStorage.getItem('venyou_city');
+    const stored = localStorage.getItem('venue_city');
     if (stored === 'knoxville' || stored === 'tampa') return stored;
     return 'knoxville';
   });
 
   const switchCity = useCallback((newCity: CityKey) => {
     setCity(newCity);
-    localStorage.setItem('venyou_city', newCity);
+    localStorage.setItem('venue_city', newCity);
   }, []);
 
   return { city, switchCity };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut } from 'lucide-react';
+import { LogOut, Radio } from 'lucide-react';
 import { supabase, envReady } from '../../lib/supabase';
 import { getInitials } from '../../lib/utils';
 import { HistoryItem } from './HistoryItem';
@@ -8,9 +8,10 @@ import type { Profile, CheckinHistory } from '../../lib/types';
 interface ProfileViewProps {
   profile: Profile;
   onSignOut: () => void;
+  onOpenPortal: () => void;
 }
 
-export function ProfileView({ profile, onSignOut }: ProfileViewProps) {
+export function ProfileView({ profile, onSignOut, onOpenPortal }: ProfileViewProps) {
   const [history, setHistory] = useState<CheckinHistory[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -70,6 +71,26 @@ export function ProfileView({ profile, onSignOut }: ProfileViewProps) {
         <div className="text-white font-bold text-3xl" style={{ fontFamily: 'Satoshi, sans-serif' }}>
           {profile.total_checkins}
         </div>
+      </div>
+
+      {/* Venue Portal Access */}
+      <div className="mb-6">
+        <button
+          onClick={onOpenPortal}
+          className="flex items-center gap-3 w-full p-4 bg-[#111114] rounded-xl border border-[#2A2A30] hover:border-[#FF5E1A33] transition-colors"
+        >
+          <div className="w-10 h-10 rounded-full bg-[#FF5E1A15] flex items-center justify-center shrink-0">
+            <Radio size={20} strokeWidth={1.5} className="text-[#FF5E1A]" />
+          </div>
+          <div className="text-left">
+            <div className="text-white font-bold text-sm" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+              Venue Portal
+            </div>
+            <div className="text-[#8A8A95] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+              Door staff clicker &amp; live counts
+            </div>
+          </div>
+        </button>
       </div>
 
       {/* History */}

@@ -62,14 +62,13 @@ export function OnboardScreen({ onComplete }: OnboardScreenProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
       <h2 className="text-white font-bold text-2xl mb-1" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-        Welcome to VENYOU
+        Welcome to <span>ven</span><span className="text-[#FF5E1A]">U</span><span>e</span>
       </h2>
       <p className="text-[#8A8A95] text-sm mb-8" style={{ fontFamily: 'Satoshi, sans-serif' }}>
         Set up your profile
       </p>
 
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-5">
-        {/* Username */}
         <div>
           <label className="text-[#8A8A95] text-xs font-medium mb-1.5 block" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             Pick a username
@@ -99,7 +98,6 @@ export function OnboardScreen({ onComplete }: OnboardScreenProps) {
           )}
         </div>
 
-        {/* Class year */}
         <div>
           <label className="text-[#8A8A95] text-xs font-medium mb-1.5 block" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             Class year
@@ -116,7 +114,6 @@ export function OnboardScreen({ onComplete }: OnboardScreenProps) {
           </select>
         </div>
 
-        {/* City toggle */}
         <div>
           <label className="text-[#8A8A95] text-xs font-medium mb-1.5 block" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             Your city
