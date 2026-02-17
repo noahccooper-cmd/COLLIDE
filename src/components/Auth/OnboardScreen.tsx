@@ -62,7 +62,7 @@ export function OnboardScreen({ onComplete }: OnboardScreenProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
       <h2 className="text-white font-bold text-2xl mb-1" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-        Welcome to COLLIDE
+        Welcome to VENYOU
       </h2>
       <p className="text-[#8A8A95] text-sm mb-8" style={{ fontFamily: 'Satoshi, sans-serif' }}>
         Set up your profile

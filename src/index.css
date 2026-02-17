@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================
-   COLLIDE — Global Styles
+   VENYOU — Global Styles
    ============================================ */
 
 :root {
@@ -75,13 +75,13 @@ body::before {
    Venue Bubble Animations
    ============================================ */
 
-@keyframes collide-pulse {
+@keyframes venyou-pulse {
   0%, 100% { transform: translate(-50%, -50%) scale(1); }
   50% { transform: translate(-50%, -50%) scale(1.1); }
 }
 
 .bubble-pulse {
-  animation: collide-pulse var(--pulse-speed, 2s) ease-in-out infinite;
+  animation: venyou-pulse var(--pulse-speed, 2s) ease-in-out infinite;
 }
 
 @keyframes count-flash {

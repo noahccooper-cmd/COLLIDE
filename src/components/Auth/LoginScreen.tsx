@@ -55,11 +55,11 @@ export function LoginScreen({ onSendLink }: LoginScreenProps) {
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
       <h1 className="text-white font-black text-3xl tracking-[0.05em] mb-2"
         style={{ fontFamily: 'Satoshi, sans-serif', textShadow: '0 0 20px rgba(255, 94, 26, 0.3)' }}>
-        COLLIDE
+        VENYOU
       </h1>
       <div className="text-center mb-8">
         <p className="text-[#8A8A95] text-sm leading-relaxed" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-          Join the collision.<br />
+          Find your venue.<br />
           See where everyone's heading.<br />
           Check in with one tap.
         </p>

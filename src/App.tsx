@@ -41,7 +41,7 @@ export default function App() {
         <div className="text-center">
           <h1 className="text-white font-black text-2xl tracking-[0.05em] mb-4"
             style={{ fontFamily: 'Satoshi, sans-serif', textShadow: '0 0 20px rgba(255, 94, 26, 0.3)' }}>
-            COLLIDE
+            VENYOU
           </h1>
           <div className="bg-[#111114] border border-[#2A2A30] rounded-xl p-5">
             <p className="text-[#FF5E1A] font-medium text-sm mb-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>

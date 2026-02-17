@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.collide.app',
-  appName: 'COLLIDE',
+  appId: 'com.venyou.app',
+  appName: 'VENYOU',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
