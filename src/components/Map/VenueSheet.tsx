@@ -1,4 +1,5 @@
-import { X, Camera, MapPin, Clock, Phone, Globe, Instagram, Star } from 'lucide-react';
+import { useRef } from 'react';
+import { X, Camera, MapPin, Clock, Phone, Globe, Star } from 'lucide-react';
 import { formatCount, getCapacityPercent, getCapacityColor, formatTime } from '../../lib/utils';
 import type { Venue, Headcount } from '../../lib/types';
 
@@ -23,6 +24,9 @@ export function VenueSheet({
   onClose,
   onLoginRequired,
 }: VenueSheetProps) {
+  const startY = useRef<number | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
   const isCheckedInHere = userCheckinVenueId === venue.id;
   const isCheckedInElsewhere = userCheckinVenueId !== null && userCheckinVenueId !== venue.id;
 
@@ -41,6 +45,26 @@ export function VenueSheet({
     }
   };
 
+  const handleCopyAddress = () => {
+    if (venue.address) {
+      navigator.clipboard?.writeText(venue.address);
+    }
+  };
+
+  // Swipe to dismiss
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (startY.current === null) return;
+    const deltaY = e.changedTouches[0].clientY - startY.current;
+    if (deltaY > 80) {
+      onClose();
+    }
+    startY.current = null;
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -50,32 +74,45 @@ export function VenueSheet({
       />
 
       {/* Sheet */}
-      <div className="venue-sheet fixed bottom-0 left-0 right-0 z-[70] bg-[#1A1A1F] rounded-t-2xl"
+      <div
+        ref={sheetRef}
+        className="venue-sheet fixed bottom-0 left-0 right-0 z-[70] bg-[#1A1A1F] rounded-t-2xl"
         style={{
           maxHeight: '75vh',
           paddingBottom: 'env(safe-area-inset-bottom, 16px)',
           boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.3)',
-        }}>
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div className="w-10 h-1 rounded-full bg-[#2A2A30]" />
         </div>
 
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-4 p-1.5 rounded-full bg-[#111114] text-[#8A8A95] hover:text-white transition-colors z-10"
+        >
+          <X size={16} strokeWidth={1.5} />
+        </button>
+
         <div className="px-5 pb-5 overflow-y-auto" style={{ maxHeight: 'calc(75vh - 40px)' }}>
-          {/* Photo placeholder */}
+          {/* Photo */}
           {venue.image_url ? (
             <div className="w-full aspect-video rounded-xl overflow-hidden mb-4">
               <img src={venue.image_url} alt={venue.name} className="w-full h-full object-cover" />
             </div>
           ) : (
-            <div className="w-full aspect-video rounded-xl bg-gradient-to-br from-[#1A1A1F] to-[#111114] border border-[#2A2A30] flex items-center justify-center mb-4">
-              <span className="text-2xl font-bold text-white/20" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            <div className="w-full aspect-video rounded-xl bg-gradient-to-br from-[#1A1A1F] via-[#1E1E24] to-[#15150F] border border-[#2A2A30] flex items-center justify-center overflow-hidden mb-4">
+              <span className="text-3xl font-bold text-white/15 tracking-wider" style={{ fontFamily: 'Satoshi, sans-serif' }}>
                 {venue.name}
               </span>
             </div>
           )}
 
-          {/* Name + Rating row */}
+          {/* Name + Rating */}
           <div className="flex items-start justify-between mb-1">
             <h2 className="text-white font-bold text-xl flex-1 min-w-0 truncate" style={{ fontFamily: 'Satoshi, sans-serif' }}>
               {venue.name}
@@ -97,28 +134,27 @@ export function VenueSheet({
 
           {/* Address */}
           {venue.address && (
-            <div className="flex items-center gap-1 text-[#8A8A95] text-sm mb-1">
+            <button
+              onClick={handleCopyAddress}
+              className="flex items-center gap-1 text-[#8A8A95] text-sm mb-1 hover:text-white transition-colors text-left"
+            >
               <MapPin size={12} strokeWidth={1.5} className="shrink-0" />
               <span style={{ fontFamily: 'Satoshi, sans-serif' }}>{venue.address}</span>
-            </div>
+            </button>
           )}
 
-          {/* Vibe */}
-          {venue.vibe && (
-            <p className="text-[#8A8A95] text-sm mb-4" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-              {venue.vibe}
+          {/* Description / Vibe */}
+          {(venue.description || venue.vibe) && (
+            <p className="text-[#8A8A95] text-sm mb-4 italic" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+              {venue.description || venue.vibe}
             </p>
           )}
 
           {/* Live headcount card */}
           {isLive && (
-            <div className="mb-4 p-3 bg-[#111114] rounded-xl border border-[#00B4FF33]">
+            <div className="mb-4 p-4 bg-[#111114] rounded-xl border border-[#2A2A3040]">
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-[#FF2D05] live-dot" />
-                  <span className="text-[#FF2D05] text-xs font-bold" style={{ fontFamily: 'Satoshi, sans-serif' }}>LIVE</span>
-                </div>
-                <span className="text-white font-bold text-lg" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                <span className="text-white font-bold text-2xl" style={{ fontFamily: 'Satoshi, sans-serif' }}>
                   {formatCount(liveCount)} inside
                 </span>
               </div>
@@ -126,7 +162,7 @@ export function VenueSheet({
               {/* Capacity bar */}
               {capacityPercent !== null && (
                 <div className="mb-2">
-                  <div className="w-full h-2 bg-[#2A2A30] rounded-full overflow-hidden">
+                  <div className="w-full h-2.5 bg-[#2A2A30] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full capacity-bar-fill"
                       style={{
@@ -136,17 +172,20 @@ export function VenueSheet({
                     />
                   </div>
                   <p className="text-[#55555F] text-xs mt-1 text-right" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-                    {capacityPercent}% full
+                    {capacityPercent}% capacity
                   </p>
                 </div>
               )}
 
-              {/* Peak */}
-              {peakCount > 0 && headcount?.updated_at && (
-                <p className="text-[#55555F] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-                  Peak tonight: {formatCount(peakCount)} at {formatTime(headcount.updated_at)}
-                </p>
-              )}
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#FF2D05] live-dot" />
+                <span className="text-[#FF2D05] text-xs font-bold" style={{ fontFamily: 'Satoshi, sans-serif' }}>LIVE</span>
+                {peakCount > 0 && headcount?.updated_at && (
+                  <span className="text-[#55555F] text-xs ml-1" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                    Peak: {formatCount(peakCount)} at {formatTime(headcount.updated_at)}
+                  </span>
+                )}
+              </div>
             </div>
           )}
 
@@ -170,31 +209,25 @@ export function VenueSheet({
             </div>
           )}
 
-          {/* Info row: hours, phone, website, instagram */}
-          {(venue.hours || venue.phone || venue.website || venue.instagram) && (
-            <div className="flex flex-wrap gap-x-4 gap-y-2 mb-4 text-[#8A8A95]">
+          {/* Contact info row */}
+          {(venue.hours || venue.phone || venue.website) && (
+            <div className="flex flex-col gap-2 mb-4">
               {venue.hours && (
-                <div className="flex items-center gap-1.5 text-sm">
-                  <Clock size={13} strokeWidth={1.5} className="shrink-0" />
+                <div className="flex items-center gap-2 text-[#8A8A95] text-sm">
+                  <Clock size={14} strokeWidth={1.5} className="shrink-0" />
                   <span style={{ fontFamily: 'Satoshi, sans-serif' }}>{venue.hours}</span>
                 </div>
               )}
               {venue.phone && (
-                <a href={`tel:${venue.phone}`} className="flex items-center gap-1.5 text-sm hover:text-white transition-colors">
-                  <Phone size={13} strokeWidth={1.5} className="shrink-0" />
+                <a href={`tel:${venue.phone}`} className="flex items-center gap-2 text-[#8A8A95] text-sm hover:text-white transition-colors">
+                  <Phone size={14} strokeWidth={1.5} className="shrink-0" />
                   <span style={{ fontFamily: 'Satoshi, sans-serif' }}>{venue.phone}</span>
                 </a>
               )}
               {venue.website && (
-                <a href={`https://${venue.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm hover:text-white transition-colors">
-                  <Globe size={13} strokeWidth={1.5} className="shrink-0" />
+                <a href={`https://${venue.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#8A8A95] text-sm hover:text-white transition-colors">
+                  <Globe size={14} strokeWidth={1.5} className="shrink-0" />
                   <span style={{ fontFamily: 'Satoshi, sans-serif' }}>{venue.website}</span>
-                </a>
-              )}
-              {venue.instagram && (
-                <a href={`https://instagram.com/${venue.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm hover:text-white transition-colors">
-                  <Instagram size={13} strokeWidth={1.5} className="shrink-0" />
-                  <span style={{ fontFamily: 'Satoshi, sans-serif' }}>{venue.instagram}</span>
                 </a>
               )}
             </div>
@@ -228,6 +261,7 @@ export function VenueSheet({
                 ? '#00E676'
                 : 'linear-gradient(135deg, #FF5E1A, #FF2D05)',
               opacity: isCheckedInHere ? 0.9 : 1,
+              borderRadius: '12px',
             }}
           >
             {isCheckedInHere
@@ -235,14 +269,6 @@ export function VenueSheet({
               : isCheckedInElsewhere
                 ? 'SWITCH HERE'
                 : "\uD83D\uDD25 I'M GOING"}
-          </button>
-
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-4 p-1.5 rounded-full bg-[#111114] text-[#8A8A95] hover:text-white transition-colors"
-          >
-            <X size={16} strokeWidth={1.5} />
           </button>
         </div>
       </div>

@@ -77,64 +77,221 @@ body::after {
 }
 
 /* ============================================
-   Venue Bubble Animations
+   Venue Marker — Container
    ============================================ */
 
-/* Warm glow (25-74) */
-.bubble-warm {
-  box-shadow: 0 0 15px 5px rgba(255, 170, 0, 0.25);
+.venue-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
-/* Hot pulse (75-149) */
-@keyframes pulse-hot {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    box-shadow: 0 0 20px 8px rgba(255, 94, 26, 0.35);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.06);
-    box-shadow: 0 0 28px 12px rgba(255, 94, 26, 0.5);
-  }
+.venue-marker:active .venue-dot {
+  transform: scale(0.92) !important;
+  transition: transform 100ms ease !important;
 }
 
-.bubble-hot {
+/* ============================================
+   Venue Marker — The Dot
+   ============================================ */
+
+.venue-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 900;
+  color: white;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+}
+
+.venue-count {
+  line-height: 1;
+}
+
+/* ============================================
+   Venue Marker — Label below dot
+   ============================================ */
+
+.venue-label {
+  margin-top: 4px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* ============================================
+   Venue Marker — Live Badge
+   ============================================ */
+
+.venue-live-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.venue-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00B4FF;
+  display: inline-block;
+}
+
+.venue-live-text {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  color: #00B4FF;
+}
+
+/* ============================================
+   Venue Dot — Count-Based Tiers
+   ============================================ */
+
+/* EMPTY — no one there (count = 0) */
+.venue-dot.tier-empty {
+  width: 28px;
+  height: 28px;
+  font-size: 0px;
+  background: radial-gradient(circle, #3A3A42 0%, #2A2A30 100%);
+  border: 2px solid #4A4A52;
+  box-shadow: 0 0 8px 2px rgba(74, 74, 82, 0.2);
+}
+
+.venue-dot.tier-empty::after {
+  content: '\2014';
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* QUIET — a few people (count 1-24) */
+.venue-dot.tier-quiet {
+  width: 34px;
+  height: 34px;
+  font-size: 13px;
+  background: radial-gradient(circle, #4A4A52 0%, #3A3A42 100%);
+  border: 2px solid #5A5A62;
+  box-shadow: 0 0 10px 3px rgba(74, 74, 82, 0.25);
+}
+
+/* WARMING — getting going (count 25-74) */
+.venue-dot.tier-warming {
+  width: 42px;
+  height: 42px;
+  font-size: 15px;
+  background: radial-gradient(circle, #FFAA00 0%, #E69500 100%);
+  border: 2px solid #FFBB33;
+  box-shadow: 0 0 18px 6px rgba(255, 170, 0, 0.3);
+  animation: pulse-warming 2.5s ease-in-out infinite;
+}
+
+/* HOT — busy night (count 75-149) */
+.venue-dot.tier-hot {
+  width: 52px;
+  height: 52px;
+  font-size: 18px;
+  font-weight: 900;
+  background: radial-gradient(circle, #FF5E1A 0%, #E54A0E 100%);
+  border: 2px solid #FF7A40;
+  box-shadow: 0 0 25px 10px rgba(255, 94, 26, 0.4);
   animation: pulse-hot 2s ease-in-out infinite;
 }
 
-/* Packed pulse (150+) */
-@keyframes pulse-packed {
+/* PACKED — going off (count 150+) */
+.venue-dot.tier-packed {
+  width: 64px;
+  height: 64px;
+  font-size: 22px;
+  font-weight: 900;
+  background: radial-gradient(circle, #FF2D05 0%, #CC2200 100%);
+  border: 2px solid #FF5533;
+  box-shadow: 0 0 35px 15px rgba(255, 45, 5, 0.5);
+  animation: pulse-packed 1.3s ease-in-out infinite;
+}
+
+/* ============================================
+   Venue Dot — Checked-In Override
+   ============================================ */
+
+.venue-dot.checked-in {
+  background: radial-gradient(circle, #00E676 0%, #00C853 100%) !important;
+  border-color: rgba(0, 230, 118, 0.6) !important;
+  box-shadow: 0 0 14px rgba(0, 230, 118, 0.4) !important;
+}
+
+/* ============================================
+   Venue Dot — Tier Animations
+   ============================================ */
+
+@keyframes pulse-warming {
   0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    box-shadow: 0 0 30px 12px rgba(255, 45, 5, 0.45);
+    transform: scale(1);
+    box-shadow: 0 0 18px 6px rgba(255, 170, 0, 0.3);
   }
   50% {
-    transform: translate(-50%, -50%) scale(1.1);
-    box-shadow: 0 0 40px 18px rgba(255, 45, 5, 0.6);
+    transform: scale(1.05);
+    box-shadow: 0 0 25px 10px rgba(255, 170, 0, 0.45);
   }
 }
 
-.bubble-packed {
-  animation: pulse-packed 1.2s ease-in-out infinite;
+@keyframes pulse-hot {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 25px 10px rgba(255, 94, 26, 0.4);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 35px 15px rgba(255, 94, 26, 0.55);
+  }
 }
 
-/* Generic pulse fallback */
-@keyframes venue-pulse {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.1); }
+@keyframes pulse-packed {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 35px 15px rgba(255, 45, 5, 0.5);
+  }
+  50% {
+    transform: scale(1.12);
+    box-shadow: 0 0 50px 22px rgba(255, 45, 5, 0.65);
+  }
 }
 
-.bubble-pulse {
-  animation: venue-pulse var(--pulse-speed, 2s) ease-in-out infinite;
+/* ============================================
+   Count Bump Animation (marker)
+   ============================================ */
+
+@keyframes count-bump {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.3); }
+  100% { transform: scale(1); }
 }
 
-/* Count update flash */
+.venue-count.bumping {
+  animation: count-bump 0.3s ease-out;
+}
+
+/* ============================================
+   Count Flash (real-time update)
+   ============================================ */
+
 @keyframes count-flash {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.15); filter: brightness(1.3); }
-  100% { transform: translate(-50%, -50%) scale(1); }
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+  100% { filter: brightness(1); }
 }
 
-.count-updated {
+.venue-dot.count-updated {
   animation: count-flash 0.4s ease-out;
 }
 
@@ -156,7 +313,8 @@ body::after {
   50% { opacity: 0.4; }
 }
 
-.live-dot {
+.live-dot,
+.venue-live-dot {
   animation: live-dot 1.5s ease-in-out infinite;
 }
 
@@ -192,14 +350,14 @@ body::after {
   animation: clicker-flash-exit 400ms ease-out;
 }
 
-@keyframes count-bump {
+@keyframes count-bump-clicker {
   0% { transform: scale(1); }
   40% { transform: scale(1.15); }
   100% { transform: scale(1); }
 }
 
 .count-bump {
-  animation: count-bump 300ms ease-out;
+  animation: count-bump-clicker 300ms ease-out;
 }
 
 /* ============================================
@@ -207,7 +365,7 @@ body::after {
    ============================================ */
 
 .venue-sheet {
-  animation: sheet-slide-up 250ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  animation: sheet-slide-up 300ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 
 @keyframes sheet-slide-up {
@@ -279,20 +437,6 @@ body::after {
 
 .mapboxgl-canvas {
   outline: none;
-}
-
-/* ============================================
-   Venue Bubble Wrapper
-   ============================================ */
-
-.venue-bubble-wrapper {
-  position: relative;
-  cursor: pointer;
-}
-
-.venue-bubble-wrapper:active .venue-bubble {
-  transform: translate(-50%, -50%) scale(0.92) !important;
-  transition: transform 100ms ease;
 }
 
 /* ============================================

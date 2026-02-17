@@ -22,54 +22,12 @@ export function formatCount(count: number): string {
   return count.toString();
 }
 
-export function getBubbleStyle(count: number, isLive: boolean) {
-  const base = (() => {
-    if (count >= 150) return {
-      size: 72,
-      color: '#FF2D05',
-      glow: '0 0 30px 12px rgba(255, 45, 5, 0.45)',
-      pulse: true,
-      pulseSpeed: '1.2s',
-      cssClass: 'bubble-packed',
-    };
-    if (count >= 75) return {
-      size: 56,
-      color: '#FF5E1A',
-      glow: '0 0 20px 8px rgba(255, 94, 26, 0.35)',
-      pulse: true,
-      pulseSpeed: '2s',
-      cssClass: 'bubble-hot',
-    };
-    if (count >= 25) return {
-      size: 44,
-      color: '#FFAA00',
-      glow: '0 0 15px 5px rgba(255, 170, 0, 0.25)',
-      pulse: false,
-      pulseSpeed: '0',
-      cssClass: 'bubble-warm',
-    };
-    if (count > 0) return {
-      size: 36,
-      color: '#4A4A52',
-      glow: 'none',
-      pulse: false,
-      pulseSpeed: '0',
-      cssClass: '',
-    };
-    return {
-      size: 32,
-      color: '#2A2A30',
-      glow: 'none',
-      pulse: false,
-      pulseSpeed: '0',
-      cssClass: '',
-    };
-  })();
-
-  return {
-    ...base,
-    liveRing: isLive,
-  };
+export function getVenueTier(count: number): string {
+  if (count === 0) return 'tier-empty';
+  if (count < 25) return 'tier-quiet';
+  if (count < 75) return 'tier-warming';
+  if (count < 150) return 'tier-hot';
+  return 'tier-packed';
 }
 
 export function getInitials(username: string): string {

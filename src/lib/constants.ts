@@ -4,8 +4,8 @@ export const CITIES = {
     state: 'TN',
     school: 'UTK',
     mascot: 'Vols',
-    center: { lat: 35.9606, lng: -83.9207 },
-    zoom: 14,
+    center: { lat: 35.9570, lng: -83.9300 },
+    zoom: 14.5,
     countLabel: (count: number) =>
       count === 0
         ? 'See who\u2019s going out tonight'
@@ -17,7 +17,7 @@ export const CITIES = {
     school: 'USF',
     mascot: 'Bulls',
     center: { lat: 27.9506, lng: -82.4572 },
-    zoom: 14,
+    zoom: 14.5,
     countLabel: (count: number) =>
       count === 0
         ? 'See who\u2019s going out tonight'

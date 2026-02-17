@@ -1,10 +1,20 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { createRoot } from 'react-dom/client';
 import { CITIES, MAPBOX_STYLE, type CityKey } from '../../lib/constants';
 import { mapboxToken, mapboxReady } from '../../lib/supabase';
-import { VenueBubble } from './VenueBubble';
+import { getVenueTier, formatCount } from '../../lib/utils';
 import type { Venue } from '../../lib/types';
+
+interface MarkerEntry {
+  marker: mapboxgl.Marker;
+  el: HTMLDivElement;
+  dotEl: HTMLDivElement;
+  countEl: HTMLSpanElement;
+  labelEl: HTMLDivElement;
+  liveEl: HTMLDivElement;
+  currentTier: string;
+  currentCount: number;
+}
 
 interface MapViewProps {
   city: CityKey;
@@ -19,7 +29,7 @@ interface MapViewProps {
 export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId, pulsedVenueId, onVenueClick }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
   const [mapLoaded, setMapLoaded] = useState(false);
   const initialCityRef = useRef(city);
 
@@ -35,13 +45,15 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
       style: MAPBOX_STYLE,
       center: [config.center.lng, config.center.lat],
       zoom: config.zoom,
-      minZoom: 2,
-      maxZoom: 18,
       bearing: 0,
-      dragRotate: false,
-      touchPitch: false,
-      pitchWithRotate: false,
+      pitch: 0,
+      minZoom: 10,
+      maxZoom: 18,
+      attributionControl: false,
     });
+
+    map.dragRotate.disable();
+    map.touchZoomRotate.disableRotation();
 
     map.on('load', () => {
       setMapLoaded(true);
@@ -50,6 +62,8 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
     mapRef.current = map;
 
     return () => {
+      markersRef.current.forEach(entry => entry.marker.remove());
+      markersRef.current.clear();
       map.remove();
       mapRef.current = null;
       setMapLoaded(false);
@@ -63,46 +77,127 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
     mapRef.current.flyTo({
       center: [config.center.lng, config.center.lat],
       zoom: config.zoom,
-      duration: 1200,
+      duration: 1500,
       essential: true,
     });
   }, [city, mapLoaded]);
 
-  // Update markers when venues/counts change
-  const updateMarkers = useCallback(() => {
+  // Create markers for new venues, remove stale ones
+  const syncMarkers = useCallback(() => {
     if (!mapRef.current || !mapLoaded) return;
 
-    // Remove old markers
-    markersRef.current.forEach(m => m.remove());
-    markersRef.current = [];
+    const currentIds = new Set(venues.map(v => v.id));
 
+    // Remove markers for venues no longer present
+    markersRef.current.forEach((entry, id) => {
+      if (!currentIds.has(id)) {
+        entry.marker.remove();
+        markersRef.current.delete(id);
+      }
+    });
+
+    // Create markers for new venues
     venues.forEach(venue => {
-      const el = document.createElement('div');
-      el.style.position = 'relative';
+      if (markersRef.current.has(venue.id)) return;
 
-      const root = createRoot(el);
-      root.render(
-        <VenueBubble
-          venue={venue}
-          count={counts[venue.id] ?? 0}
-          isLive={liveVenueIds.has(venue.id)}
-          isUserCheckedIn={userCheckinVenueId === venue.id}
-          isPulsed={pulsedVenueId === venue.id}
-          onClick={() => onVenueClick(venue)}
-        />
-      );
+      const el = document.createElement('div');
+      el.className = 'venue-marker';
+
+      const dotEl = document.createElement('div');
+      dotEl.className = 'venue-dot tier-empty';
+      dotEl.setAttribute('data-venue-id', venue.id);
+
+      const countEl = document.createElement('span');
+      countEl.className = 'venue-count';
+      dotEl.appendChild(countEl);
+
+      const labelEl = document.createElement('div');
+      labelEl.className = 'venue-label';
+      labelEl.textContent = venue.name;
+
+      const liveEl = document.createElement('div');
+      liveEl.className = 'venue-live-badge';
+      liveEl.innerHTML = '<span class="venue-live-dot"></span><span class="venue-live-text">LIVE</span>';
+      liveEl.style.display = 'none';
+
+      el.appendChild(dotEl);
+      el.appendChild(labelEl);
+      el.appendChild(liveEl);
+
+      el.addEventListener('click', () => onVenueClick(venue));
 
       const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
         .setLngLat([venue.lng, venue.lat])
         .addTo(mapRef.current!);
 
-      markersRef.current.push(marker);
+      markersRef.current.set(venue.id, {
+        marker,
+        el,
+        dotEl,
+        countEl,
+        labelEl,
+        liveEl,
+        currentTier: 'tier-empty',
+        currentCount: 0,
+      });
     });
-  }, [venues, counts, liveVenueIds, userCheckinVenueId, pulsedVenueId, onVenueClick, mapLoaded]);
+  }, [venues, mapLoaded, onVenueClick]);
 
   useEffect(() => {
-    updateMarkers();
-  }, [updateMarkers]);
+    syncMarkers();
+  }, [syncMarkers]);
+
+  // Update marker visuals when counts/live status change
+  useEffect(() => {
+    markersRef.current.forEach((entry, venueId) => {
+      const count = counts[venueId] ?? 0;
+      const isLive = liveVenueIds.has(venueId);
+      const isCheckedIn = userCheckinVenueId === venueId;
+      const isPulsed = pulsedVenueId === venueId;
+      const newTier = getVenueTier(count);
+
+      // Update tier class if changed
+      if (newTier !== entry.currentTier) {
+        entry.dotEl.classList.remove(entry.currentTier);
+        entry.dotEl.classList.add(newTier);
+        entry.currentTier = newTier;
+      }
+
+      // Update count text
+      if (count !== entry.currentCount) {
+        entry.countEl.textContent = count > 0 ? formatCount(count) : '';
+        // Add bump animation
+        entry.countEl.classList.remove('bumping');
+        // Force reflow
+        void entry.countEl.offsetWidth;
+        entry.countEl.classList.add('bumping');
+        entry.currentCount = count;
+      }
+
+      // Live badge
+      entry.liveEl.style.display = isLive ? 'flex' : 'none';
+
+      // Live ring on dot
+      if (isLive) {
+        entry.dotEl.classList.add('live-ring');
+      } else {
+        entry.dotEl.classList.remove('live-ring');
+      }
+
+      // Checked-in styling
+      if (isCheckedIn) {
+        entry.dotEl.classList.add('checked-in');
+      } else {
+        entry.dotEl.classList.remove('checked-in');
+      }
+
+      // Pulsed (count just changed via real-time)
+      if (isPulsed) {
+        entry.dotEl.classList.add('count-updated');
+        setTimeout(() => entry.dotEl.classList.remove('count-updated'), 500);
+      }
+    });
+  }, [counts, liveVenueIds, userCheckinVenueId, pulsedVenueId]);
 
   if (!mapboxReady) {
     return (
