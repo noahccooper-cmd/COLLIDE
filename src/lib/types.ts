@@ -37,6 +37,11 @@ export interface Venue {
   capacity: number | null;
   is_clicker_live: boolean;
   staff_code: string | null;
+  phone: string | null;
+  website: string | null;
+  description: string | null;
+  rating: number | null;
+  review_count: number | null;
 }
 
 export interface Checkin {
@@ -94,7 +99,7 @@ export interface ClickerLog {
   id: string;
   created_at: string;
   venue_id: string;
-  staff_id: string;
+  staff_id: string | null;
   action: 'enter' | 'exit';
   night_of: string;
   count_after: number;

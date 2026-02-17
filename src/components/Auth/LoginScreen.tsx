@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Mail, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, ArrowRight, Loader2, MapPin } from 'lucide-react';
 
 interface LoginScreenProps {
   onSendLink: (email: string) => Promise<{ error: unknown }>;
-  onBack?: () => void;
+  onBrowseAsGuest: () => void;
 }
 
-export function LoginScreen({ onSendLink }: LoginScreenProps) {
+export function LoginScreen({ onSendLink, onBrowseAsGuest }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -104,6 +104,23 @@ export function LoginScreen({ onSendLink }: LoginScreenProps) {
           We'll send you a link to sign in. No password needed.
         </p>
       </form>
+
+      {/* Guest mode */}
+      <div className="w-full max-w-sm mt-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 h-px bg-[#2A2A30]" />
+          <span className="text-[#55555F] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>or</span>
+          <div className="flex-1 h-px bg-[#2A2A30]" />
+        </div>
+        <button
+          onClick={onBrowseAsGuest}
+          className="w-full h-12 rounded-xl font-medium text-[#8A8A95] text-sm flex items-center justify-center gap-2 bg-[#111114] border border-[#2A2A30] hover:border-[#55555F] transition-colors active:scale-[0.98]"
+          style={{ fontFamily: 'Satoshi, sans-serif' }}
+        >
+          <MapPin size={16} strokeWidth={1.5} />
+          Browse as Guest
+        </button>
+      </div>
     </div>
   );
 }

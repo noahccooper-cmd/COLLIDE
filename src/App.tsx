@@ -37,18 +37,15 @@ export default function App() {
     );
 
     let total = 0;
-    // Add headcount for live venues
     for (const [, hc] of Object.entries(headcounts)) {
       if (hc.is_live) total += hc.current_count;
     }
-    // Add checkin counts for non-live venues
     for (const [id, count] of Object.entries(counts)) {
       if (!liveVenueIds.has(id)) total += count;
     }
     return total;
   }, [counts, headcounts]);
 
-  // Use merged total if any headcounts exist, otherwise fall back to checkin total
   const displayTotalCount = Object.keys(headcounts).length > 0 ? mergedTotalCount : totalCount;
 
   const handleLoginRequired = useCallback(() => {
@@ -70,6 +67,10 @@ export default function App() {
 
   const handleExitPortal = useCallback(() => {
     setPortalMode(false);
+  }, []);
+
+  const handleBrowseAsGuest = useCallback(() => {
+    setTab('tonight');
   }, []);
 
   // Missing env error screen
@@ -148,6 +149,7 @@ export default function App() {
           onCompleteOnboard={createProfile}
           onSignOut={signOut}
           onOpenPortal={handleOpenPortal}
+          onBrowseAsGuest={handleBrowseAsGuest}
         />
       </div>
 

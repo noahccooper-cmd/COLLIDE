@@ -4,18 +4,24 @@ export const CITIES = {
     state: 'TN',
     school: 'UTK',
     mascot: 'Vols',
-    center: { lat: 35.9580, lng: -83.9290 },
-    zoom: 14.5,
-    countLabel: (count: number) => `${count.toLocaleString()} people out right now`,
+    center: { lat: 35.9606, lng: -83.9207 },
+    zoom: 14,
+    countLabel: (count: number) =>
+      count === 0
+        ? 'See who\u2019s going out tonight'
+        : `${count.toLocaleString()} people out right now`,
   },
   tampa: {
     name: 'Tampa',
     state: 'FL',
     school: 'USF',
     mascot: 'Bulls',
-    center: { lat: 27.9540, lng: -82.4560 },
-    zoom: 13.5,
-    countLabel: (count: number) => `${count.toLocaleString()} people out right now`,
+    center: { lat: 27.9506, lng: -82.4572 },
+    zoom: 14,
+    countLabel: (count: number) =>
+      count === 0
+        ? 'See who\u2019s going out tonight'
+        : `${count.toLocaleString()} people out right now`,
   },
 } as const;
 

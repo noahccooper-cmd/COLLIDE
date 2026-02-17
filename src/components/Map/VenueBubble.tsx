@@ -20,7 +20,7 @@ export function VenueBubble({ venue, count, isLive, isUserCheckedIn, isPulsed, o
       style={{ cursor: 'pointer' }}
     >
       <div
-        className={`venue-bubble ${style.pulse ? 'bubble-pulse' : ''} ${isPulsed ? 'count-updated' : ''} ${style.liveRing ? 'live-ring' : ''}`}
+        className={`venue-bubble ${style.cssClass} ${isPulsed ? 'count-updated' : ''} ${style.liveRing ? 'live-ring' : ''}`}
         style={{
           width: style.size,
           height: style.size,
@@ -30,14 +30,14 @@ export function VenueBubble({ venue, count, isLive, isUserCheckedIn, isPulsed, o
           alignItems: 'center',
           justifyContent: 'center',
           boxShadow: isUserCheckedIn ? '0 0 14px rgba(0, 230, 118, 0.4)' : style.glow,
-          '--pulse-speed': style.pulseSpeed,
           transform: 'translate(-50%, -50%)',
           position: 'relative',
+          transition: 'width 300ms ease, height 300ms ease, background-color 300ms ease',
           border: isLive
             ? '2px solid rgba(0, 180, 255, 0.5)'
             : isUserCheckedIn
               ? '2px solid rgba(0, 230, 118, 0.6)'
-              : '2px solid rgba(255,255,255,0.1)',
+              : '2px solid rgba(255,255,255,0.08)',
         } as React.CSSProperties}
       >
         <span

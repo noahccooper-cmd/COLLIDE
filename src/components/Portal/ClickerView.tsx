@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Minus, Plus, LogOut } from 'lucide-react';
 import { formatCount, formatTime } from '../../lib/utils';
 import type { Venue, Headcount } from '../../lib/types';
@@ -24,10 +24,10 @@ export function ClickerView({
 }: ClickerViewProps) {
   const [flashClass, setFlashClass] = useState('');
   const [bumpKey, setBumpKey] = useState(0);
+  const [confirmEnd, setConfirmEnd] = useState(false);
   const count = headcount?.current_count ?? 0;
   const peak = headcount?.peak_count ?? 0;
   const isLive = headcount?.is_live ?? false;
-  const cityLabel = venue.city === 'knoxville' ? 'Knoxville' : 'Tampa';
 
   // Request wake lock
   useEffect(() => {
@@ -43,19 +43,26 @@ export function ClickerView({
     return () => { wakeLock?.release(); };
   }, []);
 
-  const handleEnter = async (n = 1) => {
+  const handleEnter = useCallback(async (n = 1) => {
     setFlashClass('clicker-flash-enter');
     setBumpKey(prev => prev + 1);
+    if (navigator.vibrate) navigator.vibrate(30);
     setTimeout(() => setFlashClass(''), 400);
     await onEnter(n);
-  };
+  }, [onEnter]);
 
-  const handleExit = async (n = 1) => {
+  const handleExit = useCallback(async (n = 1) => {
     setFlashClass('clicker-flash-exit');
     setBumpKey(prev => prev + 1);
+    if (navigator.vibrate) navigator.vibrate(30);
     setTimeout(() => setFlashClass(''), 400);
     await onExit(n);
-  };
+  }, [onExit]);
+
+  const handleEndNight = useCallback(async () => {
+    setConfirmEnd(false);
+    await onEndNight();
+  }, [onEndNight]);
 
   return (
     <div className={`min-h-screen bg-[#050507] flex flex-col ${flashClass}`}>
@@ -70,15 +77,20 @@ export function ClickerView({
             <span>e</span>
             <span className="text-[#8A8A95] font-bold text-sm ml-2">Portal</span>
           </h1>
-          <p className="text-[#8A8A95] text-sm font-medium" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            {venue.name} — {cityLabel}
+          <p className="text-white text-sm font-bold" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            {venue.name}
           </p>
+          {venue.address && (
+            <p className="text-[#55555F] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+              {venue.address}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {isLive && (
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-[#00B4FF] live-dot" />
-              <span className="text-[#00B4FF] text-xs font-bold" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+              <div className="w-2 h-2 rounded-full bg-[#00E676] live-dot" />
+              <span className="text-[#00E676] text-xs font-bold" style={{ fontFamily: 'Satoshi, sans-serif' }}>
                 LIVE
               </span>
             </div>
@@ -118,13 +130,12 @@ export function ClickerView({
             onClick={() => handleExit()}
             className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-[0.97] transition-transform"
             style={{
-              height: '200px',
-              backgroundColor: '#1a0000',
-              border: '2px solid #3d0000',
+              height: '180px',
+              backgroundColor: '#5C1A1A',
             }}
           >
-            <Minus size={48} strokeWidth={3} className="text-[#8B0000]" />
-            <span className="text-[#8B0000] font-black text-lg tracking-wider"
+            <Minus size={64} strokeWidth={2.5} className="text-white" />
+            <span className="text-white font-black text-lg tracking-wider"
               style={{ fontFamily: 'Satoshi, sans-serif' }}>
               EXIT
             </span>
@@ -135,20 +146,19 @@ export function ClickerView({
             onClick={() => handleEnter()}
             className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-[0.97] transition-transform"
             style={{
-              height: '200px',
-              backgroundColor: '#002b15',
-              border: '2px solid #004d29',
+              height: '180px',
+              backgroundColor: '#00E676',
             }}
           >
-            <Plus size={48} strokeWidth={3} className="text-[#00E676]" />
-            <span className="text-[#00E676] font-black text-lg tracking-wider"
+            <Plus size={64} strokeWidth={2.5} className="text-white" />
+            <span className="text-white font-black text-lg tracking-wider"
               style={{ fontFamily: 'Satoshi, sans-serif' }}>
               ENTER
             </span>
           </button>
         </div>
 
-        {/* Adjust row */}
+        {/* Adjust row + last action */}
         <div className="flex gap-3 mt-3">
           <button
             onClick={() => handleExit(5)}
@@ -157,6 +167,13 @@ export function ClickerView({
           >
             <Minus size={14} strokeWidth={2} /> 5
           </button>
+          <div className="flex-1 flex items-center justify-center">
+            {lastAction ? (
+              <p className="text-[#55555F] text-xs text-center" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                Last: {lastAction.type} {formatTime(lastAction.time)}
+              </p>
+            ) : null}
+          </div>
           <button
             onClick={() => handleEnter(5)}
             className="flex-1 h-12 rounded-xl bg-[#111114] border border-[#2A2A30] flex items-center justify-center gap-1 text-[#8A8A95] font-bold text-sm active:scale-[0.97] transition-transform"
@@ -166,23 +183,34 @@ export function ClickerView({
           </button>
         </div>
 
-        {/* Last action + End Night */}
-        <div className="flex items-center justify-between mt-4 mb-2"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
-          {lastAction ? (
-            <p className="text-[#55555F] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-              Last: {lastAction.type} at {formatTime(lastAction.time)}
-            </p>
+        {/* End Night */}
+        <div className="mt-4 mb-2" style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
+          {confirmEnd ? (
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmEnd(false)}
+                className="flex-1 h-11 rounded-xl bg-[#111114] border border-[#2A2A30] text-[#8A8A95] text-sm font-medium"
+                style={{ fontFamily: 'Satoshi, sans-serif' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEndNight}
+                className="flex-1 h-11 rounded-xl bg-[#FF2D05] text-white text-sm font-bold"
+                style={{ fontFamily: 'Satoshi, sans-serif' }}
+              >
+                End Tracking
+              </button>
+            </div>
           ) : (
-            <span />
+            <button
+              onClick={() => setConfirmEnd(true)}
+              className="w-full h-11 rounded-xl bg-[#111114] border border-[#2A2A30] text-[#55555F] text-sm font-medium hover:text-[#FF2D05] hover:border-[#FF2D0533] transition-colors"
+              style={{ fontFamily: 'Satoshi, sans-serif' }}
+            >
+              End Night
+            </button>
           )}
-          <button
-            onClick={onEndNight}
-            className="text-[#55555F] text-xs font-medium hover:text-[#FF2D05] transition-colors"
-            style={{ fontFamily: 'Satoshi, sans-serif' }}
-          >
-            End Night
-          </button>
         </div>
       </div>
     </div>

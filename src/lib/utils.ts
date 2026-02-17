@@ -27,23 +27,26 @@ export function getBubbleStyle(count: number, isLive: boolean) {
     if (count >= 150) return {
       size: 72,
       color: '#FF2D05',
-      glow: '0 0 20px rgba(255, 45, 5, 0.5)',
+      glow: '0 0 30px 12px rgba(255, 45, 5, 0.45)',
       pulse: true,
-      pulseSpeed: '1.5s',
+      pulseSpeed: '1.2s',
+      cssClass: 'bubble-packed',
     };
     if (count >= 75) return {
       size: 56,
       color: '#FF5E1A',
-      glow: '0 0 14px rgba(255, 94, 26, 0.35)',
+      glow: '0 0 20px 8px rgba(255, 94, 26, 0.35)',
       pulse: true,
       pulseSpeed: '2s',
+      cssClass: 'bubble-hot',
     };
     if (count >= 25) return {
       size: 44,
       color: '#FFAA00',
-      glow: 'none',
+      glow: '0 0 15px 5px rgba(255, 170, 0, 0.25)',
       pulse: false,
       pulseSpeed: '0',
+      cssClass: 'bubble-warm',
     };
     if (count > 0) return {
       size: 36,
@@ -51,13 +54,15 @@ export function getBubbleStyle(count: number, isLive: boolean) {
       glow: 'none',
       pulse: false,
       pulseSpeed: '0',
+      cssClass: '',
     };
     return {
       size: 32,
-      color: '#333338',
+      color: '#2A2A30',
       glow: 'none',
       pulse: false,
       pulseSpeed: '0',
+      cssClass: '',
     };
   })();
 

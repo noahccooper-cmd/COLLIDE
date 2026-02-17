@@ -12,6 +12,7 @@ interface ProfilePageProps {
   onCompleteOnboard: (username: string, classYear: number, city: CityKey) => Promise<{ error: unknown }>;
   onSignOut: () => void;
   onOpenPortal: () => void;
+  onBrowseAsGuest: () => void;
 }
 
 export function ProfilePage({
@@ -22,11 +23,12 @@ export function ProfilePage({
   onCompleteOnboard,
   onSignOut,
   onOpenPortal,
+  onBrowseAsGuest,
 }: ProfilePageProps) {
   return (
     <div className="absolute inset-0 overflow-y-auto" style={{ top: '108px', bottom: '64px' }}>
       {!isLoggedIn && (
-        <LoginScreen onSendLink={onSendMagicLink} />
+        <LoginScreen onSendLink={onSendMagicLink} onBrowseAsGuest={onBrowseAsGuest} />
       )}
 
       {isLoggedIn && needsOnboard && (

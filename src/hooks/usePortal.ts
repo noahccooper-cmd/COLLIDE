@@ -1,9 +1,9 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase, envReady } from '../lib/supabase';
 import { getNightOf } from '../lib/utils';
 import type { Venue, Headcount } from '../lib/types';
 
-const COOLDOWN_MS = 300;
+const COOLDOWN_MS = 200;
 const PORTAL_CODE_KEY = 'venue_portal_code';
 
 export function usePortal() {
@@ -15,6 +15,34 @@ export function usePortal() {
   const cooldownRef = useRef(false);
 
   const savedCode = localStorage.getItem(PORTAL_CODE_KEY) ?? '';
+
+  // Real-time subscription for this venue's headcount (sync with other bouncers)
+  useEffect(() => {
+    if (!envReady || !venue) return;
+
+    const channel = supabase
+      .channel(`portal-hc-${venue.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'headcounts',
+          filter: `venue_id=eq.${venue.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            const row = payload.new as Headcount;
+            setHeadcount(row);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [venue?.id]);
 
   const lookupVenueByCode = useCallback(async (code: string) => {
     if (!envReady) return { error: 'Not configured' };
@@ -62,6 +90,28 @@ export function usePortal() {
 
     const nightOf = getNightOf();
 
+    // Optimistic update
+    setHeadcount(prev => {
+      const newCount = Math.max((prev?.current_count ?? 0) + count, 0);
+      return {
+        ...(prev ?? {
+          id: '',
+          created_at: new Date().toISOString(),
+          venue_id: venue.id,
+          city: venue.city,
+          night_of: nightOf,
+          last_updated_by: null,
+          is_live: true,
+          peak_count: 0,
+        }),
+        updated_at: new Date().toISOString(),
+        current_count: newCount,
+        peak_count: Math.max(prev?.peak_count ?? 0, newCount),
+      } as Headcount;
+    });
+
+    setLastAction({ type: `+${count}`, time: new Date().toISOString() });
+
     const { data } = await supabase.rpc(count === 1 ? 'increment_headcount' : 'adjust_headcount', {
       target_venue: venue.id,
       target_city: venue.city,
@@ -71,35 +121,22 @@ export function usePortal() {
     });
 
     if (data) {
-      setHeadcount(prev => ({
-        ...(prev ?? {
-          id: '',
-          created_at: new Date().toISOString(),
-          venue_id: venue.id,
-          city: venue.city,
-          night_of: nightOf,
-          last_updated_by: null,
-          is_live: true,
-        }),
-        updated_at: new Date().toISOString(),
-        current_count: (data as { new_count: number }).new_count,
-        peak_count: (data as { peak?: number }).peak ?? (prev?.peak_count ?? 0),
-      } as Headcount));
+      const result = data as { new_count: number; peak?: number };
+      setHeadcount(prev => prev ? {
+        ...prev,
+        current_count: result.new_count,
+        peak_count: result.peak ?? prev.peak_count,
+      } : null);
+
+      // Log
+      supabase.from('clicker_logs').insert({
+        venue_id: venue.id,
+        staff_id: null,
+        action: 'enter',
+        night_of: nightOf,
+        count_after: result.new_count,
+      });
     }
-
-    setLastAction({ type: `+${count}`, time: new Date().toISOString() });
-
-    // Haptic
-    if (navigator.vibrate) navigator.vibrate(50);
-
-    // Log
-    await supabase.from('clicker_logs').insert({
-      venue_id: venue.id,
-      staff_id: null,
-      action: 'enter',
-      night_of: nightOf,
-      count_after: (data as { new_count: number })?.new_count ?? 0,
-    });
   }, [venue]);
 
   const handleExit = useCallback(async (count = 1) => {
@@ -108,6 +145,15 @@ export function usePortal() {
     setTimeout(() => { cooldownRef.current = false; }, COOLDOWN_MS);
 
     const nightOf = getNightOf();
+
+    // Optimistic update
+    setHeadcount(prev => prev ? {
+      ...prev,
+      updated_at: new Date().toISOString(),
+      current_count: Math.max(prev.current_count - count, 0),
+    } : null);
+
+    setLastAction({ type: `-${count}`, time: new Date().toISOString() });
 
     const { data } = await supabase.rpc(count === 1 ? 'decrement_headcount' : 'adjust_headcount', {
       target_venue: venue.id,
@@ -118,24 +164,20 @@ export function usePortal() {
     });
 
     if (data) {
+      const result = data as { new_count: number };
       setHeadcount(prev => prev ? {
         ...prev,
-        updated_at: new Date().toISOString(),
-        current_count: (data as { new_count: number }).new_count,
+        current_count: result.new_count,
       } : null);
+
+      supabase.from('clicker_logs').insert({
+        venue_id: venue.id,
+        staff_id: null,
+        action: 'exit',
+        night_of: nightOf,
+        count_after: result.new_count,
+      });
     }
-
-    setLastAction({ type: `-${count}`, time: new Date().toISOString() });
-
-    if (navigator.vibrate) navigator.vibrate(50);
-
-    await supabase.from('clicker_logs').insert({
-      venue_id: venue.id,
-      staff_id: null,
-      action: 'exit',
-      night_of: nightOf,
-      count_after: (data as { new_count: number })?.new_count ?? 0,
-    });
   }, [venue]);
 
   const endNight = useCallback(async () => {

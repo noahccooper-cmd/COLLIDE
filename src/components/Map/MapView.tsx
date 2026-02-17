@@ -21,19 +21,23 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const initialCityRef = useRef(city);
 
-  // Initialize map
+  // Initialize map once
   useEffect(() => {
     if (!mapContainer.current || !mapboxReady) return;
 
     mapboxgl.accessToken = mapboxToken;
 
-    const config = CITIES[city];
+    const config = CITIES[initialCityRef.current];
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: MAPBOX_STYLE,
       center: [config.center.lng, config.center.lat],
       zoom: config.zoom,
+      minZoom: 2,
+      maxZoom: 18,
+      bearing: 0,
       dragRotate: false,
       touchPitch: false,
       pitchWithRotate: false,
@@ -50,7 +54,19 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
       mapRef.current = null;
       setMapLoaded(false);
     };
-  }, [city]);
+  }, []);
+
+  // Fly to new city when city changes
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    const config = CITIES[city];
+    mapRef.current.flyTo({
+      center: [config.center.lng, config.center.lat],
+      zoom: config.zoom,
+      duration: 1200,
+      essential: true,
+    });
+  }, [city, mapLoaded]);
 
   // Update markers when venues/counts change
   const updateMarkers = useCallback(() => {
