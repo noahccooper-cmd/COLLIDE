@@ -46,7 +46,7 @@ export function ClickerView({
   const handleEnter = useCallback(async (n = 1) => {
     setFlashClass('clicker-flash-enter');
     setBumpKey(prev => prev + 1);
-    if (navigator.vibrate) navigator.vibrate(30);
+    if (navigator.vibrate) navigator.vibrate(50);
     setTimeout(() => setFlashClass(''), 400);
     await onEnter(n);
   }, [onEnter]);
@@ -54,7 +54,7 @@ export function ClickerView({
   const handleExit = useCallback(async (n = 1) => {
     setFlashClass('clicker-flash-exit');
     setBumpKey(prev => prev + 1);
-    if (navigator.vibrate) navigator.vibrate(30);
+    if (navigator.vibrate) navigator.vibrate(50);
     setTimeout(() => setFlashClass(''), 400);
     await onExit(n);
   }, [onExit]);

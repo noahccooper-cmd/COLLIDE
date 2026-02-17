@@ -15,8 +15,8 @@ const tabs: { key: Tab; label: string; icon: typeof MapPin }[] = [
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-[#050507] border-t border-[#2A2A30] flex items-center justify-around"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#050507] border-t border-[#2A2A30] flex items-center justify-around"
+      style={{ height: 'calc(64px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       {tabs.map(({ key, label, icon: Icon }) => {
         const isActive = key === active;
         return (
