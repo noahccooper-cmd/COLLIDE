@@ -1,8 +1,9 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { MapView } from '../components/Map/MapView';
-import { VenueSheet } from '../components/Map/VenueSheet';
+import { VenueCard } from '../components/Map/VenueCard';
 import type { Venue, Headcount } from '../lib/types';
 import type { CityKey } from '../lib/constants';
+import type mapboxgl from 'mapbox-gl';
 
 interface TonightPageProps {
   city: CityKey;
@@ -32,6 +33,7 @@ export function TonightPage({
   onLoginRequired,
 }: TonightPageProps) {
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
+  const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
 
   // Merged counts: headcount if live, else checkin count
   const mergedCounts = useMemo(() => {
@@ -55,6 +57,16 @@ export function TonightPage({
 
   const handleVenueClick = useCallback((venue: Venue) => {
     setSelectedVenue(venue);
+    // Offset map so venue dot is visible above the card
+    if (mapInstanceRef.current) {
+      const offsetLat = venue.lat - 0.003;
+      mapInstanceRef.current.flyTo({
+        center: [venue.lng, offsetLat],
+        zoom: 15,
+        duration: 400,
+        essential: true,
+      });
+    }
   }, []);
 
   const handleClose = useCallback(() => {
@@ -63,11 +75,15 @@ export function TonightPage({
 
   const handleCheckIn = useCallback(async () => {
     if (!selectedVenue) return;
-    const result = await onCheckIn(selectedVenue.id);
-    if (!result.error) {
-      // Keep sheet open to show the updated state
-    }
+    await onCheckIn(selectedVenue.id);
   }, [selectedVenue, onCheckIn]);
+
+  // Tap the map area to dismiss card
+  const handleMapTap = useCallback(() => {
+    if (selectedVenue) {
+      setSelectedVenue(null);
+    }
+  }, [selectedVenue]);
 
   return (
     <div className="absolute inset-0" style={{ top: '108px', bottom: '64px' }}>
@@ -79,10 +95,12 @@ export function TonightPage({
         userCheckinVenueId={userCheckinVenueId}
         pulsedVenueId={pulsedVenueId}
         onVenueClick={handleVenueClick}
+        onMapTap={handleMapTap}
+        mapInstanceRef={mapInstanceRef}
       />
 
       {selectedVenue && (
-        <VenueSheet
+        <VenueCard
           venue={selectedVenue}
           checkinCount={counts[selectedVenue.id] ?? 0}
           headcount={headcounts[selectedVenue.id] ?? null}

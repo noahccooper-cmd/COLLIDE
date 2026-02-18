@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, type MutableRefObject } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { CITIES, MAPBOX_STYLE, type CityKey } from '../../lib/constants';
 import { mapboxToken, mapboxReady } from '../../lib/supabase';
@@ -24,9 +24,11 @@ interface MapViewProps {
   userCheckinVenueId: string | null;
   pulsedVenueId: string | null;
   onVenueClick: (venue: Venue) => void;
+  onMapTap?: () => void;
+  mapInstanceRef?: MutableRefObject<mapboxgl.Map | null>;
 }
 
-export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId, pulsedVenueId, onVenueClick }: MapViewProps) {
+export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId, pulsedVenueId, onVenueClick, onMapTap, mapInstanceRef }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
@@ -82,15 +84,36 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
     });
 
     mapRef.current = map;
+    if (mapInstanceRef) {
+      mapInstanceRef.current = map;
+    }
 
     return () => {
       markersRef.current.forEach(entry => entry.marker.remove());
       markersRef.current.clear();
       map.remove();
       mapRef.current = null;
+      if (mapInstanceRef) {
+        mapInstanceRef.current = null;
+      }
       setMapLoaded(false);
     };
   }, []);
+
+  // Handle map click (tap on empty map area = dismiss card)
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    const map = mapRef.current;
+
+    const handleClick = () => {
+      onMapTap?.();
+    };
+
+    map.on('click', handleClick);
+    return () => {
+      map.off('click', handleClick);
+    };
+  }, [mapLoaded, onMapTap]);
 
   // Fly to new city when city changes
   useEffect(() => {
@@ -146,13 +169,8 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
       el.appendChild(labelEl);
       el.appendChild(liveEl);
 
-      el.addEventListener('click', () => {
-        // Pan map to center on venue, then open sheet
-        mapRef.current?.flyTo({
-          center: [venue.lng, venue.lat],
-          duration: 400,
-          essential: true,
-        });
+      el.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent map click from firing
         onVenueClick(venue);
       });
 

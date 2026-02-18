@@ -258,16 +258,476 @@ body::after {
 .count-bump { animation: count-bump-clicker 300ms ease-out; }
 
 /* ============================================
-   Venue Sheet
+   Venue Card — Floating Card System
    ============================================ */
 
-.venue-sheet {
-  animation: sheet-up 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+.venue-card-container {
+  position: fixed;
+  bottom: 64px;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  padding: 0 8px;
+  pointer-events: none;
 }
 
-@keyframes sheet-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+.venue-card {
+  pointer-events: auto;
+  background: rgba(10, 10, 14, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px 20px 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.5);
+  animation: card-up 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+  max-height: 45vh;
+  transition: max-height 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.venue-card.expanded {
+  max-height: 80vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.venue-card.dismissing {
+  animation: card-down 0.2s ease-in forwards;
+}
+
+@keyframes card-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes card-down {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(100%); opacity: 0; }
+}
+
+.card-handle {
+  width: 32px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  margin: 8px auto 4px;
+}
+
+.card-body {
+  padding: 8px 16px 16px;
+}
+
+/* ── Card Top Row ────────────────── */
+
+.card-top-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.card-name {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-rating {
+  font-size: 13px;
+  color: #FFAA00;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.card-address {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  color: #8A8A95;
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  color: #6A6A75;
+}
+
+.card-meta a {
+  color: #6A6A75;
+  text-decoration: none;
+}
+
+.card-meta a:active {
+  color: #FF5E1A;
+}
+
+/* ── Venue Thumbnail ─────────────── */
+
+.venue-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.venue-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumb-initial {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Compact Live Count ──────────── */
+
+.live-compact {
+  margin: 10px 0;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.live-compact.active {
+  border-color: rgba(255, 94, 26, 0.2);
+}
+
+.live-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.live-badge-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 45, 5, 0.15);
+  color: #FF2D05;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.live-blink {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #FF2D05;
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+.live-count-num {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+  line-height: 1;
+}
+
+.live-count-label {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13px;
+  color: #8A8A95;
+}
+
+.live-peak {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 11px;
+  color: #55555F;
+  margin-left: auto;
+}
+
+.live-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.live-bar {
+  flex: 1;
+  height: 5px;
+  background: #1A1A1F;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.live-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.live-bar-pct {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 11px;
+  color: #8A8A95;
+  min-width: 28px;
+  text-align: right;
+}
+
+.live-no-data {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  color: #55555F;
+  font-style: italic;
+}
+
+/* ── Check-In Button ─────────────── */
+
+.card-checkin-btn {
+  width: 100%;
+  height: 46px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.card-checkin-btn:active {
+  transform: scale(0.98);
+}
+
+.card-checkin-btn:disabled {
+  cursor: default;
+}
+
+/* ── Comment Preview ─────────────── */
+
+.comment-preview {
+  margin-top: 8px;
+  padding: 8px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+}
+
+.comment-preview:active {
+  opacity: 0.7;
+}
+
+.comment-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comment-preview-label {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  color: #8A8A95;
+  font-weight: 600;
+}
+
+.comment-preview-more {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  color: #FF5E1A;
+  font-weight: 600;
+}
+
+.comment-preview-latest {
+  margin-top: 4px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13px;
+  color: #AAAAAA;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.comment-preview-user {
+  color: #FF5E1A;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+/* ── Expanded Comments ───────────── */
+
+.expanded-comments {
+  padding: 4px 16px 16px;
+}
+
+.expanded-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #FF5E1A;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 8px;
+}
+
+.expanded-back:active {
+  opacity: 0.7;
+}
+
+.expanded-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.expanded-title {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 0.05em;
+}
+
+.expanded-count {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 11px;
+  color: #55555F;
+}
+
+.expanded-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.expanded-input {
+  flex: 1;
+  height: 38px;
+  border-radius: 10px;
+  background: #111114;
+  border: 1px solid #2A2A30;
+  padding: 0 12px;
+  color: white;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.expanded-input::placeholder {
+  color: #55555F;
+}
+
+.expanded-input:focus {
+  border-color: #FF5E1A;
+}
+
+.expanded-send {
+  height: 38px;
+  width: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #FF5E1A, #FF2D05);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.1s;
+}
+
+.expanded-send:active {
+  transform: scale(0.95);
+}
+
+.expanded-send:disabled {
+  opacity: 0.3;
+}
+
+.expanded-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 45vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.expanded-empty {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13px;
+  color: #55555F;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.expanded-comment {
+  background: #111114;
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid #2A2A30;
+}
+
+.expanded-comment-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.expanded-comment-user {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #FF5E1A;
+}
+
+.expanded-comment-time {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 11px;
+  color: #55555F;
+}
+
+.expanded-comment-body {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13px;
+  color: white;
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* ============================================
