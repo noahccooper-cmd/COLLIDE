@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { MapView } from '../components/Map/MapView';
 import { VenueCard } from '../components/Map/VenueCard';
 import type { Venue, Headcount } from '../lib/types';
@@ -10,13 +10,9 @@ interface TonightPageProps {
   venues: Venue[];
   counts: Record<string, number>;
   headcounts: Record<string, Headcount>;
-  userCheckinVenueId: string | null;
+  liveVenueIds: Set<string>;
   pulsedVenueId: string | null;
-  isLoggedIn: boolean;
-  userId: string | null;
-  username: string | null;
-  onCheckIn: (venueId: string) => Promise<{ error: unknown }>;
-  onLoginRequired: () => void;
+  username: string;
 }
 
 export function TonightPage({
@@ -24,45 +20,24 @@ export function TonightPage({
   venues,
   counts,
   headcounts,
-  userCheckinVenueId,
+  liveVenueIds,
   pulsedVenueId,
-  isLoggedIn,
-  userId,
   username,
-  onCheckIn,
-  onLoginRequired,
 }: TonightPageProps) {
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
 
-  // Merged counts: headcount if live, else checkin count
-  const mergedCounts = useMemo(() => {
-    const merged: Record<string, number> = { ...counts };
-    for (const [venueId, hc] of Object.entries(headcounts)) {
-      if (hc.is_live) {
-        merged[venueId] = hc.current_count;
-      }
-    }
-    return merged;
-  }, [counts, headcounts]);
-
-  // Set of venue IDs with live headcount data
-  const liveVenueIds = useMemo(() => {
-    return new Set(
-      Object.entries(headcounts)
-        .filter(([, hc]) => hc.is_live)
-        .map(([id]) => id)
-    );
-  }, [headcounts]);
+  // Keep selectedVenue in sync with venues array (for realtime special updates)
+  const currentVenue = selectedVenue
+    ? venues.find(v => v.id === selectedVenue.id) ?? selectedVenue
+    : null;
 
   const handleVenueClick = useCallback((venue: Venue) => {
     setSelectedVenue(venue);
-    // Offset map so venue dot sits in the visible portion above the card
     if (mapInstanceRef.current) {
       const map = mapInstanceRef.current;
       const bounds = map.getBounds();
       const latSpan = bounds.getNorth() - bounds.getSouth();
-      // Card occupies ~40% of map area from bottom; push dot into top 55%
       const offsetLat = venue.lat - latSpan * 0.22;
       map.flyTo({
         center: [venue.lng, offsetLat],
@@ -77,12 +52,6 @@ export function TonightPage({
     setSelectedVenue(null);
   }, []);
 
-  const handleCheckIn = useCallback(async () => {
-    if (!selectedVenue) return;
-    await onCheckIn(selectedVenue.id);
-  }, [selectedVenue, onCheckIn]);
-
-  // Tap the map area to dismiss card
   const handleMapTap = useCallback(() => {
     if (selectedVenue) {
       setSelectedVenue(null);
@@ -94,27 +63,20 @@ export function TonightPage({
       <MapView
         city={city}
         venues={venues}
-        counts={mergedCounts}
+        counts={counts}
         liveVenueIds={liveVenueIds}
-        userCheckinVenueId={userCheckinVenueId}
         pulsedVenueId={pulsedVenueId}
         onVenueClick={handleVenueClick}
         onMapTap={handleMapTap}
         mapInstanceRef={mapInstanceRef}
       />
 
-      {selectedVenue && (
+      {currentVenue && (
         <VenueCard
-          venue={selectedVenue}
-          checkinCount={counts[selectedVenue.id] ?? 0}
-          headcount={headcounts[selectedVenue.id] ?? null}
-          userCheckinVenueId={userCheckinVenueId}
-          isLoggedIn={isLoggedIn}
-          userId={userId}
+          venue={currentVenue}
+          headcount={headcounts[currentVenue.id] ?? null}
           username={username}
-          onCheckIn={handleCheckIn}
           onClose={handleClose}
-          onLoginRequired={onLoginRequired}
         />
       )}
     </div>

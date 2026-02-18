@@ -2,14 +2,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { Minus, Plus, LogOut } from 'lucide-react';
 import { formatCount, formatTime } from '../../lib/utils';
 import type { Venue, Headcount } from '../../lib/types';
+import type { EndNightSummary } from '../../hooks/usePortal';
 
 interface ClickerViewProps {
   venue: Venue;
   headcount: Headcount | null;
   lastAction: { type: string; time: string } | null;
+  endSummary: EndNightSummary | null;
   onEnter: (count?: number) => Promise<void>;
   onExit: (count?: number) => Promise<void>;
   onEndNight: () => Promise<void>;
+  onUpdateSpecial: (text: string) => Promise<void>;
   onDisconnect: () => void;
 }
 
@@ -17,14 +20,18 @@ export function ClickerView({
   venue,
   headcount,
   lastAction,
+  endSummary,
   onEnter,
   onExit,
   onEndNight,
+  onUpdateSpecial,
   onDisconnect,
 }: ClickerViewProps) {
   const [flashClass, setFlashClass] = useState('');
   const [bumpKey, setBumpKey] = useState(0);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [specialText, setSpecialText] = useState(venue.tonight_special ?? '');
+  const [specialSaved, setSpecialSaved] = useState(false);
   const count = headcount?.current_count ?? 0;
   const peak = headcount?.peak_count ?? 0;
   const isLive = headcount?.is_live ?? false;
@@ -63,6 +70,48 @@ export function ClickerView({
     setConfirmEnd(false);
     await onEndNight();
   }, [onEndNight]);
+
+  const handleUpdateSpecial = useCallback(async () => {
+    await onUpdateSpecial(specialText);
+    setSpecialSaved(true);
+    setTimeout(() => setSpecialSaved(false), 2000);
+  }, [specialText, onUpdateSpecial]);
+
+  // Show end-of-night summary
+  if (endSummary) {
+    return (
+      <div className="min-h-screen bg-[#050507] flex flex-col items-center justify-center px-6">
+        <div className="text-center max-w-sm">
+          <h1 className="text-white font-black text-2xl tracking-[0.05em] mb-6"
+            style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            <span>ven</span><span className="text-[#FF5E1A]">U</span><span>e</span>
+          </h1>
+          <div className="bg-[#111114] border border-[#2A2A30] rounded-2xl p-6">
+            <p className="text-[#8A8A95] text-sm mb-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>Tonight at</p>
+            <h2 className="text-white font-black text-xl mb-4" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+              {endSummary.venueName}
+            </h2>
+            <div className="flex items-baseline justify-center gap-2 mb-2">
+              <span className="text-white font-black text-5xl" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                {formatCount(endSummary.peakCount)}
+              </span>
+              <span className="text-[#8A8A95] text-sm" style={{ fontFamily: 'Satoshi, sans-serif' }}>peak</span>
+            </div>
+            <p className="text-[#55555F] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+              at {formatTime(endSummary.peakTime)}
+            </p>
+          </div>
+          <button
+            onClick={onDisconnect}
+            className="w-full h-[52px] rounded-xl font-bold text-white text-base mt-6 active:scale-[0.98] transition-transform"
+            style={{ fontFamily: 'Satoshi, sans-serif', background: 'linear-gradient(135deg, #FF5E1A, #FF2D05)' }}
+          >
+            DONE
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen bg-[#050507] flex flex-col ${flashClass}`}>
@@ -125,36 +174,23 @@ export function ClickerView({
       {/* Main Buttons */}
       <div className="px-4 pb-3">
         <div className="flex gap-3">
-          {/* EXIT */}
           <button
             onClick={() => handleExit()}
             className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-[0.97] transition-transform"
-            style={{
-              height: '180px',
-              backgroundColor: '#5C1A1A',
-            }}
+            style={{ height: '180px', backgroundColor: '#5C1A1A' }}
           >
             <Minus size={64} strokeWidth={2.5} className="text-white" />
             <span className="text-white font-black text-lg tracking-wider"
-              style={{ fontFamily: 'Satoshi, sans-serif' }}>
-              EXIT
-            </span>
+              style={{ fontFamily: 'Satoshi, sans-serif' }}>EXIT</span>
           </button>
-
-          {/* ENTER */}
           <button
             onClick={() => handleEnter()}
             className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-[0.97] transition-transform"
-            style={{
-              height: '180px',
-              backgroundColor: '#00E676',
-            }}
+            style={{ height: '180px', backgroundColor: '#00E676' }}
           >
             <Plus size={64} strokeWidth={2.5} className="text-white" />
             <span className="text-white font-black text-lg tracking-wider"
-              style={{ fontFamily: 'Satoshi, sans-serif' }}>
-              ENTER
-            </span>
+              style={{ fontFamily: 'Satoshi, sans-serif' }}>ENTER</span>
           </button>
         </div>
 
@@ -174,23 +210,28 @@ export function ClickerView({
         )}
 
         {/* End Night */}
-        <div className="mt-4 mb-2" style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
+        <div className="mt-4">
           {confirmEnd ? (
-            <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmEnd(false)}
-                className="flex-1 h-11 rounded-xl bg-[#111114] border border-[#2A2A30] text-[#8A8A95] text-sm font-medium"
-                style={{ fontFamily: 'Satoshi, sans-serif' }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEndNight}
-                className="flex-1 h-11 rounded-xl bg-[#FF2D05] text-white text-sm font-bold"
-                style={{ fontFamily: 'Satoshi, sans-serif' }}
-              >
-                End Tracking
-              </button>
+            <div className="flex flex-col gap-2">
+              <p className="text-[#8A8A95] text-sm text-center" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                End tracking for {venue.name} tonight?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmEnd(false)}
+                  className="flex-1 h-11 rounded-xl bg-[#111114] border border-[#2A2A30] text-[#8A8A95] text-sm font-medium"
+                  style={{ fontFamily: 'Satoshi, sans-serif' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEndNight}
+                  className="flex-1 h-11 rounded-xl bg-[#FF2D05] text-white text-sm font-bold"
+                  style={{ fontFamily: 'Satoshi, sans-serif' }}
+                >
+                  End Tracking
+                </button>
+              </div>
             </div>
           ) : (
             <button
@@ -201,6 +242,31 @@ export function ClickerView({
               End Night
             </button>
           )}
+        </div>
+
+        {/* Tonight's Special input */}
+        <div className="mt-4 mb-2 p-4 bg-[#111114] border border-[#2A2A30] rounded-xl"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
+          <p className="text-[#8A8A95] text-xs font-bold mb-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            {'\uD83C\uDF89'} Set tonight's special
+          </p>
+          <input
+            value={specialText}
+            onChange={e => setSpecialText(e.target.value.slice(0, 100))}
+            placeholder="$3 wells til midnight"
+            className="w-full h-10 px-3 bg-[#050507] border border-[#2A2A30] rounded-lg text-white text-sm outline-none focus:border-[#FF5E1A] transition-colors"
+            style={{ fontFamily: 'Satoshi, sans-serif' }}
+          />
+          <button
+            onClick={handleUpdateSpecial}
+            className="w-full h-9 rounded-lg text-white text-sm font-bold mt-2 active:scale-[0.98] transition-transform"
+            style={{
+              fontFamily: 'Satoshi, sans-serif',
+              background: specialSaved ? '#00E676' : 'linear-gradient(135deg, #FF5E1A, #FF2D05)',
+            }}
+          >
+            {specialSaved ? 'Saved!' : 'Update'}
+          </button>
         </div>
       </div>
     </div>

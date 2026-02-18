@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { X, ArrowLeft, Send } from 'lucide-react';
+import { X, Send } from 'lucide-react';
 import { formatCount, getCapacityPercent, getCapacityColor, timeAgo, getCommentDay } from '../../lib/utils';
 import { supabase, envReady } from '../../lib/supabase';
 import { useVenueComments } from '../../hooks/useVenueComments';
@@ -7,43 +7,43 @@ import type { Venue, Headcount, VenueComment } from '../../lib/types';
 
 interface VenueCardProps {
   venue: Venue;
-  checkinCount: number;
   headcount: Headcount | null;
-  userCheckinVenueId: string | null;
-  isLoggedIn: boolean;
-  userId: string | null;
-  username: string | null;
-  onCheckIn: () => void;
+  username: string;
   onClose: () => void;
-  onLoginRequired: () => void;
 }
 
-/* ── Thumbnail ─────────────────────────────── */
+/* ── Photo Hero ──────────────────────────── */
 
-function VenueThumb({ venue }: { venue: Venue }) {
+function VenuePhoto({ venue }: { venue: Venue }) {
   if (venue.image_url) {
-    return <img src={venue.image_url} className="venue-thumb" alt="" />;
+    return (
+      <div className="card-photo-wrap">
+        <img src={venue.image_url} className="card-photo" alt="" />
+      </div>
+    );
   }
   const hash = venue.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   const hue = (hash * 47) % 360;
   return (
-    <div
-      className="venue-thumb venue-thumb-placeholder"
-      style={{
-        background: `linear-gradient(135deg, hsl(${hue}, 40%, 18%) 0%, hsl(${(hue + 60) % 360}, 30%, 10%) 100%)`,
-      }}
-    >
-      <span className="thumb-initial">{venue.name.charAt(0)}</span>
+    <div className="card-photo-wrap">
+      <div
+        className="card-photo-placeholder"
+        style={{
+          background: `linear-gradient(135deg, hsl(${hue}, 40%, 18%) 0%, hsl(${(hue + 60) % 360}, 30%, 10%) 100%)`,
+        }}
+      >
+        <span className="big-initial">{venue.name.charAt(0)}</span>
+        <span className="photo-venue-name">{venue.name}</span>
+      </div>
     </div>
   );
 }
 
-/* ── Compact Live Count ────────────────────── */
+/* ── Live Count Section ─────────────────── */
 
-function LiveCountCompact({ headcount, venue }: { headcount: Headcount | null; venue: Venue }) {
+function LiveCountSection({ headcount, venue }: { headcount: Headcount | null; venue: Venue }) {
   const isLive = headcount?.is_live ?? false;
   const count = headcount?.current_count ?? 0;
-  const peak = headcount?.peak_count ?? 0;
 
   if (!isLive) {
     return (
@@ -63,7 +63,6 @@ function LiveCountCompact({ headcount, venue }: { headcount: Headcount | null; v
         </span>
         <span className="live-count-num">{formatCount(count)}</span>
         <span className="live-count-label">inside</span>
-        {peak > 0 && <span className="live-peak">Peak: {formatCount(peak)}</span>}
       </div>
       {pct !== null && (
         <div className="live-bar-row">
@@ -77,12 +76,26 @@ function LiveCountCompact({ headcount, venue }: { headcount: Headcount | null; v
   );
 }
 
-/* ── Comment Preview ───────────────────────── */
+/* ── Comment Section (preview + expanded) ── */
 
-function CommentPreview({ venue, onExpand }: { venue: Venue; onExpand: () => void }) {
-  const [latestComment, setLatestComment] = useState<VenueComment | null>(null);
-  const [commentCount, setCommentCount] = useState(0);
+function CommentSection({
+  venue,
+  username,
+  expanded,
+  onExpand,
+}: {
+  venue: Venue;
+  username: string;
+  expanded: boolean;
+  onExpand: () => void;
+}) {
+  const { comments, sendComment } = useVenueComments(venue.id);
+  const [commentText, setCommentText] = useState('');
+  const [previewComment, setPreviewComment] = useState<VenueComment | null>(null);
+  const [previewCount, setPreviewCount] = useState(0);
+  const listRef = useRef<HTMLDivElement>(null);
 
+  // Fetch preview data
   useEffect(() => {
     if (!envReady) return;
     const dayOf = getCommentDay();
@@ -94,145 +107,104 @@ function CommentPreview({ venue, onExpand }: { venue: Venue; onExpand: () => voi
       .order('created_at', { ascending: false })
       .limit(1)
       .then(({ data, count }) => {
-        setLatestComment((data?.[0] as VenueComment) || null);
-        setCommentCount(count || 0);
+        setPreviewComment((data?.[0] as VenueComment) || null);
+        setPreviewCount(count || 0);
       });
   }, [venue.id]);
 
-  return (
-    <div className="card-comments" onClick={onExpand}>
-      <div className="card-comments-row">
-        <span className="card-comments-label">
-          {commentCount > 0 ? `${commentCount} comments tonight` : 'No comments yet'}
-        </span>
-        {commentCount > 0 && <span className="card-comments-more">See all &#9656;</span>}
-      </div>
-      {latestComment && (
-        <div className="card-comments-preview">
-          <span className="card-comments-user">@{latestComment.username}: </span>
-          {latestComment.body}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Expanded Comments View ────────────────── */
-
-function ExpandedComments({
-  venue,
-  userId,
-  username,
-  isLoggedIn,
-  onBack,
-  onLoginRequired,
-}: {
-  venue: Venue;
-  userId: string | null;
-  username: string | null;
-  isLoggedIn: boolean;
-  onBack: () => void;
-  onLoginRequired: () => void;
-}) {
-  const [commentText, setCommentText] = useState('');
-  const { comments, sendComment } = useVenueComments(venue.id);
-
-  const handleSend = async () => {
-    if (!commentText.trim()) return;
-    if (!isLoggedIn) {
-      onLoginRequired();
-      return;
+  // Update preview from realtime comments
+  useEffect(() => {
+    if (comments.length > 0) {
+      setPreviewComment(comments[0]);
+      setPreviewCount(comments.length);
     }
-    await sendComment(userId, username ?? 'anonymous', commentText.trim());
+  }, [comments]);
+
+  const handleSend = useCallback(async () => {
+    if (!commentText.trim()) return;
+    await sendComment(null, username, commentText.trim());
     setCommentText('');
-  };
+  }, [commentText, sendComment, username]);
 
   return (
-    <div className="expanded-comments">
-      <button onClick={onBack} className="expanded-back">
-        <ArrowLeft size={16} strokeWidth={2} />
-        <span>Back</span>
-      </button>
-
-      <div className="expanded-header">
-        <span className="expanded-title">TONIGHT'S CHAT</span>
-        <span className="expanded-count">{comments.length}</span>
-      </div>
-
-      <div className="expanded-input-row">
-        <input
-          value={commentText}
-          onChange={e => setCommentText(e.target.value.slice(0, 200))}
-          placeholder="What's happening tonight?"
-          className="expanded-input"
-          onKeyDown={e => e.key === 'Enter' && handleSend()}
-          maxLength={200}
-        />
-        <button
-          onClick={handleSend}
-          disabled={!commentText.trim()}
-          className="expanded-send"
-        >
-          <Send size={14} strokeWidth={2} />
-        </button>
-      </div>
-
-      <div className="expanded-list">
-        {comments.length === 0 ? (
-          <p className="expanded-empty">
-            Be the first to say something about {venue.name} tonight
-          </p>
-        ) : (
-          comments.map(c => (
-            <div key={c.id} className="expanded-comment">
-              <div className="expanded-comment-top">
-                <span className="expanded-comment-user">@{c.username}</span>
-                <span className="expanded-comment-time">{timeAgo(c.created_at)}</span>
-              </div>
-              <p className="expanded-comment-body">{c.body}</p>
-            </div>
-          ))
+    <>
+      {/* Preview row */}
+      <div className="card-comments" onClick={!expanded ? onExpand : undefined}>
+        <div className="card-comments-row">
+          <span className="card-comments-label">
+            {'\uD83D\uDCAC'} {previewCount > 0 ? `${previewCount} tonight` : 'No comments yet'}
+          </span>
+          {!expanded && previewCount > 0 && (
+            <span className="card-comments-more">See all &#9656;</span>
+          )}
+        </div>
+        {!expanded && previewComment && (
+          <div className="card-comments-preview">
+            <span className="card-comments-user">@{previewComment.username}: </span>
+            {previewComment.body}
+          </div>
         )}
       </div>
-    </div>
+
+      {/* Expanded inline comments */}
+      {expanded && (
+        <div className="expanded-comments-inline">
+          <div className="expanded-input-row">
+            <input
+              value={commentText}
+              onChange={e => setCommentText(e.target.value.slice(0, 200))}
+              placeholder="Say something..."
+              className="expanded-input"
+              onKeyDown={e => e.key === 'Enter' && handleSend()}
+              maxLength={200}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!commentText.trim()}
+              className="expanded-send"
+            >
+              <Send size={14} strokeWidth={2} />
+            </button>
+          </div>
+          <div className="expanded-list" ref={listRef}>
+            {comments.length === 0 ? (
+              <p className="expanded-empty">
+                Be the first to say something about {venue.name} tonight
+              </p>
+            ) : (
+              comments.map(c => (
+                <div key={c.id} className="expanded-comment">
+                  <div className="expanded-comment-top">
+                    <span className="expanded-comment-user">@{c.username}</span>
+                    <span className="expanded-comment-time">{timeAgo(c.created_at)}</span>
+                  </div>
+                  <p className="expanded-comment-body">{c.body}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
-/* ── Main VenueCard ────────────────────────── */
+/* ── Main VenueCard (Floating Pill) ──────── */
 
 export function VenueCard({
   venue,
-  checkinCount,
   headcount,
-  userCheckinVenueId,
-  isLoggedIn,
-  userId,
   username,
-  onCheckIn,
   onClose,
-  onLoginRequired,
 }: VenueCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [dismissing, setDismissing] = useState(false);
   const touchStartY = useRef<number | null>(null);
 
-  const isCheckedInHere = userCheckinVenueId === venue.id;
-  const isCheckedInElsewhere = userCheckinVenueId !== null && userCheckinVenueId !== venue.id;
-
   const dismiss = useCallback(() => {
     setDismissing(true);
-    setTimeout(() => onClose(), 200);
+    setTimeout(() => onClose(), 180);
   }, [onClose]);
-
-  const handleAction = () => {
-    if (!isLoggedIn) {
-      onLoginRequired();
-      return;
-    }
-    if (!isCheckedInHere) {
-      onCheckIn();
-    }
-  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
@@ -272,59 +244,43 @@ export function VenueCard({
           </button>
         </div>
 
-        {expanded ? (
-          <ExpandedComments
-            venue={venue}
-            userId={userId}
-            username={username}
-            isLoggedIn={isLoggedIn}
-            onBack={() => setExpanded(false)}
-            onLoginRequired={onLoginRequired}
-          />
-        ) : (
-          <div className="card-body">
-            {/* Top row: thumbnail + info */}
-            <div className="card-top-row">
-              <VenueThumb venue={venue} />
-              <div className="card-info">
-                <div className="card-name-row">
-                  <h3 className="card-name">{venue.name}</h3>
-                  {venue.rating && (
-                    <span className="card-rating">
-                      {'\u2605'} {venue.rating}
-                      {venue.review_count ? <span className="card-rating-count">({venue.review_count})</span> : null}
-                    </span>
-                  )}
-                </div>
-                {venue.address && <p className="card-address">{venue.address}</p>}
-                <div className="card-meta">
-                  {venue.hours && <span>{venue.hours}</span>}
-                  {venue.phone && <a href={`tel:${venue.phone}`}>{venue.phone}</a>}
-                </div>
-              </div>
+        <div className="card-body">
+          {/* Photo hero */}
+          <VenuePhoto venue={venue} />
+
+          {/* Info section */}
+          <div className="card-info-section">
+            <div className="card-name-row">
+              <h3 className="card-name">{venue.name}</h3>
+              {venue.rating && (
+                <span className="card-rating">
+                  {'\u2605'} {venue.rating}
+                  {venue.review_count ? <span className="card-rating-count">({venue.review_count})</span> : null}
+                </span>
+              )}
             </div>
-
-            {/* Live count section */}
-            <LiveCountCompact headcount={headcount} venue={venue} />
-
-            {/* I'M GOING button */}
-            <button
-              onClick={handleAction}
-              disabled={isCheckedInHere}
-              className={`card-go-btn${isCheckedInHere ? ' checked' : ''}`}
-              style={!isCheckedInHere ? {} : { opacity: 0.9 }}
-            >
-              {isCheckedInHere
-                ? "YOU'RE GOING \u2713"
-                : isCheckedInElsewhere
-                  ? 'SWITCH HERE'
-                  : "\uD83D\uDD25 I'M GOING"}
-            </button>
-
-            {/* Comment preview */}
-            <CommentPreview venue={venue} onExpand={() => setExpanded(true)} />
+            {venue.address && <p className="card-address">{venue.address}</p>}
           </div>
-        )}
+
+          {/* Tonight's Special */}
+          {venue.tonight_special && (
+            <div className="card-special">
+              <div className="special-badge">{'\uD83C\uDF89'} TONIGHT</div>
+              <p className="special-text">{venue.tonight_special}</p>
+            </div>
+          )}
+
+          {/* Live count section */}
+          <LiveCountSection headcount={headcount} venue={venue} />
+
+          {/* Comments section (preview + expandable) */}
+          <CommentSection
+            venue={venue}
+            username={username}
+            expanded={expanded}
+            onExpand={() => setExpanded(true)}
+          />
+        </div>
       </div>
     </div>
   );

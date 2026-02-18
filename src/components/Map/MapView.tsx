@@ -21,7 +21,6 @@ interface MapViewProps {
   venues: Venue[];
   counts: Record<string, number>;
   liveVenueIds: Set<string>;
-  userCheckinVenueId: string | null;
   pulsedVenueId: string | null;
   onVenueClick: (venue: Venue) => void;
   onMapTap?: () => void;
@@ -31,7 +30,7 @@ interface MapViewProps {
 const HEATMAP_SOURCE = 'venue-heat';
 const HEATMAP_LAYER = 'venue-heatmap';
 
-export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId, pulsedVenueId, onVenueClick, onMapTap, mapInstanceRef }: MapViewProps) {
+export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onVenueClick, onMapTap, mapInstanceRef }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
@@ -128,7 +127,7 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
             200, 0.9,
             300, 1,
           ],
-          'heatmap-intensity': 0.6,
+          'heatmap-intensity': 0.75,
           'heatmap-color': [
             'interpolate', ['linear'], ['heatmap-density'],
             0, 'rgba(0, 0, 0, 0)',
@@ -143,9 +142,9 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
           'heatmap-opacity': [
             'interpolate', ['linear'], ['zoom'],
             11, 0,
-            12.5, 0.7,
-            15, 0.5,
-            18, 0.3,
+            12.5, 0.8,
+            15, 0.6,
+            18, 0.4,
           ],
         },
       });
@@ -218,10 +217,10 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
 
       const el = document.createElement('div');
       el.className = 'venue-marker';
+      el.setAttribute('data-venue-id', venue.id);
 
       const dotEl = document.createElement('div');
       dotEl.className = 'venue-dot dot-t0';
-      dotEl.setAttribute('data-venue-id', venue.id);
 
       const countEl = document.createElement('span');
       countEl.className = 'venue-count';
@@ -268,10 +267,11 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
 
   // Update marker visuals + heatmap when counts/live status change
   useEffect(() => {
+    console.log('🗺️ MAP UPDATE — counts:', counts, 'live:', [...liveVenueIds]);
+
     markersRef.current.forEach((entry, venueId) => {
       const count = counts[venueId] ?? 0;
       const isLive = liveVenueIds.has(venueId);
-      const isCheckedIn = userCheckinVenueId === venueId;
       const isPulsed = pulsedVenueId === venueId;
       const newTier = getDotTier(count);
 
@@ -301,13 +301,6 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
         entry.dotEl.classList.remove('live-ring');
       }
 
-      // Checked-in styling
-      if (isCheckedIn) {
-        entry.dotEl.classList.add('checked-in');
-      } else {
-        entry.dotEl.classList.remove('checked-in');
-      }
-
       // Pulsed (count just changed via real-time)
       if (isPulsed) {
         entry.dotEl.classList.add('count-updated');
@@ -322,7 +315,7 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
         source.setData(buildHeatGeoJSON());
       }
     }
-  }, [counts, liveVenueIds, userCheckinVenueId, pulsedVenueId, mapLoaded, buildHeatGeoJSON]);
+  }, [counts, liveVenueIds, pulsedVenueId, mapLoaded, buildHeatGeoJSON]);
 
   if (!mapboxReady) {
     return (

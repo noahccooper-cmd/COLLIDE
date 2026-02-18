@@ -1,5 +1,4 @@
-import { User } from 'lucide-react';
-import { formatNightDate } from '../../lib/utils';
+import { formatNightDate, getInitials } from '../../lib/utils';
 import { CITIES, type CityKey } from '../../lib/constants';
 import { CityToggle } from './CityToggle';
 
@@ -7,10 +6,10 @@ interface HeaderProps {
   city: CityKey;
   onCityChange: (city: CityKey) => void;
   totalCount: number;
-  onProfileTap: () => void;
+  username: string;
 }
 
-export function Header({ city, onCityChange, totalCount, onProfileTap }: HeaderProps) {
+export function Header({ city, onCityChange, totalCount, username }: HeaderProps) {
   const config = CITIES[city];
   const nightDate = formatNightDate();
   const showFire = totalCount > 50;
@@ -26,12 +25,12 @@ export function Header({ city, onCityChange, totalCount, onProfileTap }: HeaderP
           </h1>
           <div className="flex items-center gap-2">
             <CityToggle city={city} onChange={onCityChange} />
-            <button
-              onClick={onProfileTap}
-              className="w-9 h-9 rounded-full bg-[#111114] border border-[#2A2A30] flex items-center justify-center text-[#8A8A95] hover:text-white transition-colors"
+            <div
+              className="w-9 h-9 rounded-full bg-[#111114] border border-[#2A2A30] flex items-center justify-center text-[#FF5E1A] text-xs font-bold"
+              style={{ fontFamily: 'Satoshi, sans-serif' }}
             >
-              <User size={16} strokeWidth={1.5} />
-            </button>
+              {getInitials(username)}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-1.5 text-[#8A8A95] text-sm" style={{ fontFamily: 'Satoshi, sans-serif' }}>

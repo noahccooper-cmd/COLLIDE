@@ -42,6 +42,8 @@ export interface Venue {
   description: string | null;
   rating: number | null;
   review_count: number | null;
+  tonight_special: string | null;
+  special_updated_at: string | null;
 }
 
 export interface Checkin {

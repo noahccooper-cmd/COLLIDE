@@ -38,33 +38,38 @@ export function useHeadcounts(city: CityKey) {
     fetchHeadcounts();
   }, [fetchHeadcounts]);
 
-  // Real-time subscription for headcounts
+  // Real-time subscription — unique channel name for clean reconnect
   useEffect(() => {
     if (!envReady) return;
 
+    const channelName = `headcounts-rt-${city}-${Date.now()}`;
     const channel = supabase
-      .channel(`headcounts-rt-${city}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'headcounts',
-          filter: `city=eq.${city}`,
         },
         (payload) => {
+          console.log('🔴 REALTIME HEADCOUNT:', payload.eventType, payload.new);
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const row = payload.new as Headcount;
+            // Only process rows for our city
+            if (row.city !== city) return;
             setHeadcounts(prev => ({ ...prev, [row.venue_id]: row }));
 
-            // Trigger bubble pulse
+            // Trigger dot pulse
             setPulsedVenueId(row.venue_id);
             if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
             pulseTimeoutRef.current = setTimeout(() => setPulsedVenueId(null), 600);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🔴 HEADCOUNT CHANNEL STATUS:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);

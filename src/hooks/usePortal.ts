@@ -6,22 +6,29 @@ import type { Venue, Headcount } from '../lib/types';
 const COOLDOWN_MS = 150;
 const PORTAL_CODE_KEY = 'venue_portal_code';
 
+export interface EndNightSummary {
+  venueName: string;
+  peakCount: number;
+  peakTime: string;
+}
+
 export function usePortal() {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [headcount, setHeadcount] = useState<Headcount | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [lastAction, setLastAction] = useState<{ type: string; time: string } | null>(null);
+  const [endSummary, setEndSummary] = useState<EndNightSummary | null>(null);
   const cooldownRef = useRef(false);
 
   const savedCode = localStorage.getItem(PORTAL_CODE_KEY) ?? '';
 
-  // Real-time subscription for this venue's headcount (sync with other bouncers)
+  // Real-time subscription for this venue's headcount
   useEffect(() => {
     if (!envReady || !venue) return;
 
     const channel = supabase
-      .channel(`portal-hc-${venue.id}`)
+      .channel(`portal-hc-${venue.id}-${Date.now()}`)
       .on(
         'postgres_changes',
         {
@@ -31,13 +38,16 @@ export function usePortal() {
           filter: `venue_id=eq.${venue.id}`,
         },
         (payload) => {
+          console.log('🟢 PORTAL REALTIME:', payload.eventType, payload.new);
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const row = payload.new as Headcount;
             setHeadcount(row);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🟢 PORTAL CHANNEL STATUS:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -49,6 +59,7 @@ export function usePortal() {
 
     setLoading(true);
     setError('');
+    setEndSummary(null);
 
     const { data, error: err } = await supabase
       .from('venues')
@@ -128,7 +139,6 @@ export function usePortal() {
         peak_count: result.peak ?? prev.peak_count,
       } : null);
 
-      // Log
       supabase.from('clicker_logs').insert({
         venue_id: venue.id,
         staff_id: null,
@@ -146,7 +156,6 @@ export function usePortal() {
 
     const nightOf = getNightOf();
 
-    // Optimistic update
     setHeadcount(prev => prev ? {
       ...prev,
       updated_at: new Date().toISOString(),
@@ -180,9 +189,29 @@ export function usePortal() {
     }
   }, [venue]);
 
+  const updateSpecial = useCallback(async (text: string) => {
+    if (!venue || !envReady) return;
+    const specialText = text.trim() || null;
+    await supabase
+      .from('venues')
+      .update({
+        tonight_special: specialText,
+        special_updated_at: specialText ? new Date().toISOString() : null,
+      })
+      .eq('id', venue.id);
+
+    setVenue(prev => prev ? { ...prev, tonight_special: specialText, special_updated_at: specialText ? new Date().toISOString() : null } : null);
+  }, [venue]);
+
   const endNight = useCallback(async () => {
     if (!venue) return;
     const nightOf = getNightOf();
+
+    const summary: EndNightSummary = {
+      venueName: venue.name,
+      peakCount: headcount?.peak_count ?? 0,
+      peakTime: headcount?.updated_at ?? new Date().toISOString(),
+    };
 
     await supabase
       .from('headcounts')
@@ -196,13 +225,15 @@ export function usePortal() {
       .eq('id', venue.id);
 
     setHeadcount(prev => prev ? { ...prev, is_live: false } : null);
-  }, [venue]);
+    setEndSummary(summary);
+  }, [venue, headcount]);
 
   const disconnect = useCallback(() => {
     setVenue(null);
     setHeadcount(null);
     setLastAction(null);
     setError('');
+    setEndSummary(null);
   }, []);
 
   return {
@@ -212,9 +243,11 @@ export function usePortal() {
     error,
     lastAction,
     savedCode,
+    endSummary,
     lookupVenueByCode,
     handleEnter,
     handleExit,
+    updateSpecial,
     endNight,
     disconnect,
   };

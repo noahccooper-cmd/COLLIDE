@@ -1,70 +1,47 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { envReady } from './lib/supabase';
 import { useCity } from './hooks/useCity';
-import { useAuth } from './hooks/useAuth';
 import { useVenues } from './hooks/useVenues';
-import { useCheckins } from './hooks/useCheckins';
 import { useHeadcounts } from './hooks/useHeadcounts';
 import { Header } from './components/Layout/Header';
 import { BottomNav, type Tab } from './components/Layout/BottomNav';
 import { TonightPage } from './pages/TonightPage';
 import { PortalPage } from './pages/PortalPage';
-import { ProfileOverlay } from './components/Profile/ProfileOverlay';
+import { UsernameScreen } from './components/UsernameScreen';
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('tonight');
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [username, setUsername] = useState<string | null>(
+    () => localStorage.getItem('venue_username')
+  );
   const { city, switchCity } = useCity();
-  const { user, profile, loading: authLoading, needsOnboard, sendMagicLink, createProfile, signOut } = useAuth();
   const { venues } = useVenues(city);
-  const { counts, totalCount, userCheckinVenueId, pulsedVenueId: checkinPulsedId, checkIn } = useCheckins(city, profile?.id);
-  const { headcounts, pulsedVenueId: headcountPulsedId } = useHeadcounts(city);
+  const { headcounts, pulsedVenueId } = useHeadcounts(city);
 
-  const isLoggedIn = !!user && !authLoading;
+  // Build counts map from headcounts (portal data only)
+  const counts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const [venueId, hc] of Object.entries(headcounts)) {
+      if (hc.is_live) {
+        map[venueId] = hc.current_count;
+      }
+    }
+    return map;
+  }, [headcounts]);
 
-  // Merge pulsed venue IDs (headcount pulse takes priority)
-  const pulsedVenueId = headcountPulsedId ?? checkinPulsedId;
+  // Total count across all live venues
+  const totalCount = useMemo(() => {
+    return Object.values(counts).reduce((sum, c) => sum + c, 0);
+  }, [counts]);
 
-  // Compute merged total: headcount if live, else checkin count per venue
-  const mergedTotalCount = useMemo(() => {
-    const liveVenueIds = new Set(
+  // Set of venue IDs with live headcount
+  const liveVenueIds = useMemo(() => {
+    return new Set(
       Object.entries(headcounts)
         .filter(([, hc]) => hc.is_live)
         .map(([id]) => id)
     );
-
-    let total = 0;
-    for (const [, hc] of Object.entries(headcounts)) {
-      if (hc.is_live) total += hc.current_count;
-    }
-    for (const [id, count] of Object.entries(counts)) {
-      if (!liveVenueIds.has(id)) total += count;
-    }
-    return total;
-  }, [counts, headcounts]);
-
-  const displayTotalCount = Object.keys(headcounts).length > 0 ? mergedTotalCount : totalCount;
-
-  const handleLoginRequired = useCallback(() => {
-    setProfileOpen(true);
-  }, []);
-
-  const handleCheckIn = useCallback(async (venueId: string) => {
-    return checkIn(venueId);
-  }, [checkIn]);
-
-  const handleProfileTap = useCallback(() => {
-    setProfileOpen(true);
-  }, []);
-
-  const handleProfileClose = useCallback(() => {
-    setProfileOpen(false);
-  }, []);
-
-  const handleBrowseAsGuest = useCallback(() => {
-    setProfileOpen(false);
-    setTab('tonight');
-  }, []);
+  }, [headcounts]);
 
   // Missing env error screen
   if (!envReady) {
@@ -80,37 +57,38 @@ export default function App() {
               Missing configuration
             </p>
             <p className="text-[#8A8A95] text-sm" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-              Check your .env file. Required variables:
+              Check your .env file.
             </p>
-            <ul className="text-[#55555F] text-xs mt-2 space-y-1" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-              <li>VITE_SUPABASE_URL</li>
-              <li>VITE_SUPABASE_ANON_KEY</li>
-              <li>VITE_MAPBOX_TOKEN</li>
-            </ul>
           </div>
         </div>
       </div>
     );
   }
 
+  // Username onboarding — first open
+  if (!username) {
+    return <UsernameScreen onComplete={setUsername} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#050507] relative">
-      <Header city={city} onCityChange={switchCity} totalCount={displayTotalCount} onProfileTap={handleProfileTap} />
+      <Header
+        city={city}
+        onCityChange={switchCity}
+        totalCount={totalCount}
+        username={username}
+      />
 
-      {/* Tonight tab — map + venue sheets */}
+      {/* Tonight tab — map + venue cards */}
       <div className={tab === 'tonight' ? '' : 'hidden'}>
         <TonightPage
           city={city}
           venues={venues}
           counts={counts}
           headcounts={headcounts}
-          userCheckinVenueId={userCheckinVenueId}
+          liveVenueIds={liveVenueIds}
           pulsedVenueId={pulsedVenueId}
-          isLoggedIn={isLoggedIn}
-          userId={profile?.id ?? null}
-          username={profile?.username ?? null}
-          onCheckIn={handleCheckIn}
-          onLoginRequired={handleLoginRequired}
+          username={username}
         />
       </div>
 
@@ -120,19 +98,6 @@ export default function App() {
       </div>
 
       <BottomNav active={tab} onChange={setTab} />
-
-      {/* Profile overlay (slide-in from right) */}
-      <ProfileOverlay
-        open={profileOpen}
-        onClose={handleProfileClose}
-        isLoggedIn={isLoggedIn}
-        needsOnboard={needsOnboard}
-        profile={profile}
-        onSendMagicLink={sendMagicLink}
-        onCompleteOnboard={createProfile}
-        onSignOut={signOut}
-        onBrowseAsGuest={handleBrowseAsGuest}
-      />
     </div>
   );
 }

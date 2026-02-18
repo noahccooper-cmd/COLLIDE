@@ -17,9 +17,11 @@ export function PortalPage({ initialCode, onExit }: PortalPageProps) {
     error,
     lastAction,
     savedCode,
+    endSummary,
     lookupVenueByCode,
     handleEnter,
     handleExit,
+    updateSpecial,
     endNight,
     disconnect,
   } = usePortal();
@@ -64,9 +66,11 @@ export function PortalPage({ initialCode, onExit }: PortalPageProps) {
       venue={venue}
       headcount={headcount}
       lastAction={lastAction}
+      endSummary={endSummary}
       onEnter={handleEnter}
       onExit={handleExit}
       onEndNight={endNight}
+      onUpdateSpecial={updateSpecial}
       onDisconnect={handleDisconnect}
     />
   );

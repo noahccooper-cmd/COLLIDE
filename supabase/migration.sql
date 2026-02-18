@@ -190,6 +190,19 @@ CREATE POLICY "auth_insert_vc" ON venue_comments FOR INSERT WITH CHECK (true);
 ALTER PUBLICATION supabase_realtime ADD TABLE venue_comments;
 
 -- ============================================
+-- Specials columns on venues
+-- ============================================
+
+ALTER TABLE venues ADD COLUMN IF NOT EXISTS tonight_special TEXT DEFAULT NULL;
+ALTER TABLE venues ADD COLUMN IF NOT EXISTS special_updated_at TIMESTAMPTZ DEFAULT NULL;
+
+-- ============================================
+-- Ensure all tables in realtime publication
+-- ============================================
+
+DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE venues; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ============================================
 -- Replace Knoxville venue data with 5 real bars
 -- ============================================
 
