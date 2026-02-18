@@ -3,7 +3,7 @@ import { supabase, envReady } from '../lib/supabase';
 import { getNightOf } from '../lib/utils';
 import type { Venue, Headcount } from '../lib/types';
 
-const COOLDOWN_MS = 200;
+const COOLDOWN_MS = 150;
 const PORTAL_CODE_KEY = 'venue_portal_code';
 
 export function usePortal() {

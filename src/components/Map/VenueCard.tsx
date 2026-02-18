@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Send } from 'lucide-react';
+import { X, ArrowLeft, Send } from 'lucide-react';
 import { formatCount, getCapacityPercent, getCapacityColor, timeAgo, getCommentDay } from '../../lib/utils';
 import { supabase, envReady } from '../../lib/supabase';
 import { useVenueComments } from '../../hooks/useVenueComments';
@@ -100,17 +100,17 @@ function CommentPreview({ venue, onExpand }: { venue: Venue; onExpand: () => voi
   }, [venue.id]);
 
   return (
-    <div className="comment-preview" onClick={onExpand}>
-      <div className="comment-preview-header">
-        <span className="comment-preview-label">
+    <div className="card-comments" onClick={onExpand}>
+      <div className="card-comments-row">
+        <span className="card-comments-label">
           {commentCount > 0 ? `${commentCount} comments tonight` : 'No comments yet'}
         </span>
-        {commentCount > 0 && <span className="comment-preview-more">See all &#9656;</span>}
+        {commentCount > 0 && <span className="card-comments-more">See all &#9656;</span>}
       </div>
       {latestComment && (
-        <div className="comment-preview-latest">
-          <span className="comment-preview-user">@{latestComment.username}:</span>
-          <span className="comment-preview-body">{latestComment.body}</span>
+        <div className="card-comments-preview">
+          <span className="card-comments-user">@{latestComment.username}: </span>
+          {latestComment.body}
         </div>
       )}
     </div>
@@ -159,7 +159,6 @@ function ExpandedComments({
         <span className="expanded-count">{comments.length}</span>
       </div>
 
-      {/* Input */}
       <div className="expanded-input-row">
         <input
           value={commentText}
@@ -178,7 +177,6 @@ function ExpandedComments({
         </button>
       </div>
 
-      {/* Comment list */}
       <div className="expanded-list">
         {comments.length === 0 ? (
           <p className="expanded-empty">
@@ -217,7 +215,6 @@ export function VenueCard({
   const [expanded, setExpanded] = useState(false);
   const [dismissing, setDismissing] = useState(false);
   const touchStartY = useRef<number | null>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
 
   const isCheckedInHere = userCheckinVenueId === venue.id;
   const isCheckedInElsewhere = userCheckinVenueId !== null && userCheckinVenueId !== venue.id;
@@ -254,23 +251,26 @@ export function VenueCard({
     touchStartY.current = null;
   };
 
-  // Reset expanded when venue changes
   useEffect(() => {
     setExpanded(false);
     setDismissing(false);
   }, [venue.id]);
 
   return (
-    <div className="venue-card-container">
+    <div className="venue-card-wrap">
       <div
-        ref={cardRef}
         className={`venue-card${expanded ? ' expanded' : ''}${dismissing ? ' dismissing' : ''}`}
         onClick={e => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Handle */}
-        <div className="card-handle" />
+        {/* Handle + close */}
+        <div className="card-handle-row">
+          <div className="card-handle" />
+          <button className="card-close" onClick={dismiss}>
+            <X size={14} strokeWidth={2} />
+          </button>
+        </div>
 
         {expanded ? (
           <ExpandedComments
@@ -290,15 +290,16 @@ export function VenueCard({
                 <div className="card-name-row">
                   <h3 className="card-name">{venue.name}</h3>
                   {venue.rating && (
-                    <span className="card-rating">{'\u2605'} {venue.rating}</span>
+                    <span className="card-rating">
+                      {'\u2605'} {venue.rating}
+                      {venue.review_count ? <span className="card-rating-count">({venue.review_count})</span> : null}
+                    </span>
                   )}
                 </div>
                 {venue.address && <p className="card-address">{venue.address}</p>}
                 <div className="card-meta">
                   {venue.hours && <span>{venue.hours}</span>}
-                  {venue.phone && (
-                    <a href={`tel:${venue.phone}`}>{venue.phone}</a>
-                  )}
+                  {venue.phone && <a href={`tel:${venue.phone}`}>{venue.phone}</a>}
                 </div>
               </div>
             </div>
@@ -306,15 +307,12 @@ export function VenueCard({
             {/* Live count section */}
             <LiveCountCompact headcount={headcount} venue={venue} />
 
-            {/* Check-in button */}
+            {/* I'M GOING button */}
             <button
               onClick={handleAction}
               disabled={isCheckedInHere}
-              className="card-checkin-btn"
-              style={{
-                background: isCheckedInHere ? '#00E676' : 'linear-gradient(135deg, #FF5E1A, #FF2D05)',
-                opacity: isCheckedInHere ? 0.9 : 1,
-              }}
+              className={`card-go-btn${isCheckedInHere ? ' checked' : ''}`}
+              style={!isCheckedInHere ? {} : { opacity: 0.9 }}
             >
               {isCheckedInHere
                 ? "YOU'RE GOING \u2713"

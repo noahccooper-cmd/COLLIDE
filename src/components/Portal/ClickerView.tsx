@@ -46,7 +46,7 @@ export function ClickerView({
   const handleEnter = useCallback(async (n = 1) => {
     setFlashClass('clicker-flash-enter');
     setBumpKey(prev => prev + 1);
-    if (navigator.vibrate) navigator.vibrate(50);
+    if (navigator.vibrate) navigator.vibrate(40);
     setTimeout(() => setFlashClass(''), 400);
     await onEnter(n);
   }, [onEnter]);
@@ -54,7 +54,7 @@ export function ClickerView({
   const handleExit = useCallback(async (n = 1) => {
     setFlashClass('clicker-flash-exit');
     setBumpKey(prev => prev + 1);
-    if (navigator.vibrate) navigator.vibrate(50);
+    if (navigator.vibrate) navigator.vibrate(40);
     setTimeout(() => setFlashClass(''), 400);
     await onExit(n);
   }, [onExit]);
@@ -158,30 +158,20 @@ export function ClickerView({
           </button>
         </div>
 
-        {/* Adjust row + last action */}
-        <div className="flex gap-3 mt-3">
-          <button
-            onClick={() => handleExit(5)}
-            className="flex-1 h-12 rounded-xl bg-[#111114] border border-[#2A2A30] flex items-center justify-center gap-1 text-[#8A8A95] font-bold text-sm active:scale-[0.97] transition-transform"
-            style={{ fontFamily: 'Satoshi, sans-serif' }}
-          >
-            <Minus size={14} strokeWidth={2} /> 5
-          </button>
-          <div className="flex-1 flex items-center justify-center">
-            {lastAction ? (
-              <p className="text-[#55555F] text-xs text-center" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-                Last: {lastAction.type} {formatTime(lastAction.time)}
-              </p>
-            ) : null}
-          </div>
-          <button
-            onClick={() => handleEnter(5)}
-            className="flex-1 h-12 rounded-xl bg-[#111114] border border-[#2A2A30] flex items-center justify-center gap-1 text-[#8A8A95] font-bold text-sm active:scale-[0.97] transition-transform"
-            style={{ fontFamily: 'Satoshi, sans-serif' }}
-          >
-            <Plus size={14} strokeWidth={2} /> 5
-          </button>
+        {/* Bulk buttons */}
+        <div className="clicker-bulk-row">
+          <button onClick={() => handleExit(5)} className="clicker-bulk minus">-5</button>
+          <button onClick={() => handleExit(2)} className="clicker-bulk minus">-2</button>
+          <button onClick={() => handleEnter(2)} className="clicker-bulk plus">+2</button>
+          <button onClick={() => handleEnter(5)} className="clicker-bulk plus">+5</button>
         </div>
+
+        {/* Last action */}
+        {lastAction && (
+          <p className="text-[#55555F] text-xs text-center mt-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            Last: {lastAction.type} at {formatTime(lastAction.time)}
+          </p>
+        )}
 
         {/* End Night */}
         <div className="mt-4 mb-2" style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>

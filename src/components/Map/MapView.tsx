@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState, type MutableRefObject } from 
 import mapboxgl from 'mapbox-gl';
 import { CITIES, MAPBOX_STYLE, type CityKey } from '../../lib/constants';
 import { mapboxToken, mapboxReady } from '../../lib/supabase';
-import { getDotClass, getShortName, formatCount } from '../../lib/utils';
+import { getDotTier, getShortName, formatCount } from '../../lib/utils';
 import type { Venue } from '../../lib/types';
 
 interface MarkerEntry {
@@ -12,7 +12,7 @@ interface MarkerEntry {
   countEl: HTMLSpanElement;
   labelEl: HTMLDivElement;
   liveEl: HTMLDivElement;
-  currentDotClass: string;
+  currentTier: string;
   currentCount: number;
 }
 
@@ -28,12 +28,32 @@ interface MapViewProps {
   mapInstanceRef?: MutableRefObject<mapboxgl.Map | null>;
 }
 
+const HEATMAP_SOURCE = 'venue-heat';
+const HEATMAP_LAYER = 'venue-heatmap';
+
 export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId, pulsedVenueId, onVenueClick, onMapTap, mapInstanceRef }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
   const [mapLoaded, setMapLoaded] = useState(false);
   const initialCityRef = useRef(city);
+  const venuesRef = useRef(venues);
+  const countsRef = useRef(counts);
+  venuesRef.current = venues;
+  countsRef.current = counts;
+
+  // Build GeoJSON from current venues + counts
+  const buildHeatGeoJSON = useCallback((): GeoJSON.FeatureCollection => ({
+    type: 'FeatureCollection',
+    features: venuesRef.current.map(v => ({
+      type: 'Feature' as const,
+      geometry: { type: 'Point' as const, coordinates: [v.lng, v.lat] },
+      properties: {
+        count: countsRef.current[v.id] || 0,
+        intensity: Math.min((countsRef.current[v.id] || 0) / 100, 1),
+      },
+    })),
+  }), []);
 
   // Initialize map once
   useEffect(() => {
@@ -79,6 +99,57 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
     map.on('zoom', updateMarkerVisibility);
 
     map.on('load', () => {
+      // Add heatmap source + layer
+      map.addSource(HEATMAP_SOURCE, {
+        type: 'geojson',
+        data: buildHeatGeoJSON(),
+      });
+
+      map.addLayer({
+        id: HEATMAP_LAYER,
+        type: 'heatmap',
+        source: HEATMAP_SOURCE,
+        paint: {
+          'heatmap-radius': [
+            'interpolate', ['linear'], ['get', 'count'],
+            0, 0,
+            10, 30,
+            50, 60,
+            100, 90,
+            200, 130,
+            300, 170,
+          ],
+          'heatmap-weight': [
+            'interpolate', ['linear'], ['get', 'count'],
+            0, 0,
+            10, 0.3,
+            50, 0.5,
+            100, 0.7,
+            200, 0.9,
+            300, 1,
+          ],
+          'heatmap-intensity': 0.6,
+          'heatmap-color': [
+            'interpolate', ['linear'], ['heatmap-density'],
+            0, 'rgba(0, 0, 0, 0)',
+            0.1, 'rgba(40, 120, 50, 0.15)',
+            0.25, 'rgba(80, 180, 60, 0.25)',
+            0.4, 'rgba(200, 190, 40, 0.35)',
+            0.55, 'rgba(240, 160, 30, 0.4)',
+            0.7, 'rgba(255, 94, 26, 0.45)',
+            0.85, 'rgba(240, 50, 15, 0.5)',
+            1.0, 'rgba(200, 20, 5, 0.55)',
+          ],
+          'heatmap-opacity': [
+            'interpolate', ['linear'], ['zoom'],
+            11, 0,
+            12.5, 0.7,
+            15, 0.5,
+            18, 0.3,
+          ],
+        },
+      });
+
       setMapLoaded(true);
       updateMarkerVisibility();
     });
@@ -149,7 +220,7 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
       el.className = 'venue-marker';
 
       const dotEl = document.createElement('div');
-      dotEl.className = 'venue-dot dot-empty';
+      dotEl.className = 'venue-dot dot-t0';
       dotEl.setAttribute('data-venue-id', venue.id);
 
       const countEl = document.createElement('span');
@@ -162,7 +233,7 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
 
       const liveEl = document.createElement('div');
       liveEl.className = 'venue-live-badge';
-      liveEl.innerHTML = '<span class="venue-live-dot"></span><span class="venue-live-text">LIVE</span>';
+      liveEl.innerHTML = '<span class="blink"></span>LIVE';
       liveEl.style.display = 'none';
 
       el.appendChild(dotEl);
@@ -170,7 +241,7 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
       el.appendChild(liveEl);
 
       el.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent map click from firing
+        e.stopPropagation();
         onVenueClick(venue);
       });
 
@@ -185,7 +256,7 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
         countEl,
         labelEl,
         liveEl,
-        currentDotClass: 'dot-empty',
+        currentTier: 'dot-t0',
         currentCount: 0,
       });
     });
@@ -195,20 +266,20 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
     syncMarkers();
   }, [syncMarkers]);
 
-  // Update marker visuals when counts/live status change
+  // Update marker visuals + heatmap when counts/live status change
   useEffect(() => {
     markersRef.current.forEach((entry, venueId) => {
       const count = counts[venueId] ?? 0;
       const isLive = liveVenueIds.has(venueId);
       const isCheckedIn = userCheckinVenueId === venueId;
       const isPulsed = pulsedVenueId === venueId;
-      const newDotClass = getDotClass(count);
+      const newTier = getDotTier(count);
 
       // Update dot class if changed
-      if (newDotClass !== entry.currentDotClass) {
-        entry.dotEl.classList.remove(entry.currentDotClass);
-        entry.dotEl.classList.add(newDotClass);
-        entry.currentDotClass = newDotClass;
+      if (newTier !== entry.currentTier) {
+        entry.dotEl.classList.remove(entry.currentTier);
+        entry.dotEl.classList.add(newTier);
+        entry.currentTier = newTier;
       }
 
       // Update count text
@@ -243,7 +314,15 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
         setTimeout(() => entry.dotEl.classList.remove('count-updated'), 500);
       }
     });
-  }, [counts, liveVenueIds, userCheckinVenueId, pulsedVenueId]);
+
+    // Update heatmap data
+    if (mapRef.current && mapLoaded) {
+      const source = mapRef.current.getSource(HEATMAP_SOURCE) as mapboxgl.GeoJSONSource | undefined;
+      if (source) {
+        source.setData(buildHeatGeoJSON());
+      }
+    }
+  }, [counts, liveVenueIds, userCheckinVenueId, pulsedVenueId, mapLoaded, buildHeatGeoJSON]);
 
   if (!mapboxReady) {
     return (

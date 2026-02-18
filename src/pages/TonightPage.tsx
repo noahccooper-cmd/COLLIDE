@@ -57,12 +57,16 @@ export function TonightPage({
 
   const handleVenueClick = useCallback((venue: Venue) => {
     setSelectedVenue(venue);
-    // Offset map so venue dot is visible above the card
+    // Offset map so venue dot sits in the visible portion above the card
     if (mapInstanceRef.current) {
-      const offsetLat = venue.lat - 0.003;
-      mapInstanceRef.current.flyTo({
+      const map = mapInstanceRef.current;
+      const bounds = map.getBounds();
+      const latSpan = bounds.getNorth() - bounds.getSouth();
+      // Card occupies ~40% of map area from bottom; push dot into top 55%
+      const offsetLat = venue.lat - latSpan * 0.22;
+      map.flyTo({
         center: [venue.lng, offsetLat],
-        zoom: 15,
+        zoom: Math.max(map.getZoom(), 14.5),
         duration: 400,
         essential: true,
       });

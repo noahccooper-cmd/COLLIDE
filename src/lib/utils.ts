@@ -22,13 +22,13 @@ export function formatCount(count: number): string {
   return count.toString();
 }
 
-export function getDotClass(count: number): string {
-  if (count === 0) return 'dot-empty';
-  if (count <= 15) return 'dot-quiet';
-  if (count <= 50) return 'dot-warm';
-  if (count <= 100) return 'dot-busy';
-  if (count <= 200) return 'dot-packed';
-  return 'dot-fire';
+export function getDotTier(count: number): string {
+  if (count === 0) return 'dot-t0';
+  if (count <= 20) return 'dot-t1';
+  if (count <= 60) return 'dot-t2';
+  if (count <= 120) return 'dot-t3';
+  if (count <= 200) return 'dot-t4';
+  return 'dot-t5';
 }
 
 export function getShortName(name: string): string {
