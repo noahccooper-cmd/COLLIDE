@@ -1,6 +1,6 @@
-import { MapPin, MessageCircle, User } from 'lucide-react';
+import { MapPin, Radio } from 'lucide-react';
 
-export type Tab = 'tonight' | 'chat' | 'profile';
+export type Tab = 'tonight' | 'portal';
 
 interface BottomNavProps {
   active: Tab;
@@ -9,8 +9,7 @@ interface BottomNavProps {
 
 const tabs: { key: Tab; label: string; icon: typeof MapPin }[] = [
   { key: 'tonight', label: 'Tonight', icon: MapPin },
-  { key: 'chat', label: 'Chat', icon: MessageCircle },
-  { key: 'profile', label: 'Profile', icon: User },
+  { key: 'portal', label: 'Portal', icon: Radio },
 ];
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
@@ -23,7 +22,7 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
           <button
             key={key}
             onClick={() => onChange(key)}
-            className="flex flex-col items-center gap-0.5 py-2 px-6 min-w-[72px]"
+            className="flex-1 flex flex-col items-center gap-0.5 py-2"
           >
             <Icon
               size={22}

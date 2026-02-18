@@ -22,12 +22,27 @@ export function formatCount(count: number): string {
   return count.toString();
 }
 
-export function getVenueTier(count: number): string {
-  if (count === 0) return 'tier-empty';
-  if (count < 25) return 'tier-quiet';
-  if (count < 75) return 'tier-warming';
-  if (count < 150) return 'tier-hot';
-  return 'tier-packed';
+export function getDotClass(count: number): string {
+  if (count === 0) return 'dot-empty';
+  if (count <= 15) return 'dot-quiet';
+  if (count <= 50) return 'dot-warm';
+  if (count <= 100) return 'dot-busy';
+  if (count <= 200) return 'dot-packed';
+  return 'dot-fire';
+}
+
+export function getShortName(name: string): string {
+  return name.replace(/\s*(Bar\s*&?\s*Grill|Bar\s*and\s*Grill|Restaurant)\s*$/i, '').trim();
+}
+
+export function getCommentDay(): string {
+  const now = new Date();
+  if (now.getHours() < 12) {
+    const y = new Date(now);
+    y.setDate(y.getDate() - 1);
+    return y.toISOString().split('T')[0];
+  }
+  return now.toISOString().split('T')[0];
 }
 
 export function getInitials(username: string): string {

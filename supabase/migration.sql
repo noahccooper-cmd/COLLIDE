@@ -168,6 +168,28 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ============================================
+-- venue_comments table (per-venue, noon-to-noon cycle)
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS venue_comments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  venue_id UUID NOT NULL REFERENCES venues(id) ON DELETE CASCADE,
+  user_id UUID,
+  username VARCHAR(30) NOT NULL,
+  body TEXT NOT NULL CHECK (char_length(body) <= 200),
+  day_of DATE NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_vc_venue_day ON venue_comments(venue_id, day_of, created_at DESC);
+
+ALTER TABLE venue_comments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_read_vc" ON venue_comments FOR SELECT USING (true);
+CREATE POLICY "auth_insert_vc" ON venue_comments FOR INSERT WITH CHECK (true);
+
+ALTER PUBLICATION supabase_realtime ADD TABLE venue_comments;
+
+-- ============================================
 -- Replace Knoxville venue data with 5 real bars
 -- ============================================
 

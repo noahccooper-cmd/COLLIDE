@@ -5,23 +5,20 @@ import { useAuth } from './hooks/useAuth';
 import { useVenues } from './hooks/useVenues';
 import { useCheckins } from './hooks/useCheckins';
 import { useHeadcounts } from './hooks/useHeadcounts';
-import { useChat } from './hooks/useChat';
 import { Header } from './components/Layout/Header';
 import { BottomNav, type Tab } from './components/Layout/BottomNav';
 import { TonightPage } from './pages/TonightPage';
-import { ChatPage } from './pages/ChatPage';
-import { ProfilePage } from './pages/ProfilePage';
 import { PortalPage } from './pages/PortalPage';
+import { ProfileOverlay } from './components/Profile/ProfileOverlay';
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('tonight');
-  const [portalMode, setPortalMode] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const { city, switchCity } = useCity();
   const { user, profile, loading: authLoading, needsOnboard, sendMagicLink, createProfile, signOut } = useAuth();
   const { venues } = useVenues(city);
   const { counts, totalCount, userCheckinVenueId, pulsedVenueId: checkinPulsedId, checkIn } = useCheckins(city, profile?.id);
   const { headcounts, pulsedVenueId: headcountPulsedId } = useHeadcounts(city);
-  const { messages, loading: chatLoading, sendMessage } = useChat(city);
 
   const isLoggedIn = !!user && !authLoading;
 
@@ -49,27 +46,23 @@ export default function App() {
   const displayTotalCount = Object.keys(headcounts).length > 0 ? mergedTotalCount : totalCount;
 
   const handleLoginRequired = useCallback(() => {
-    setTab('profile');
+    setProfileOpen(true);
   }, []);
 
   const handleCheckIn = useCallback(async (venueId: string) => {
     return checkIn(venueId);
   }, [checkIn]);
 
-  const handleSendChat = useCallback(async (body: string) => {
-    if (!profile) return;
-    await sendMessage(profile.id, profile.username, body);
-  }, [profile, sendMessage]);
-
-  const handleOpenPortal = useCallback(() => {
-    setPortalMode(true);
+  const handleProfileTap = useCallback(() => {
+    setProfileOpen(true);
   }, []);
 
-  const handleExitPortal = useCallback(() => {
-    setPortalMode(false);
+  const handleProfileClose = useCallback(() => {
+    setProfileOpen(false);
   }, []);
 
   const handleBrowseAsGuest = useCallback(() => {
+    setProfileOpen(false);
     setTab('tonight');
   }, []);
 
@@ -100,19 +93,11 @@ export default function App() {
     );
   }
 
-  // Portal mode — fullscreen, no header/nav
-  if (portalMode) {
-    return (
-      <div className="min-h-screen bg-[#050507] relative">
-        <PortalPage onExit={handleExitPortal} />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#050507] relative">
-      <Header city={city} onCityChange={switchCity} totalCount={displayTotalCount} />
+      <Header city={city} onCityChange={switchCity} totalCount={displayTotalCount} onProfileTap={handleProfileTap} />
 
+      {/* Tonight tab — map + venue sheets */}
       <div className={tab === 'tonight' ? '' : 'hidden'}>
         <TonightPage
           city={city}
@@ -122,38 +107,32 @@ export default function App() {
           userCheckinVenueId={userCheckinVenueId}
           pulsedVenueId={pulsedVenueId}
           isLoggedIn={isLoggedIn}
+          userId={profile?.id ?? null}
+          username={profile?.username ?? null}
           onCheckIn={handleCheckIn}
           onLoginRequired={handleLoginRequired}
         />
       </div>
 
-      <div className={tab === 'chat' ? '' : 'hidden'}>
-        <ChatPage
-          city={city}
-          messages={messages}
-          loading={chatLoading}
-          userId={profile?.id}
-          username={profile?.username}
-          isLoggedIn={isLoggedIn}
-          onSend={handleSendChat}
-          onLoginRequired={handleLoginRequired}
-        />
-      </div>
-
-      <div className={tab === 'profile' ? '' : 'hidden'}>
-        <ProfilePage
-          isLoggedIn={isLoggedIn}
-          needsOnboard={needsOnboard}
-          profile={profile}
-          onSendMagicLink={sendMagicLink}
-          onCompleteOnboard={createProfile}
-          onSignOut={signOut}
-          onOpenPortal={handleOpenPortal}
-          onBrowseAsGuest={handleBrowseAsGuest}
-        />
+      {/* Portal tab — fullscreen clicker */}
+      <div className={tab === 'portal' ? '' : 'hidden'}>
+        <PortalPage onExit={() => setTab('tonight')} />
       </div>
 
       <BottomNav active={tab} onChange={setTab} />
+
+      {/* Profile overlay (slide-in from right) */}
+      <ProfileOverlay
+        open={profileOpen}
+        onClose={handleProfileClose}
+        isLoggedIn={isLoggedIn}
+        needsOnboard={needsOnboard}
+        profile={profile}
+        onSendMagicLink={sendMagicLink}
+        onCompleteOnboard={createProfile}
+        onSignOut={signOut}
+        onBrowseAsGuest={handleBrowseAsGuest}
+      />
     </div>
   );
 }

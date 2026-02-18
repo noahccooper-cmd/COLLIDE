@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { CITIES, MAPBOX_STYLE, type CityKey } from '../../lib/constants';
 import { mapboxToken, mapboxReady } from '../../lib/supabase';
-import { getVenueTier, formatCount } from '../../lib/utils';
+import { getDotClass, getShortName, formatCount } from '../../lib/utils';
 import type { Venue } from '../../lib/types';
 
 interface MarkerEntry {
@@ -12,7 +12,7 @@ interface MarkerEntry {
   countEl: HTMLSpanElement;
   labelEl: HTMLDivElement;
   liveEl: HTMLDivElement;
-  currentTier: string;
+  currentDotClass: string;
   currentCount: number;
 }
 
@@ -47,7 +47,7 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
       zoom: config.zoom,
       bearing: 0,
       pitch: 0,
-      minZoom: 10,
+      minZoom: 2,
       maxZoom: 18,
       attributionControl: false,
     });
@@ -55,8 +55,30 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
     map.dragRotate.disable();
     map.touchZoomRotate.disableRotation();
 
+    // Zoom-aware marker fade
+    const updateMarkerVisibility = () => {
+      const zoom = map.getZoom();
+      document.querySelectorAll('.venue-marker').forEach(node => {
+        const el = node as HTMLElement;
+        if (zoom >= 12.5) {
+          el.style.opacity = '1';
+          el.style.pointerEvents = 'auto';
+        } else if (zoom >= 11) {
+          const fade = (zoom - 11) / 1.5;
+          el.style.opacity = String(Math.max(0, Math.min(1, fade)));
+          el.style.pointerEvents = fade > 0.5 ? 'auto' : 'none';
+        } else {
+          el.style.opacity = '0';
+          el.style.pointerEvents = 'none';
+        }
+      });
+    };
+
+    map.on('zoom', updateMarkerVisibility);
+
     map.on('load', () => {
       setMapLoaded(true);
+      updateMarkerVisibility();
     });
 
     mapRef.current = map;
@@ -104,7 +126,7 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
       el.className = 'venue-marker';
 
       const dotEl = document.createElement('div');
-      dotEl.className = 'venue-dot tier-empty';
+      dotEl.className = 'venue-dot dot-empty';
       dotEl.setAttribute('data-venue-id', venue.id);
 
       const countEl = document.createElement('span');
@@ -113,7 +135,7 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
 
       const labelEl = document.createElement('div');
       labelEl.className = 'venue-label';
-      labelEl.textContent = venue.name;
+      labelEl.textContent = getShortName(venue.name);
 
       const liveEl = document.createElement('div');
       liveEl.className = 'venue-live-badge';
@@ -124,7 +146,15 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
       el.appendChild(labelEl);
       el.appendChild(liveEl);
 
-      el.addEventListener('click', () => onVenueClick(venue));
+      el.addEventListener('click', () => {
+        // Pan map to center on venue, then open sheet
+        mapRef.current?.flyTo({
+          center: [venue.lng, venue.lat],
+          duration: 400,
+          essential: true,
+        });
+        onVenueClick(venue);
+      });
 
       const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
         .setLngLat([venue.lng, venue.lat])
@@ -137,7 +167,7 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
         countEl,
         labelEl,
         liveEl,
-        currentTier: 'tier-empty',
+        currentDotClass: 'dot-empty',
         currentCount: 0,
       });
     });
@@ -154,21 +184,19 @@ export function MapView({ city, venues, counts, liveVenueIds, userCheckinVenueId
       const isLive = liveVenueIds.has(venueId);
       const isCheckedIn = userCheckinVenueId === venueId;
       const isPulsed = pulsedVenueId === venueId;
-      const newTier = getVenueTier(count);
+      const newDotClass = getDotClass(count);
 
-      // Update tier class if changed
-      if (newTier !== entry.currentTier) {
-        entry.dotEl.classList.remove(entry.currentTier);
-        entry.dotEl.classList.add(newTier);
-        entry.currentTier = newTier;
+      // Update dot class if changed
+      if (newDotClass !== entry.currentDotClass) {
+        entry.dotEl.classList.remove(entry.currentDotClass);
+        entry.dotEl.classList.add(newDotClass);
+        entry.currentDotClass = newDotClass;
       }
 
       // Update count text
       if (count !== entry.currentCount) {
         entry.countEl.textContent = count > 0 ? formatCount(count) : '';
-        // Add bump animation
         entry.countEl.classList.remove('bumping');
-        // Force reflow
         void entry.countEl.offsetWidth;
         entry.countEl.classList.add('bumping');
         entry.currentCount = count;

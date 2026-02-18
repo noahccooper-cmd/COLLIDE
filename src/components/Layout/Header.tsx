@@ -1,3 +1,4 @@
+import { User } from 'lucide-react';
 import { formatNightDate } from '../../lib/utils';
 import { CITIES, type CityKey } from '../../lib/constants';
 import { CityToggle } from './CityToggle';
@@ -6,9 +7,10 @@ interface HeaderProps {
   city: CityKey;
   onCityChange: (city: CityKey) => void;
   totalCount: number;
+  onProfileTap: () => void;
 }
 
-export function Header({ city, onCityChange, totalCount }: HeaderProps) {
+export function Header({ city, onCityChange, totalCount, onProfileTap }: HeaderProps) {
   const config = CITIES[city];
   const nightDate = formatNightDate();
   const showFire = totalCount > 50;
@@ -22,7 +24,15 @@ export function Header({ city, onCityChange, totalCount }: HeaderProps) {
             style={{ fontFamily: 'Satoshi, sans-serif', textShadow: '0 0 20px rgba(255, 94, 26, 0.3)' }}>
             ven<span className="text-[#FF5E1A]" style={{ fontSize: '24px' }}>U</span>e
           </h1>
-          <CityToggle city={city} onChange={onCityChange} />
+          <div className="flex items-center gap-2">
+            <CityToggle city={city} onChange={onCityChange} />
+            <button
+              onClick={onProfileTap}
+              className="w-9 h-9 rounded-full bg-[#111114] border border-[#2A2A30] flex items-center justify-center text-[#8A8A95] hover:text-white transition-colors"
+            >
+              <User size={16} strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-1.5 text-[#8A8A95] text-sm" style={{ fontFamily: 'Satoshi, sans-serif' }}>
           <span className="font-medium">Tonight</span>
@@ -30,7 +40,7 @@ export function Header({ city, onCityChange, totalCount }: HeaderProps) {
           <span>{nightDate}</span>
         </div>
         <div className="text-white font-bold text-lg" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-          {showFire && <span className="mr-1">🔥</span>}
+          {showFire && <span className="mr-1">{'\uD83D\uDD25'}</span>}
           {config.countLabel(totalCount)}
         </div>
       </div>

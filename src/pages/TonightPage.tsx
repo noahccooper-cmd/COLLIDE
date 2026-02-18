@@ -12,6 +12,8 @@ interface TonightPageProps {
   userCheckinVenueId: string | null;
   pulsedVenueId: string | null;
   isLoggedIn: boolean;
+  userId: string | null;
+  username: string | null;
   onCheckIn: (venueId: string) => Promise<{ error: unknown }>;
   onLoginRequired: () => void;
 }
@@ -24,6 +26,8 @@ export function TonightPage({
   userCheckinVenueId,
   pulsedVenueId,
   isLoggedIn,
+  userId,
+  username,
   onCheckIn,
   onLoginRequired,
 }: TonightPageProps) {
@@ -84,6 +88,8 @@ export function TonightPage({
           headcount={headcounts[selectedVenue.id] ?? null}
           userCheckinVenueId={userCheckinVenueId}
           isLoggedIn={isLoggedIn}
+          userId={userId}
+          username={username}
           onCheckIn={handleCheckIn}
           onClose={handleClose}
           onLoginRequired={onLoginRequired}

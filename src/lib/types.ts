@@ -95,6 +95,16 @@ export interface VenueStaff {
   is_active: boolean;
 }
 
+export interface VenueComment {
+  id: string;
+  created_at: string;
+  venue_id: string;
+  user_id: string | null;
+  username: string;
+  body: string;
+  day_of: string;
+}
+
 export interface ClickerLog {
   id: string;
   created_at: string;
