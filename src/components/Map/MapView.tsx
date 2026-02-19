@@ -30,55 +30,6 @@ interface MapViewProps {
 const HEATMAP_SOURCE = 'venue-heat';
 const HEATMAP_LAYER = 'venue-heatmap';
 
-/* ── Power T Canvas Image (512px, crisp) ── */
-
-function createPowerTImage(): { width: number; height: number; data: Uint8Array } {
-  const size = 512;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-
-  function roundRect(x: number, y: number, w: number, h: number, r: number) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-  }
-
-  ctx.fillStyle = '#FF8200';
-
-  const topW = size * 0.85;
-  const topH = size * 0.28;
-  const topX = (size - topW) / 2;
-  const topY = size * 0.05;
-  roundRect(topX, topY, topW, topH, 16);
-  ctx.fill();
-
-  const vertW = size * 0.32;
-  const vertH = size * 0.65;
-  const vertX = (size - vertW) / 2;
-  const vertY = topY + topH - 4;
-  roundRect(vertX, vertY, vertW, vertH, 16);
-  ctx.fill();
-
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-  roundRect(topX + 6, topY + 6, topW - 12, topH * 0.4, 12);
-  ctx.fill();
-  roundRect(vertX + 6, vertY + 6, vertW - 12, vertH * 0.15, 12);
-  ctx.fill();
-
-  const imageData = ctx.getImageData(0, 0, size, size);
-  return { width: size, height: size, data: new Uint8Array(imageData.data.buffer) };
-}
-
 /* ── Neyland Stadium polygon for 3D tint ── */
 
 const NEYLAND_POLYGON = {
@@ -98,6 +49,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
+  const tMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const initialCityRef = useRef(city);
   const venuesRef = useRef(venues);
@@ -138,26 +90,49 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     map.dragRotate.disable();
     map.touchZoomRotate.disableRotation();
 
-    const updateMarkerVisibility = () => {
+    /* ── Zoom-aware visibility for ALL elements ── */
+    const updateZoomVisibility = () => {
       const zoom = map.getZoom();
+
+      // ── Venue dots: visible zoom >= 13, fade 12-13, hidden < 12 ──
       document.querySelectorAll('.venue-marker').forEach(node => {
         const el = node as HTMLElement;
-        if (zoom >= 12.5) {
+        if (zoom >= 13) {
           el.style.opacity = '1';
           el.style.pointerEvents = 'auto';
-        } else if (zoom >= 11) {
-          const fade = (zoom - 11) / 1.5;
+        } else if (zoom >= 12) {
+          const fade = (zoom - 12) / 1;
           el.style.opacity = String(Math.max(0, Math.min(1, fade)));
-          el.style.pointerEvents = fade > 0.5 ? 'auto' : 'none';
+          el.style.pointerEvents = fade > 0.3 ? 'auto' : 'none';
         } else {
           el.style.opacity = '0';
           el.style.pointerEvents = 'none';
         }
       });
+
+      // ── Power T marker: visible zoom 6-12.5, fade out 12.5-14, hidden otherwise ──
+      const tEl = document.querySelector('.power-t-marker') as HTMLElement | null;
+      if (tEl) {
+        if (zoom < 6) {
+          tEl.style.opacity = '0';
+          tEl.style.transform = 'scale(0.5)';
+        } else if (zoom >= 6 && zoom <= 12.5) {
+          tEl.style.opacity = '0.85';
+          tEl.style.transform = 'scale(1)';
+        } else if (zoom > 12.5 && zoom <= 14) {
+          const fade = 1 - ((zoom - 12.5) / 1.5);
+          tEl.style.opacity = String(Math.max(fade * 0.85, 0));
+          tEl.style.transform = `scale(${Math.max(fade, 0.5)})`;
+        } else {
+          tEl.style.opacity = '0';
+          tEl.style.transform = 'scale(0.5)';
+        }
+      }
     };
 
-    map.on('zoom', updateMarkerVisibility);
+    map.on('zoom', updateZoomVisibility);
 
+    // ── 3D pitch when zoomed way in ──
     map.on('zoom', () => {
       const zoom = map.getZoom();
       if (zoom >= 15.5) {
@@ -181,6 +156,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       }
 
       // ── Road Glow (composite source, real road geometry) ──
+      // Only visible zoom >= 12.5
       map.addLayer({
         id: 'road-glow',
         type: 'line',
@@ -189,9 +165,9 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         filter: ['in', 'class', 'primary', 'secondary', 'tertiary', 'street'],
         paint: {
           'line-color': 'rgba(255, 215, 140, 0.06)',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 6, 15, 30, 18, 60],
-          'line-blur': ['interpolate', ['linear'], ['zoom'], 12, 6, 15, 25, 18, 45],
-          'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.5, 16, 0.8],
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12.5, 6, 15, 30, 18, 60],
+          'line-blur': ['interpolate', ['linear'], ['zoom'], 12.5, 6, 15, 25, 18, 45],
+          'line-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, 0, 13, 0.5, 16, 0.8],
         },
       }, firstLabelLayer);
 
@@ -203,39 +179,11 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         filter: ['in', 'class', 'primary', 'secondary', 'tertiary', 'street'],
         paint: {
           'line-color': 'rgba(255, 200, 120, 0.12)',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2, 15, 8, 18, 16],
-          'line-blur': ['interpolate', ['linear'], ['zoom'], 12, 2, 15, 6, 18, 10],
-          'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.6, 16, 1],
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12.5, 2, 15, 8, 18, 16],
+          'line-blur': ['interpolate', ['linear'], ['zoom'], 12.5, 2, 15, 6, 18, 10],
+          'line-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, 0, 13, 0.6, 16, 1],
         },
       }, firstLabelLayer);
-
-      // ── Power T on UTK Campus (centered, bigger, 512px) ──
-      const tImage = createPowerTImage();
-      map.addImage('power-t', tImage, { sdf: false });
-
-      map.addSource('power-t-source', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: { type: 'Point', coordinates: [-83.9300, 35.9490] },
-          properties: {},
-        },
-      });
-
-      map.addLayer({
-        id: 'power-t-layer',
-        type: 'symbol',
-        source: 'power-t-source',
-        layout: {
-          'icon-image': 'power-t',
-          'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.5, 14, 1.0, 16, 1.5, 18, 2.2],
-          'icon-allow-overlap': true,
-          'icon-ignore-placement': true,
-        },
-        paint: {
-          'icon-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.12, 14, 0.22, 16, 0.30, 18, 0.35],
-        },
-      });
 
       // ── 3D Buildings with Neyland Orange Tint ──
       map.addLayer({
@@ -257,7 +205,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         },
       });
 
-      // ── Heatmap Layer ──
+      // ── Heatmap Layer — only visible zoom >= 12.5 ──
       map.addSource(HEATMAP_SOURCE, { type: 'geojson', data: buildHeatGeoJSON() });
 
       map.addLayer({
@@ -287,13 +235,26 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
           ],
           'heatmap-opacity': [
             'interpolate', ['linear'], ['zoom'],
-            11, 0, 12.5, 0.8, 15, 0.6, 18, 0.4,
+            12, 0, 12.5, 0, 13, 0.8, 15, 0.6, 18, 0.4,
           ],
         },
       });
 
+      // ── Power T — simple SVG marker (visible zoomed OUT, hidden zoomed IN) ──
+      const tEl = document.createElement('div');
+      tEl.className = 'power-t-marker';
+      tEl.innerHTML = `<svg width="40" height="40" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="4" width="52" height="16" rx="3" fill="#FF8200"/>
+        <rect x="22" y="18" width="20" height="42" rx="3" fill="#FF8200"/>
+      </svg>`;
+
+      const tMarker = new mapboxgl.Marker({ element: tEl, anchor: 'center' })
+        .setLngLat([-83.9300, 35.9544])
+        .addTo(map);
+      tMarkerRef.current = tMarker;
+
       setMapLoaded(true);
-      updateMarkerVisibility();
+      updateZoomVisibility();
     });
 
     mapRef.current = map;
@@ -302,6 +263,10 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     return () => {
       markersRef.current.forEach(entry => entry.marker.remove());
       markersRef.current.clear();
+      if (tMarkerRef.current) {
+        tMarkerRef.current.remove();
+        tMarkerRef.current = null;
+      }
       map.remove();
       mapRef.current = null;
       if (mapInstanceRef) mapInstanceRef.current = null;

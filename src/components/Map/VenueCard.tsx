@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { formatCount, getCapacityPercent, getCapacityColor, formatTime } from '../../lib/utils';
+import { formatCount, getCapacityPercent, formatTime } from '../../lib/utils';
 import { useVenueRecaps } from '../../hooks/useVenueRecaps';
 import type { Venue, Headcount } from '../../lib/types';
 
@@ -12,117 +12,47 @@ interface VenueSheetProps {
   onClose: () => void;
 }
 
-/* ── Bar Photo with LIVE Badge ───────── */
+/* ── Photo Placeholder (gradient, NOT brown rectangle) ── */
 
-function BarPhoto({ venue, isLive }: { venue: Venue; isLive: boolean }) {
+function PhotoPlaceholder({ venue }: { venue: Venue }) {
   const hash = venue.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   const hue = (hash * 47) % 360;
 
   return (
-    <div className="bar-photo-wrap">
-      {venue.image_url ? (
-        <img src={venue.image_url} className="bar-photo" alt={venue.name} />
-      ) : (
-        <div
-          className="bar-photo-placeholder"
-          style={{
-            background: `linear-gradient(135deg, hsl(${hue}, 40%, 18%) 0%, hsl(${(hue + 60) % 360}, 30%, 10%) 100%)`,
-          }}
-        >
-          <span className="bar-photo-initial">{venue.name.charAt(0)}</span>
-          <span className="bar-photo-name">{venue.name}</span>
-        </div>
-      )}
-      {isLive && (
-        <div className="photo-live-badge">
-          <span className="live-dot" /> LIVE
-        </div>
-      )}
+    <div
+      className="photo-placeholder"
+      style={{
+        background: `linear-gradient(135deg, hsl(${hue}, 35%, 15%) 0%, hsl(${(hue + 60) % 360}, 25%, 8%) 100%)`,
+      }}
+    >
+      <span className="placeholder-name">{venue.name}</span>
     </div>
   );
 }
 
-/* ── Live Count Section ──────────────── */
+/* ── Uber deep link ── */
 
-function LiveCountSection({ headcount, venue }: { headcount: Headcount | null; venue: Venue }) {
-  const isLive = headcount?.is_live ?? false;
-  const count = headcount?.current_count ?? 0;
-  const peak = headcount?.peak_count ?? 0;
-
-  if (!isLive) {
-    return (
-      <div className="live-compact empty">
-        <span className="live-no-data">No live count yet</span>
-      </div>
-    );
-  }
-
-  const pct = getCapacityPercent(count, venue.capacity);
-
-  return (
-    <div className="live-compact active">
-      <div className="live-row">
-        <span className="live-badge-sm">
-          <span className="live-blink" /> LIVE
-        </span>
-        <span className="live-count-num">{formatCount(count)}</span>
-        <span className="live-count-label">inside</span>
-        {peak > 0 && (
-          <span className="live-peak-label">Peak: {formatCount(peak)}</span>
-        )}
-      </div>
-      {pct !== null && (
-        <div className="live-bar-row">
-          <div className="live-bar">
-            <div className="live-bar-fill" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${getCapacityColor(pct)}, #FF2D05)` }} />
-          </div>
-          <span className="live-bar-pct">{pct}%</span>
-        </div>
-      )}
-    </div>
-  );
+function getUberUrl(venue: Venue): string {
+  const params = new URLSearchParams({
+    action: 'setPickup',
+    'dropoff[latitude]': String(venue.lat),
+    'dropoff[longitude]': String(venue.lng),
+    'dropoff[nickname]': venue.name,
+  });
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (isIOS) return `uber://?${params.toString()}`;
+  return `https://m.uber.com/ul/?${params.toString()}`;
 }
 
-/* ── Action Buttons: Uber, Call, Recap ── */
+/* ── Directions helper ── */
 
-function ActionButtons({ venue, onOpenRecap }: { venue: Venue; onOpenRecap: () => void }) {
-  const uberDeepLink = `uber://?action=setPickup&dropoff[latitude]=${venue.lat}&dropoff[longitude]=${venue.lng}&dropoff[nickname]=${encodeURIComponent(venue.name)}`;
-  const uberWebFallback = `https://m.uber.com/ul/?action=setPickup&dropoff[latitude]=${venue.lat}&dropoff[longitude]=${venue.lng}&dropoff[nickname]=${encodeURIComponent(venue.name)}`;
-
-  const handleUber = (e: React.MouseEvent) => {
-    e.preventDefault();
-    window.location.href = uberDeepLink;
-    setTimeout(() => {
-      window.location.href = uberWebFallback;
-    }, 500);
-  };
-
-  return (
-    <div className="action-row">
-      <a href={uberDeepLink} onClick={handleUber} className="action-btn">
-        <span className="action-icon">{'\uD83D\uDE97'}</span>
-        <span className="action-label">Uber</span>
-      </a>
-      {venue.phone ? (
-        <a href={`tel:${venue.phone}`} className="action-btn">
-          <span className="action-icon">{'\uD83D\uDCDE'}</span>
-          <span className="action-label">Call</span>
-        </a>
-      ) : (
-        <div className="action-btn disabled">
-          <span className="action-icon">{'\uD83D\uDCDE'}</span>
-          <span className="action-label">Call</span>
-        </div>
-      )}
-      <button onClick={onOpenRecap} className="action-btn">
-        <span className="action-icon">{'\u2B50'}</span>
-        <span className="action-label">Recap</span>
-      </button>
-    </div>
-  );
+function getDirectionsUrl(venue: Venue): string {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (isIOS) return `https://maps.apple.com/?daddr=${venue.lat},${venue.lng}&dirflg=w`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}&travelmode=walking`;
 }
 
-/* ── Specials Row (scrollable chips) ──── */
+/* ── Specials Row (scrollable chips) ── */
 
 function SpecialsRow({ venue }: { venue: Venue }) {
   if (!venue.tonight_special) return null;
@@ -141,17 +71,7 @@ function SpecialsRow({ venue }: { venue: Venue }) {
   );
 }
 
-/* ── Directions helper ──────────────── */
-
-function getDirectionsUrl(venue: Venue): string {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  if (isIOS) {
-    return `https://maps.apple.com/?daddr=${venue.lat},${venue.lng}&dirflg=w`;
-  }
-  return `https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}&travelmode=walking`;
-}
-
-/* ── Recap Card ──────────────────────── */
+/* ── Recap Card ── */
 
 function RecapCard({ recap, index }: { recap: any; index: number }) {
   return (
@@ -170,7 +90,7 @@ function RecapCard({ recap, index }: { recap: any; index: number }) {
   );
 }
 
-/* ── Leave a Recap ───────────────────── */
+/* ── Leave a Recap ── */
 
 function LeaveRecap({ venue, username, submitRecap }: { venue: Venue; username: string; submitRecap: (u: string, b: string, s: number) => Promise<void> }) {
   const [stars, setStars] = useState(0);
@@ -214,7 +134,7 @@ function LeaveRecap({ venue, username, submitRecap }: { venue: Venue; username: 
   );
 }
 
-/* ── Recap Section ───────────────────── */
+/* ── Recap Section ── */
 
 function RecapSection({ venue, username }: { venue: Venue; username: string }) {
   const { recaps, submitRecap } = useVenueRecaps(venue.id);
@@ -250,6 +170,9 @@ export function VenueSheet({
   const recapRef = useRef<HTMLDivElement>(null);
   const startY = useRef(0);
   const isLive = headcount?.is_live ?? false;
+  const count = headcount?.current_count ?? 0;
+  const peak = headcount?.peak_count ?? 0;
+  const pct = getCapacityPercent(count, venue.capacity);
 
   // Reset state when venue changes
   useEffect(() => {
@@ -269,6 +192,21 @@ export function VenueSheet({
     }, 400);
   }, []);
 
+  const handleUber = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const deepLink = getUberUrl(venue);
+    // On iOS, try native app first then fallback
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      window.location.href = deepLink;
+      setTimeout(() => {
+        window.location.href = `https://m.uber.com/ul/?action=setPickup&dropoff[latitude]=${venue.lat}&dropoff[longitude]=${venue.lng}&dropoff[nickname]=${encodeURIComponent(venue.name)}`;
+      }, 500);
+    } else {
+      window.open(deepLink, '_blank');
+    }
+  }, [venue]);
+
   // Swipe gesture handling
   const onTouchStart = (e: React.TouchEvent) => {
     startY.current = e.touches[0].clientY;
@@ -281,7 +219,6 @@ export function VenueSheet({
       if (diff > 50) setSheetState('expanded');
       else if (diff < -50) dismiss();
     } else if (sheetState === 'expanded') {
-      // Only collapse if scrolled to top
       if (diff < -50 && (sheetRef.current?.scrollTop ?? 0) < 5) {
         setSheetState('peeked');
       }
@@ -302,74 +239,134 @@ export function VenueSheet({
       {/* Close button (expanded only via CSS) */}
       <button className="sheet-close-btn" onClick={dismiss}>{'\u2715'}</button>
 
-      {/* Photo */}
-      <BarPhoto venue={venue} isLive={isLive} />
+      {/* ═══ PEEK CONTENT (always visible) ═══ */}
+      <div className="sheet-peek-content">
+        {/* Photo */}
+        <div className="sheet-photo-wrap">
+          {venue.image_url ? (
+            <img src={venue.image_url} className="sheet-photo" alt={venue.name} />
+          ) : (
+            <PhotoPlaceholder venue={venue} />
+          )}
+          {isLive && (
+            <div className="sheet-live-badge">
+              <span className="ld" /> LIVE
+            </div>
+          )}
+        </div>
 
-      {/* Info */}
-      <div className="sheet-info">
-        <div className="sheet-name-row">
-          <h2 className="sheet-name">{venue.name}</h2>
-          {venue.rating && (
-            <span className="sheet-rating">
-              {'\u2605'} {venue.rating}
-              {venue.review_count ? <span className="sheet-rating-count"> ({venue.review_count})</span> : null}
+        {/* Name + Rating */}
+        <div className="sheet-info">
+          <div className="sheet-name-row">
+            <h2 className="sheet-name">{venue.name}</h2>
+            {venue.rating && (
+              <span className="sheet-rating">
+                {'\u2605'} {venue.rating}
+                {venue.review_count ? <span className="sheet-rating-count"> ({venue.review_count})</span> : null}
+              </span>
+            )}
+          </div>
+          {venue.address && (
+            <a
+              href={getDirectionsUrl(venue)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sheet-address"
+            >
+              {'\uD83D\uDCCD'} {venue.address}
+            </a>
+          )}
+        </div>
+
+        {/* Live Count */}
+        {isLive ? (
+          <div className="sheet-live-section">
+            <div className="sheet-live-row">
+              <span className="sheet-live-pill"><span className="ld" /> LIVE</span>
+              <span className="sheet-live-count">{formatCount(count)}</span>
+              <span className="sheet-live-label">inside</span>
+              {peak > 0 && (
+                <span className="sheet-live-peak">Peak: {formatCount(peak)}</span>
+              )}
+            </div>
+            {pct !== null && (
+              <div className="sheet-bar-row">
+                <div className="sheet-bar">
+                  <div
+                    className="sheet-bar-fill"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <span className="sheet-bar-pct">{pct}%</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="sheet-live-section empty">
+            <span className="sheet-no-data">No live count yet</span>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="sheet-actions">
+          <a href={getUberUrl(venue)} onClick={handleUber} className="sheet-action-btn">
+            <span className="sa-icon">{'\uD83D\uDE97'}</span>
+            <span className="sa-label">Uber</span>
+          </a>
+          {venue.phone ? (
+            <a href={`tel:${venue.phone}`} className="sheet-action-btn">
+              <span className="sa-icon">{'\uD83D\uDCDE'}</span>
+              <span className="sa-label">Call</span>
+            </a>
+          ) : (
+            <div className="sheet-action-btn disabled">
+              <span className="sa-icon">{'\uD83D\uDCDE'}</span>
+              <span className="sa-label">Call</span>
+            </div>
+          )}
+          <button onClick={handleOpenRecap} className="sheet-action-btn">
+            <span className="sa-icon">{'\u2B50'}</span>
+            <span className="sa-label">Recap</span>
+          </button>
+        </div>
+
+        {sheetState === 'peeked' && (
+          <div className="swipe-hint">{'\u2191'} Swipe up for more</div>
+        )}
+      </div>
+
+      {/* ═══ EXPANDED CONTENT (hidden when peeked via CSS) ═══ */}
+      <div className="sheet-expanded-content">
+        {/* Description */}
+        {venue.description && (
+          <p className="sheet-description">{venue.description}</p>
+        )}
+
+        {/* Specials */}
+        <SpecialsRow venue={venue} />
+
+        {/* Hours / Website */}
+        <div className="sheet-meta">
+          {venue.hours && (
+            <span className="sheet-meta-item">{'\uD83D\uDD50'} {venue.hours}</span>
+          )}
+          {venue.website && (
+            <span className="sheet-meta-item">
+              {'\uD83C\uDF10'}{' '}
+              <a href={`https://${venue.website}`} target="_blank" rel="noopener noreferrer" className="sheet-meta-link">
+                {venue.website}
+              </a>
             </span>
           )}
         </div>
-        {venue.address && (
-          <a
-            href={getDirectionsUrl(venue)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="venue-address-link"
-          >
-            {'\uD83D\uDCCD'} {venue.address}
-          </a>
-        )}
-      </div>
 
-      {/* Live Count */}
-      <div className="sheet-section">
-        <LiveCountSection headcount={headcount} venue={venue} />
-      </div>
+        {/* Divider */}
+        <div className="sheet-divider" />
 
-      {/* Action Buttons */}
-      <ActionButtons venue={venue} onOpenRecap={handleOpenRecap} />
-
-      {/* Swipe hint (hidden when expanded via CSS) */}
-      <div className="swipe-hint">{'\u2191'} Swipe up for more</div>
-
-      {/* ─── Expanded content below ─── */}
-
-      {/* Description */}
-      {venue.description && (
-        <p className="sheet-description">{venue.description}</p>
-      )}
-
-      {/* Specials */}
-      <SpecialsRow venue={venue} />
-
-      {/* Hours / Website */}
-      <div className="sheet-meta">
-        {venue.hours && (
-          <span className="sheet-meta-item">{'\uD83D\uDD50'} {venue.hours}</span>
-        )}
-        {venue.website && (
-          <span className="sheet-meta-item">
-            {'\uD83C\uDF10'}{' '}
-            <a href={`https://${venue.website}`} target="_blank" rel="noopener noreferrer" className="sheet-meta-link">
-              {venue.website}
-            </a>
-          </span>
-        )}
-      </div>
-
-      {/* Divider */}
-      <div className="sheet-divider" />
-
-      {/* The Recap */}
-      <div ref={recapRef}>
-        <RecapSection venue={venue} username={username} />
+        {/* The Recap */}
+        <div ref={recapRef}>
+          <RecapSection venue={venue} username={username} />
+        </div>
       </div>
     </div>
   );

@@ -288,6 +288,22 @@ body::after {
 .clicker-bulk.minus:active { background: rgba(255, 40, 40, 0.25); }
 
 /* ============================================
+   Power T — City-Level Marker
+   ============================================ */
+
+.power-t-marker {
+  opacity: 0.85;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(255, 130, 0, 0.3));
+}
+
+.power-t-marker svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* ============================================
    Venue Sheet — Pull-Up Bottom Sheet
    ============================================ */
 
@@ -296,13 +312,10 @@ body::after {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(10, 10, 14, 0.97);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-radius: 22px 22px 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+  background: #0C0C10;
+  border-radius: 20px 20px 0 0;
   z-index: 600;
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.6);
   transition: max-height 0.35s cubic-bezier(0.32, 0.72, 0, 1),
               opacity 0.25s ease,
               transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
@@ -336,9 +349,9 @@ body::after {
 .sheet-handle {
   width: 36px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 2px;
-  margin: 10px auto 8px;
+  margin: 10px auto 4px;
 }
 
 /* Sheet close button */
@@ -366,73 +379,67 @@ body::after {
 }
 
 /* ============================================
-   Bar Photo
+   Sheet Photo
    ============================================ */
 
-.bar-photo-wrap {
+.sheet-photo-wrap {
   position: relative;
-  width: 100%;
-  overflow: hidden;
+  padding: 4px 12px 0;
 }
 
-.bar-photo {
+.sheet-photo {
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
+  border-radius: 14px;
   display: block;
 }
 
-.bar-photo-placeholder {
+.photo-placeholder {
   width: 100%;
   aspect-ratio: 16 / 9;
+  border-radius: 14px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
+  align-items: flex-end;
+  padding: 12px 16px;
 }
 
-.bar-photo-initial {
-  font-size: 72px;
-  font-weight: 900;
-  color: rgba(255, 255, 255, 0.04);
-  position: absolute;
-}
-
-.bar-photo-name {
-  position: absolute;
-  bottom: 12px;
-  left: 14px;
-  font-size: 15px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.45);
+.placeholder-name {
   font-family: 'Satoshi', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.15);
 }
 
-.photo-live-badge {
+.sheet-live-badge {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  display: flex;
+  top: 14px;
+  right: 22px;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-family: 'Satoshi', sans-serif;
-  font-size: 11px;
-  font-weight: 800;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
   color: #FF2D05;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
   letter-spacing: 0.04em;
 }
 
-.photo-live-badge .live-dot {
+.ld {
   width: 5px; height: 5px;
   border-radius: 50%;
   background: #FF2D05;
-  animation: live-blink 1.2s ease-in-out infinite;
+  display: inline-block;
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
 }
 
 /* ============================================
@@ -440,7 +447,7 @@ body::after {
    ============================================ */
 
 .sheet-info {
-  padding: 12px 16px 0;
+  padding: 10px 16px 0;
 }
 
 .sheet-name-row {
@@ -472,48 +479,53 @@ body::after {
   font-weight: 500;
 }
 
-.venue-address-link {
-  display: block;
-  margin-top: 4px;
+.sheet-address {
+  display: inline-block;
   font-family: 'Satoshi', sans-serif;
   font-size: 13px;
-  color: #888;
+  color: #8A8A95;
   text-decoration: none;
+  margin-top: 2px;
 }
 
-.venue-address-link:active { color: #FF5E1A; }
+.sheet-address:active { color: #FF5E1A; }
 
 /* ============================================
-   Sheet Section (Live Count wrapper)
+   Sheet Live Count
    ============================================ */
 
-.sheet-section {
-  padding: 0 16px;
-}
-
-/* ============================================
-   Compact Live Count (shared)
-   ============================================ */
-
-.live-compact {
-  margin: 8px 0;
+.sheet-live-section {
+  margin: 10px 16px;
   padding: 10px 12px;
   background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 94, 26, 0.12);
   border-radius: 12px;
 }
 
-.live-compact.active { border-color: rgba(255, 94, 26, 0.15); }
+.sheet-live-section.empty {
+  border-color: rgba(255, 255, 255, 0.05);
+}
 
-.live-row { display: flex; align-items: baseline; gap: 6px; }
+.sheet-no-data {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  color: #55555F;
+  font-style: italic;
+}
 
-.live-badge-sm {
+.sheet-live-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.sheet-live-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(255, 40, 10, 0.12);
+  background: rgba(255, 40, 10, 0.1);
   color: #FF2D05;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: 10px;
   font-family: 'Satoshi', sans-serif;
   font-size: 9px;
@@ -521,19 +533,7 @@ body::after {
   letter-spacing: 0.04em;
 }
 
-.live-blink {
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: #FF2D05;
-  animation: blink 1.5s ease-in-out infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.2; }
-}
-
-.live-count-num {
+.sheet-live-count {
   font-family: 'Satoshi', sans-serif;
   font-size: 26px;
   font-weight: 900;
@@ -541,58 +541,54 @@ body::after {
   line-height: 1;
 }
 
-.live-count-label { font-family: 'Satoshi', sans-serif; font-size: 12px; color: #777; }
-.live-peak-label { font-family: 'Satoshi', sans-serif; font-size: 11px; color: #55555F; margin-left: auto; }
-.live-bar-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
-.live-bar { flex: 1; height: 4px; background: #1A1A1F; border-radius: 2px; overflow: hidden; }
-.live-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
-.live-bar-pct { font-family: 'Satoshi', sans-serif; font-size: 10px; color: #666; min-width: 28px; text-align: right; }
+.sheet-live-label { font-family: 'Satoshi', sans-serif; font-size: 13px; color: #777; }
+.sheet-live-peak { font-family: 'Satoshi', sans-serif; font-size: 11px; color: #444; margin-left: auto; }
 
-.live-no-data {
-  font-family: 'Satoshi', sans-serif;
-  font-size: 12px;
-  color: #55555F;
-  font-style: italic;
-}
+.sheet-bar-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.sheet-bar { flex: 1; height: 4px; background: #1A1A1F; border-radius: 2px; overflow: hidden; }
+.sheet-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #FF5E1A, #FF2D05); transition: width 0.5s ease; }
+.sheet-bar-pct { font-family: 'Satoshi', sans-serif; font-size: 11px; color: #666; }
 
 /* ============================================
-   Action Buttons (Uber, Call, Recap)
+   Sheet Action Buttons (Uber, Call, Recap)
    ============================================ */
 
-.action-row {
+.sheet-actions {
   display: flex;
   gap: 10px;
-  padding: 8px 16px 4px;
+  padding: 10px 16px;
 }
 
-.action-btn {
+.sheet-action-btn {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 4px;
-  padding: 10px 0;
-  background: rgba(255, 255, 255, 0.04);
+  padding: 12px 0;
+  background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 14px;
   text-decoration: none;
-  cursor: pointer;
-  transition: background 0.15s;
-  font-family: 'Satoshi', sans-serif;
   color: white;
+  cursor: pointer;
+  font-family: 'Satoshi', sans-serif;
+  transition: background 0.15s, transform 0.1s;
 }
 
-.action-btn:active { background: rgba(255, 255, 255, 0.1); }
+.sheet-action-btn:active {
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(0.96);
+}
 
-.action-btn.disabled {
+.sheet-action-btn.disabled {
   opacity: 0.3;
   pointer-events: none;
 }
 
-.action-icon { font-size: 20px; line-height: 1; }
+.sa-icon { font-size: 20px; line-height: 1; }
 
-.action-label {
+.sa-label {
   font-size: 11px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.6);
@@ -606,32 +602,37 @@ body::after {
   text-align: center;
   font-family: 'Satoshi', sans-serif;
   font-size: 11px;
-  color: #55555F;
-  padding: 8px 0 4px;
+  color: rgba(255, 255, 255, 0.2);
+  padding: 6px 0 12px;
   letter-spacing: 0.02em;
 }
 
-.venue-sheet.expanded .swipe-hint { display: none; }
-
 /* ============================================
-   Sheet Description
+   Sheet Expanded Content
    ============================================ */
+
+.sheet-expanded-content {
+  padding: 0 16px 24px;
+}
+
+.venue-sheet.peeked .sheet-expanded-content {
+  display: none;
+}
 
 .sheet-description {
   font-family: 'Satoshi', sans-serif;
   font-size: 13px;
-  color: #AAA;
-  line-height: 1.5;
-  padding: 8px 16px 0;
+  color: #999;
+  line-height: 1.4;
   font-style: italic;
-  margin: 0;
+  margin: 4px 0 12px;
 }
 
 /* ============================================
    Specials (scrollable chips)
    ============================================ */
 
-.specials-section { padding: 10px 16px 0; }
+.specials-section { margin: 8px 0 0; }
 
 .specials-label {
   font-family: 'Satoshi', sans-serif;
@@ -674,14 +675,15 @@ body::after {
 .sheet-meta {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 16px 0;
+  gap: 4px;
+  margin: 8px 0;
 }
 
 .sheet-meta-item {
   font-family: 'Satoshi', sans-serif;
   font-size: 13px;
-  color: #999;
+  color: #777;
+  text-decoration: none;
 }
 
 .sheet-meta-link {
@@ -689,6 +691,8 @@ body::after {
   text-decoration: none;
 }
 
+.sheet-meta-item.link:active { color: #FF5E1A; }
+.sheet-meta-link { color: #FF5E1A; text-decoration: none; }
 .sheet-meta-link:active { opacity: 0.7; }
 
 /* ============================================
@@ -697,15 +701,15 @@ body::after {
 
 .sheet-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.06);
-  margin: 12px 16px 0;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 16px 0;
 }
 
 /* ============================================
    The Recap
    ============================================ */
 
-.recap-section { padding: 12px 16px 20px; }
+.recap-section { padding: 0 0 20px; }
 
 .recap-header-row {
   display: flex;
