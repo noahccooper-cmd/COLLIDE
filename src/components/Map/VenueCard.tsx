@@ -168,7 +168,9 @@ export function VenueSheet({
   const [sheetState, setSheetState] = useState<SheetState>('peeked');
   const sheetRef = useRef<HTMLDivElement>(null);
   const recapRef = useRef<HTMLDivElement>(null);
-  const startY = useRef(0);
+  const startYRef = useRef(0);
+  const currentYRef = useRef(0);
+  const isDragging = useRef(false);
   const isLive = headcount?.is_live ?? false;
   const count = headcount?.current_count ?? 0;
   const peak = headcount?.peak_count ?? 0;
@@ -195,7 +197,6 @@ export function VenueSheet({
   const handleUber = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     const deepLink = getUberUrl(venue);
-    // On iOS, try native app first then fallback
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     if (isIOS) {
       window.location.href = deepLink;
@@ -207,34 +208,95 @@ export function VenueSheet({
     }
   }, [venue]);
 
-  // Swipe gesture handling
-  const onTouchStart = (e: React.TouchEvent) => {
-    startY.current = e.touches[0].clientY;
-  };
+  /* ── Swipe / drag gesture handling ── */
 
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const diff = startY.current - e.changedTouches[0].clientY;
+  const finishDrag = useCallback(() => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
 
-    if (sheetState === 'peeked') {
-      if (diff > 50) setSheetState('expanded');
-      else if (diff < -50) dismiss();
-    } else if (sheetState === 'expanded') {
-      if (diff < -50 && (sheetRef.current?.scrollTop ?? 0) < 5) {
+    const diff = startYRef.current - currentYRef.current; // positive = swipe up
+
+    // Reset any drag transform
+    if (sheetRef.current) {
+      sheetRef.current.style.transform = '';
+    }
+
+    if (diff > 60) {
+      // SWIPED UP
+      if (sheetState === 'peeked') setSheetState('expanded');
+    } else if (diff < -60) {
+      // SWIPED DOWN
+      if (sheetState === 'expanded' && (sheetRef.current?.scrollTop ?? 0) < 5) {
         setSheetState('peeked');
+      } else if (sheetState === 'peeked') {
+        dismiss();
       }
     }
-  };
+  }, [sheetState, dismiss]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    startYRef.current = e.touches[0].clientY;
+    currentYRef.current = e.touches[0].clientY;
+    isDragging.current = true;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging.current) return;
+    currentYRef.current = e.touches[0].clientY;
+
+    // Visual drag feedback in peek mode
+    const diff = currentYRef.current - startYRef.current;
+    if (sheetRef.current && sheetState === 'peeked' && diff < 0) {
+      const offset = Math.max(diff, -40);
+      sheetRef.current.style.transform = `translateY(${offset}px)`;
+    }
+  }, [sheetState]);
+
+  const handleTouchEnd = useCallback(() => {
+    finishDrag();
+  }, [finishDrag]);
+
+  // Mouse events for desktop testing
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    startYRef.current = e.clientY;
+    currentYRef.current = e.clientY;
+    isDragging.current = true;
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging.current) return;
+    currentYRef.current = e.clientY;
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    finishDrag();
+  }, [finishDrag]);
+
+  // Handle toggle
+  const handleHandleTap = useCallback(() => {
+    if (sheetState === 'peeked') setSheetState('expanded');
+    else if (sheetState === 'expanded') setSheetState('peeked');
+  }, [sheetState]);
 
   return (
     <div
       ref={sheetRef}
       className={`venue-sheet ${sheetState}`}
       onClick={e => e.stopPropagation()}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
     >
-      {/* Drag handle */}
-      <div className="sheet-handle" />
+      {/* Handle area — tappable to expand/collapse */}
+      <div className="sheet-handle-area" onClick={handleHandleTap}>
+        <div className="sheet-handle" />
+        {sheetState === 'peeked' && (
+          <div className="swipe-hint">Tap or swipe up for more</div>
+        )}
+      </div>
 
       {/* Close button (expanded only via CSS) */}
       <button className="sheet-close-btn" onClick={dismiss}>{'\u2715'}</button>
@@ -329,10 +391,6 @@ export function VenueSheet({
             <span className="sa-label">Recap</span>
           </button>
         </div>
-
-        {sheetState === 'peeked' && (
-          <div className="swipe-hint">{'\u2191'} Swipe up for more</div>
-        )}
       </div>
 
       {/* ═══ EXPANDED CONTENT (hidden when peeked via CSS) ═══ */}

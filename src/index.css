@@ -345,13 +345,19 @@ body::after {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Sheet drag handle */
+/* Sheet handle area — tappable */
+.sheet-handle-area {
+  padding: 6px 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .sheet-handle {
   width: 36px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
-  margin: 10px auto 4px;
+  margin: 0 auto;
 }
 
 /* Sheet close button */
@@ -389,7 +395,6 @@ body::after {
 
 .sheet-photo {
   width: 100%;
-  aspect-ratio: 16 / 9;
   object-fit: cover;
   border-radius: 14px;
   display: block;
@@ -397,11 +402,24 @@ body::after {
 
 .photo-placeholder {
   width: 100%;
-  aspect-ratio: 16 / 9;
   border-radius: 14px;
   display: flex;
   align-items: flex-end;
   padding: 12px 16px;
+}
+
+/* Peek mode — compact 100px strip */
+.venue-sheet.peeked .sheet-photo,
+.venue-sheet.peeked .photo-placeholder {
+  height: 100px;
+  aspect-ratio: unset;
+}
+
+/* Expanded mode — full 16:9 */
+.venue-sheet.expanded .sheet-photo,
+.venue-sheet.expanded .photo-placeholder {
+  height: auto;
+  aspect-ratio: 16 / 9;
 }
 
 .placeholder-name {
@@ -447,7 +465,7 @@ body::after {
    ============================================ */
 
 .sheet-info {
-  padding: 10px 16px 0;
+  padding: 6px 16px 0;
 }
 
 .sheet-name-row {
@@ -495,8 +513,8 @@ body::after {
    ============================================ */
 
 .sheet-live-section {
-  margin: 10px 16px;
-  padding: 10px 12px;
+  margin: 6px 16px;
+  padding: 8px 12px;
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(255, 94, 26, 0.12);
   border-radius: 12px;
@@ -556,7 +574,7 @@ body::after {
 .sheet-actions {
   display: flex;
   gap: 10px;
-  padding: 10px 16px;
+  padding: 6px 16px;
 }
 
 .sheet-action-btn {
@@ -564,8 +582,8 @@ body::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 0;
+  gap: 3px;
+  padding: 10px 0;
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 14px;
@@ -603,7 +621,7 @@ body::after {
   font-family: 'Satoshi', sans-serif;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.2);
-  padding: 6px 0 12px;
+  margin-top: 2px;
   letter-spacing: 0.02em;
 }
 
