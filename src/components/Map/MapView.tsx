@@ -25,12 +25,130 @@ interface MapViewProps {
   onVenueClick: (venue: Venue) => void;
   onMapTap?: () => void;
   mapInstanceRef?: MutableRefObject<mapboxgl.Map | null>;
+  panelOpen?: boolean;
 }
 
 const HEATMAP_SOURCE = 'venue-heat';
 const HEATMAP_LAYER = 'venue-heatmap';
 
-export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onVenueClick, onMapTap, mapInstanceRef }: MapViewProps) {
+/* ── Power T Canvas Image ────────────── */
+
+function createPowerTImage(): { width: number; height: number; data: Uint8Array } {
+  const size = 200;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+
+  function roundRect(x: number, y: number, w: number, h: number, r: number) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  // Tennessee Orange
+  ctx.fillStyle = '#FF8200';
+
+  // Top bar of T
+  const topW = size * 0.85;
+  const topH = size * 0.28;
+  const topX = (size - topW) / 2;
+  const topY = size * 0.05;
+  roundRect(topX, topY, topW, topH, 8);
+  ctx.fill();
+
+  // Vertical bar of T
+  const vertW = size * 0.32;
+  const vertH = size * 0.65;
+  const vertX = (size - vertW) / 2;
+  const vertY = topY + topH - 2;
+  roundRect(vertX, vertY, vertW, vertH, 8);
+  ctx.fill();
+
+  // Subtle bevel highlight
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+  roundRect(topX + 3, topY + 3, topW - 6, topH * 0.4, 6);
+  ctx.fill();
+  roundRect(vertX + 3, vertY + 3, vertW - 6, vertH * 0.15, 6);
+  ctx.fill();
+
+  const imageData = ctx.getImageData(0, 0, size, size);
+  return { width: size, height: size, data: new Uint8Array(imageData.data.buffer) };
+}
+
+/* ── Nightlife Streets GeoJSON ────────── */
+
+const NIGHTLIFE_STREETS: GeoJSON.FeatureCollection = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      properties: { name: 'Cumberland Ave', intensity: 1.0 },
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [-83.9400, 35.9565],
+          [-83.9350, 35.9560],
+          [-83.9300, 35.9555],
+          [-83.9250, 35.9553],
+          [-83.9200, 35.9555],
+          [-83.9150, 35.9560],
+        ],
+      },
+    },
+    {
+      type: 'Feature',
+      properties: { name: 'The Strip', intensity: 0.9 },
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [-83.9320, 35.9575],
+          [-83.9300, 35.9568],
+          [-83.9280, 35.9560],
+          [-83.9260, 35.9555],
+        ],
+      },
+    },
+    {
+      type: 'Feature',
+      properties: { name: 'Central St / Old City', intensity: 0.7 },
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [-83.9175, 35.9695],
+          [-83.9170, 35.9675],
+          [-83.9168, 35.9660],
+          [-83.9170, 35.9645],
+        ],
+      },
+    },
+  ],
+};
+
+/* ── Neyland Stadium polygon for 3D tint ── */
+
+const NEYLAND_POLYGON = {
+  type: 'Polygon' as const,
+  coordinates: [[
+    [-83.9260, 35.9570],
+    [-83.9200, 35.9570],
+    [-83.9200, 35.9530],
+    [-83.9260, 35.9530],
+    [-83.9260, 35.9570],
+  ]],
+};
+
+/* ── Main MapView Component ──────────── */
+
+export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onVenueClick, onMapTap, mapInstanceRef, panelOpen }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
@@ -97,8 +215,129 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
 
     map.on('zoom', updateMarkerVisibility);
 
+    // Auto-pitch for 3D buildings at high zoom
+    map.on('zoom', () => {
+      const zoom = map.getZoom();
+      if (zoom >= 15.5) {
+        const targetPitch = Math.min((zoom - 15.5) * 15, 45);
+        if (Math.abs(map.getPitch() - targetPitch) > 2) {
+          map.easeTo({ pitch: targetPitch, duration: 300 });
+        }
+      } else if (map.getPitch() > 0) {
+        map.easeTo({ pitch: 0, duration: 300 });
+      }
+    });
+
     map.on('load', () => {
-      // Add heatmap source + layer
+      // Find first label layer for inserting glow layers below
+      const layers = map.getStyle().layers || [];
+      let firstLabelLayer: string | undefined;
+      for (const layer of layers) {
+        if (layer.type === 'symbol' && (layer as any).layout?.['text-field']) {
+          firstLabelLayer = layer.id;
+          break;
+        }
+      }
+
+      // ── Nightlife Street Glow (3 layers) ──────────────
+      map.addSource('nightlife-streets', {
+        type: 'geojson',
+        data: NIGHTLIFE_STREETS,
+      });
+
+      // Outer glow (wide, faint warm gold)
+      map.addLayer({
+        id: 'street-glow-outer',
+        type: 'line',
+        source: 'nightlife-streets',
+        paint: {
+          'line-color': 'rgba(255, 210, 140, 0.06)',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 8, 15, 40, 18, 80],
+          'line-blur': ['interpolate', ['linear'], ['zoom'], 12, 8, 15, 30, 18, 50],
+          'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.5, 16, 0.8],
+        },
+      }, firstLabelLayer);
+
+      // Mid glow
+      map.addLayer({
+        id: 'street-glow-mid',
+        type: 'line',
+        source: 'nightlife-streets',
+        paint: {
+          'line-color': 'rgba(255, 190, 100, 0.12)',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 3, 15, 16, 18, 30],
+          'line-blur': ['interpolate', ['linear'], ['zoom'], 12, 4, 15, 12, 18, 20],
+          'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.6, 16, 0.9],
+        },
+      }, firstLabelLayer);
+
+      // Inner bright line
+      map.addLayer({
+        id: 'street-glow-inner',
+        type: 'line',
+        source: 'nightlife-streets',
+        paint: {
+          'line-color': 'rgba(255, 220, 170, 0.25)',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 15, 4, 18, 8],
+          'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.7, 16, 1],
+        },
+      }, firstLabelLayer);
+
+      // ── Power T on UTK Campus ─────────────────────
+      const tImage = createPowerTImage();
+      map.addImage('power-t', tImage, { sdf: false });
+
+      map.addSource('power-t-source', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [-83.9295, 35.9544],
+          },
+          properties: {},
+        },
+      });
+
+      map.addLayer({
+        id: 'power-t-layer',
+        type: 'symbol',
+        source: 'power-t-source',
+        layout: {
+          'icon-image': 'power-t',
+          'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.25, 14, 0.5, 16, 0.8, 18, 1.2],
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+        },
+        paint: {
+          'icon-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.15, 14, 0.3, 16, 0.4],
+        },
+      });
+
+      // ── 3D Buildings with Neyland Orange Tint ──────
+      map.addLayer({
+        id: '3d-buildings',
+        source: 'composite',
+        'source-layer': 'building',
+        type: 'fill-extrusion',
+        minzoom: 14,
+        paint: {
+          'fill-extrusion-color': [
+            'case',
+            ['all',
+              ['>=', ['get', 'height'], 30],
+              ['within', NEYLAND_POLYGON],
+            ],
+            'rgba(255, 130, 0, 0.6)',
+            'rgba(30, 30, 35, 0.6)',
+          ] as any,
+          'fill-extrusion-height': ['get', 'height'],
+          'fill-extrusion-base': ['get', 'min_height'],
+          'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 14, 0, 15, 0.5, 17, 0.7],
+        },
+      });
+
+      // ── Heatmap Layer ─────────────────────────────
       map.addSource(HEATMAP_SOURCE, {
         type: 'geojson',
         data: buildHeatGeoJSON(),
@@ -111,21 +350,11 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         paint: {
           'heatmap-radius': [
             'interpolate', ['linear'], ['get', 'count'],
-            0, 0,
-            10, 30,
-            50, 60,
-            100, 90,
-            200, 130,
-            300, 170,
+            0, 0, 10, 30, 50, 60, 100, 90, 200, 130, 300, 170,
           ],
           'heatmap-weight': [
             'interpolate', ['linear'], ['get', 'count'],
-            0, 0,
-            10, 0.3,
-            50, 0.5,
-            100, 0.7,
-            200, 0.9,
-            300, 1,
+            0, 0, 10, 0.3, 50, 0.5, 100, 0.7, 200, 0.9, 300, 1,
           ],
           'heatmap-intensity': 0.75,
           'heatmap-color': [
@@ -141,10 +370,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
           ],
           'heatmap-opacity': [
             'interpolate', ['linear'], ['zoom'],
-            11, 0,
-            12.5, 0.8,
-            15, 0.6,
-            18, 0.4,
+            11, 0, 12.5, 0.8, 15, 0.6, 18, 0.4,
           ],
         },
       });
@@ -170,7 +396,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     };
   }, []);
 
-  // Handle map click (tap on empty map area = dismiss card)
+  // Handle map click (tap on empty map area = dismiss panel)
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
     const map = mapRef.current;
@@ -184,6 +410,15 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       map.off('click', handleClick);
     };
   }, [mapLoaded, onMapTap]);
+
+  // Resize map when panel opens/closes (desktop)
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    const timer = setTimeout(() => {
+      mapRef.current?.resize();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [panelOpen, mapLoaded]);
 
   // Fly to new city when city changes
   useEffect(() => {
@@ -267,8 +502,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
 
   // Update marker visuals + heatmap when counts/live status change
   useEffect(() => {
-    console.log('🗺️ MAP UPDATE — counts:', counts, 'live:', [...liveVenueIds]);
-
     markersRef.current.forEach((entry, venueId) => {
       const count = counts[venueId] ?? 0;
       const isLive = liveVenueIds.has(venueId);
@@ -282,7 +515,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         entry.currentTier = newTier;
       }
 
-      // Update count text
+      // Update count text — empty dots show nothing (no dash)
       if (count !== entry.currentCount) {
         entry.countEl.textContent = count > 0 ? formatCount(count) : '';
         entry.countEl.classList.remove('bumping');
@@ -328,6 +561,9 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
   }
 
   return (
-    <div ref={mapContainer} className="w-full h-full" />
+    <div
+      ref={mapContainer}
+      className={`w-full h-full map-container${panelOpen ? ' panel-open' : ''}`}
+    />
   );
 }

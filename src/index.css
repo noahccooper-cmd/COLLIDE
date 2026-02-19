@@ -45,6 +45,20 @@ body::after {
 ::-webkit-scrollbar-thumb { background: #2A2A30; border-radius: 2px; }
 
 /* ============================================
+   Map Container — Panel Push
+   ============================================ */
+
+.map-container {
+  transition: margin-left 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (min-width: 769px) {
+  .map-container.panel-open {
+    margin-left: 380px;
+  }
+}
+
+/* ============================================
    Venue Marker — Container
    ============================================ */
 
@@ -135,75 +149,71 @@ body::after {
 }
 
 /* ============================================
-   6-Tier Dot System (inner glow + outer ring)
+   6-Tier Dot System — Color + No Dashes
    ============================================ */
 
-/* T0 — Empty (0) */
+/* T0 — Empty (0) — clean circle, NO dash */
 .dot-t0 {
-  width: 26px; height: 26px; font-size: 0;
-  background: radial-gradient(circle at 35% 35%, #3D3D45, #252528);
-  border: 1.5px solid #4A4A52;
-}
-.dot-t0::after {
-  content: '\2014'; font-size: 10px; color: rgba(255,255,255,0.2);
+  width: 22px; height: 22px; font-size: 0;
+  background: radial-gradient(circle at 40% 35%, #35353D, #25252A);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  box-shadow: 0 0 6px 2px rgba(50, 50, 60, 0.3);
 }
 
-/* T1 — Open/Quiet (1-20) */
+/* T1 — Quiet (1-20) — soft green */
 .dot-t1 {
-  width: 32px; height: 32px; font-size: 12px;
-  background: radial-gradient(circle at 35% 35%, #3B7A3B, #2A5C2A);
-  border: 1.5px solid #4C9E4C;
-  box-shadow: 0 0 12px 3px rgba(60, 122, 60, 0.3);
+  width: 30px; height: 30px; font-size: 11px;
+  background: radial-gradient(circle at 40% 35%, #3D8A3D, #2B6B2B);
+  border: 1.5px solid #4CAF50;
+  box-shadow: 0 0 10px 3px rgba(76, 175, 80, 0.25);
 }
 
-/* T2 — Getting Going (21-60) */
+/* T2 — Getting Going (21-60) — gold */
 .dot-t2 {
-  width: 40px; height: 40px; font-size: 14px;
-  background: radial-gradient(circle at 35% 35%, #D4C032, #A89520);
-  border: 2px solid #E8D84A;
-  box-shadow: 0 0 18px 6px rgba(212, 192, 50, 0.3),
-              inset 0 0 8px rgba(255, 255, 200, 0.15);
+  width: 38px; height: 38px; font-size: 13px;
+  background: radial-gradient(circle at 40% 35%, #D4B830, #B89A20);
+  border: 2px solid #E8CC40;
+  box-shadow: 0 0 16px 5px rgba(212, 184, 48, 0.3),
+              inset 0 0 6px rgba(255,255,200,0.1);
   animation: pulse-t2 3s ease-in-out infinite;
 }
-.dot-t2::before { border-color: rgba(212, 192, 50, 0.15); }
+.dot-t2::before { border-color: rgba(212, 184, 48, 0.15); }
 
-/* T3 — Busy (61-120) */
+/* T3 — Busy (61-120) — amber */
 .dot-t3 {
-  width: 50px; height: 50px; font-size: 17px;
-  background: radial-gradient(circle at 35% 35%, #F09030, #D07020);
-  border: 2px solid #FFA850;
-  box-shadow: 0 0 24px 8px rgba(240, 144, 48, 0.35),
-              inset 0 0 12px rgba(255, 200, 100, 0.15);
+  width: 48px; height: 48px; font-size: 16px;
+  background: radial-gradient(circle at 40% 35%, #F09535, #D07822);
+  border: 2px solid #FFB04A;
+  box-shadow: 0 0 22px 8px rgba(240, 149, 53, 0.35),
+              inset 0 0 10px rgba(255,200,100,0.12);
   animation: pulse-t3 2s ease-in-out infinite;
 }
-.dot-t3::before { border-color: rgba(240, 144, 48, 0.2); animation: ring-t3 2s ease-in-out infinite; }
+.dot-t3::before { border-color: rgba(240, 149, 53, 0.2); animation: ring-t3 2s ease-in-out infinite; }
 
-/* T4 — Packed (121-200) — STRONGER glow */
+/* T4 — Packed (121-200) — deep orange */
 .dot-t4 {
-  width: 60px; height: 60px; font-size: 20px;
-  background: radial-gradient(circle at 35% 35%, #E85A1A, #C04010);
-  border: 2px solid #FF7030;
-  box-shadow:
-    0 0 35px 14px rgba(232, 90, 26, 0.45),
-    0 0 70px 25px rgba(232, 90, 26, 0.15),
-    inset 0 0 15px rgba(255, 150, 50, 0.2);
+  width: 58px; height: 58px; font-size: 19px;
+  background: radial-gradient(circle at 40% 35%, #E86020, #C54815);
+  border: 2px solid #FF7535;
+  box-shadow: 0 0 35px 14px rgba(232, 96, 32, 0.45),
+              0 0 70px 25px rgba(232, 96, 32, 0.15),
+              inset 0 0 14px rgba(255,150,50,0.18);
   animation: pulse-t4 1.5s ease-in-out infinite;
 }
-.dot-t4::before { border-color: rgba(232, 90, 26, 0.25); animation: ring-t4 1.5s ease-in-out infinite; }
+.dot-t4::before { border-color: rgba(232, 96, 32, 0.25); animation: ring-t4 1.5s ease-in-out infinite; }
 
-/* T5 — FIRE (200+) — MAXIMUM glow — triple-layer radiating heat */
+/* T5 — FIRE (200+) — blazing red */
 .dot-t5 {
-  width: 72px; height: 72px; font-size: 24px;
-  background: radial-gradient(circle at 35% 35%, #DC2010, #A00D05);
-  border: 2.5px solid #FF4030;
-  box-shadow:
-    0 0 50px 22px rgba(220, 32, 16, 0.55),
-    0 0 100px 40px rgba(220, 32, 16, 0.2),
-    0 0 150px 60px rgba(220, 32, 16, 0.08),
-    inset 0 0 20px rgba(255, 100, 50, 0.25);
+  width: 70px; height: 70px; font-size: 23px;
+  background: radial-gradient(circle at 40% 35%, #DD2515, #A81008);
+  border: 2.5px solid #FF4535;
+  box-shadow: 0 0 50px 22px rgba(221, 37, 21, 0.55),
+              0 0 100px 40px rgba(221, 37, 21, 0.2),
+              0 0 150px 60px rgba(221, 37, 21, 0.08),
+              inset 0 0 18px rgba(255,100,50,0.22);
   animation: pulse-t5 1s ease-in-out infinite;
 }
-.dot-t5::before { border-color: rgba(220, 32, 16, 0.3); animation: ring-t5 1s ease-in-out infinite; }
+.dot-t5::before { border-color: rgba(221, 37, 21, 0.3); animation: ring-t5 1s ease-in-out infinite; }
 
 /* Pulse animations — boosted amplitude */
 @keyframes pulse-t2 { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
@@ -309,105 +319,130 @@ body::after {
 .clicker-bulk.minus:active { background: rgba(255, 40, 40, 0.25); }
 
 /* ============================================
-   Venue Card — Floating Pill
+   Side Panel — Google Maps Style
    ============================================ */
 
-.venue-card-wrap {
-  position: fixed;
-  bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 10px);
-  left: 12px;
+/* Desktop: left side panel */
+@media (min-width: 769px) {
+  .side-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 380px;
+    height: 100vh;
+    background: rgba(10, 10, 14, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    z-index: 600;
+    overflow-y: auto;
+    animation: panel-slide-in 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  @keyframes panel-slide-in {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+
+  .side-panel.dismissing {
+    animation: panel-slide-out 0.2s ease-in forwards;
+  }
+
+  @keyframes panel-slide-out {
+    to { transform: translateX(-100%); }
+  }
+}
+
+/* Mobile: compact bottom card */
+@media (max-width: 768px) {
+  .side-panel {
+    position: fixed;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 8px);
+    left: 10px;
+    right: 10px;
+    max-height: 38vh;
+    background: rgba(12, 12, 16, 0.93);
+    backdrop-filter: blur(28px) saturate(1.5);
+    -webkit-backdrop-filter: blur(28px) saturate(1.5);
+    border-radius: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 12px 48px rgba(0,0,0,0.3);
+    z-index: 600;
+    overflow-y: auto;
+    animation: card-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  @keyframes card-pop {
+    0% { transform: translateY(30px) scale(0.93); opacity: 0; }
+    70% { transform: translateY(-3px) scale(1.01); }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .side-panel.dismissing {
+    animation: card-pop-out 0.18s ease-in forwards;
+  }
+
+  @keyframes card-pop-out {
+    to { transform: translateY(30px) scale(0.95); opacity: 0; }
+  }
+}
+
+.side-panel-close {
+  position: absolute;
+  top: 12px;
   right: 12px;
-  z-index: 500;
-  pointer-events: none;
-}
-
-.venue-card {
-  pointer-events: auto;
-  background: rgba(14, 14, 18, 0.92);
-  backdrop-filter: blur(28px) saturate(1.5);
-  -webkit-backdrop-filter: blur(28px) saturate(1.5);
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.5),
-    0 12px 48px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  animation: pill-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  overflow: hidden;
-  max-height: 42vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Spring entrance — slight overshoot for bounce */
-@keyframes pill-in {
-  0% { transform: translateY(40px) scale(0.92); opacity: 0; }
-  70% { transform: translateY(-4px) scale(1.01); opacity: 1; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
-}
-
-.venue-card.expanded {
-  max-height: 75vh;
-  transition: max-height 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.venue-card.dismissing {
-  animation: pill-out 0.18s ease-in forwards;
-}
-
-@keyframes pill-out {
-  to { transform: translateY(30px) scale(0.95); opacity: 0; }
-}
-
-.card-handle-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 8px 12px 0;
-  position: relative;
-}
-
-.card-handle {
-  width: 28px; height: 3px;
-  background: rgba(255,255,255,0.12);
-  border-radius: 2px;
-}
-
-.card-close {
-  width: 28px; height: 28px;
+  width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
   background: rgba(255,255,255,0.06);
   border-radius: 50%;
   border: none;
-  color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.5);
   font-size: 14px;
   cursor: pointer;
-  position: absolute;
-  right: 12px;
-  top: 8px;
+  z-index: 10;
+}
+.side-panel-close:active { background: rgba(255,255,255,0.12); }
+
+.side-panel-content {
+  padding: 16px;
 }
 
-.card-close:active { background: rgba(255,255,255,0.12); }
+/* ── Side Panel Photo ─────────────── */
 
-.card-body { padding: 4px 14px 14px; }
-
-/* ── Photo Hero ─────────────────── */
-
-.card-photo-wrap {
-  padding: 6px 0 0;
+.sp-photo-wrap {
+  padding: 0;
 }
 
-.card-photo {
+@media (min-width: 769px) {
+  .sp-photo-wrap {
+    padding: 0;
+  }
+}
+
+.sp-photo {
   width: 100%;
   aspect-ratio: 3 / 2;
-  border-radius: 16px;
   object-fit: cover;
+  display: block;
 }
 
-.card-photo-placeholder {
+@media (min-width: 769px) {
+  .sp-photo {
+    border-radius: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .sp-photo {
+    border-radius: 22px 22px 0 0;
+  }
+}
+
+.sp-photo-placeholder {
   width: 100%;
   aspect-ratio: 3 / 2;
-  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -415,14 +450,20 @@ body::after {
   overflow: hidden;
 }
 
-.card-photo-placeholder .big-initial {
+@media (max-width: 768px) {
+  .sp-photo-placeholder {
+    border-radius: 22px 22px 0 0;
+  }
+}
+
+.sp-big-initial {
   font-size: 80px;
   font-weight: 900;
   color: rgba(255, 255, 255, 0.04);
   position: absolute;
 }
 
-.card-photo-placeholder .photo-venue-name {
+.sp-photo-name {
   position: absolute;
   bottom: 12px;
   left: 14px;
@@ -432,83 +473,108 @@ body::after {
   font-family: 'Satoshi', sans-serif;
 }
 
-/* ── Card Info Section ──────────── */
+/* ── Side Panel Header & Info ─────── */
 
-.card-info-section { padding: 10px 0 0; }
-
-.card-name-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
+.sp-header {
+  margin-bottom: 2px;
 }
 
-.card-name {
+.sp-name {
   font-family: 'Satoshi', sans-serif;
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 800;
   color: white;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.card-rating {
-  font-size: 13px;
-  color: #FFAA00;
-  white-space: nowrap;
-  font-weight: 700;
+.sp-rating {
+  display: flex; align-items: center; gap: 4px;
+  margin-top: 4px;
+}
+.sp-stars { color: #FFAA00; font-size: 14px; letter-spacing: -1px; }
+.sp-rating-num { font-size: 14px; font-weight: 700; color: #FFAA00; }
+.sp-reviews { font-size: 12px; color: #666; }
+
+.sp-address {
+  font-size: 13px; color: #888; margin: 6px 0 0;
+  font-family: 'Satoshi', sans-serif;
+}
+
+.sp-description {
+  font-size: 13px; color: #AAA; margin: 8px 0 0;
+  line-height: 1.4; font-style: italic;
+  font-family: 'Satoshi', sans-serif;
+}
+
+/* ── Side Panel Tonight's Special ──── */
+
+.sp-special {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(255,94,26,0.1), rgba(255,45,5,0.05));
+  border: 1px solid rgba(255,94,26,0.2);
+  border-radius: 14px;
+}
+.sp-special-badge {
+  font-size: 10px; font-weight: 800; color: #FF5E1A;
+  letter-spacing: 0.06em;
+  font-family: 'Satoshi', sans-serif;
+}
+.sp-special-text {
+  font-size: 15px; font-weight: 700; color: #F0F0F0;
+  margin: 4px 0 0; line-height: 1.3;
+  font-family: 'Satoshi', sans-serif;
+}
+
+/* ── Side Panel Info Grid ──────────── */
+
+.sp-info-grid {
+  display: flex; flex-direction: column; gap: 6px;
+  margin: 12px 0;
+}
+.sp-info-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: #999;
+  text-decoration: none;
+  padding: 4px 0;
+  font-family: 'Satoshi', sans-serif;
+}
+.sp-info-item.clickable { cursor: pointer; }
+.sp-info-item.clickable:active { color: #FF5E1A; }
+.sp-info-icon { font-size: 14px; width: 20px; text-align: center; }
+
+/* ── Side Panel Directions Button ──── */
+
+.sp-directions-btn {
   display: flex;
   align-items: center;
-  gap: 2px;
-}
-
-.card-rating-count {
-  font-size: 11px;
-  color: #666;
-  font-weight: 500;
-}
-
-.card-address {
-  font-family: 'Satoshi', sans-serif;
-  font-size: 12px;
-  color: #777;
-  margin: 2px 0 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ── Tonight's Special ──────────── */
-
-.card-special {
-  margin: 8px 0;
-  padding: 10px 12px;
-  background: linear-gradient(135deg, rgba(255, 94, 26, 0.08), rgba(255, 45, 5, 0.04));
-  border: 1px solid rgba(255, 94, 26, 0.15);
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 44px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px;
-}
-
-.special-badge {
-  font-size: 10px;
-  font-weight: 800;
-  color: #FF5E1A;
-  letter-spacing: 0.06em;
-  margin-bottom: 4px;
+  color: white;
   font-family: 'Satoshi', sans-serif;
-}
-
-.special-text {
   font-size: 14px;
-  font-weight: 600;
-  color: #EEEEEE;
-  margin: 0;
-  line-height: 1.3;
-  font-family: 'Satoshi', sans-serif;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  margin: 8px 0;
+  transition: background 0.15s;
+}
+.sp-directions-btn:active { background: rgba(255,255,255,0.1); }
+
+/* ── Side Panel Comments Section ───── */
+
+.sp-comments-section {
+  margin-top: 8px;
 }
 
-/* ── Compact Live Count ──────────── */
+/* ============================================
+   Compact Live Count (shared)
+   ============================================ */
 
 .live-compact {
   margin: 8px 0;
@@ -569,7 +635,9 @@ body::after {
   font-style: italic;
 }
 
-/* ── Comment Preview ─────────────── */
+/* ============================================
+   Comment Preview (shared)
+   ============================================ */
 
 .card-comments {
   padding: 8px 0 0;
@@ -594,7 +662,9 @@ body::after {
 
 .card-comments-user { color: #FF5E1A; font-weight: 700; }
 
-/* ── Expanded Comments (inline) ──── */
+/* ============================================
+   Expanded Comments (inline, shared)
+   ============================================ */
 
 .expanded-comments-inline { padding: 8px 0 0; }
 
@@ -633,15 +703,6 @@ body::after {
 .expanded-comment-user { font-family: 'Satoshi', sans-serif; font-size: 12px; font-weight: 700; color: #FF5E1A; }
 .expanded-comment-time { font-family: 'Satoshi', sans-serif; font-size: 11px; color: #55555F; }
 .expanded-comment-body { font-family: 'Satoshi', sans-serif; font-size: 13px; color: white; margin: 0; line-height: 1.4; }
-
-/* ============================================
-   Profile Overlay Slide
-   ============================================ */
-
-@keyframes slide-in-right {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
 
 /* ============================================
    Shared Animations
