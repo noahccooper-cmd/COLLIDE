@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { MapView } from '../components/Map/MapView';
-import { VenueSidePanel } from '../components/Map/VenueCard';
+import { VenueSheet } from '../components/Map/VenueCard';
 import type { Venue, Headcount } from '../lib/types';
 import type { CityKey } from '../lib/constants';
 import type mapboxgl from 'mapbox-gl';
@@ -36,28 +36,16 @@ export function TonightPage({
     setSelectedVenue(venue);
     if (mapInstanceRef.current) {
       const map = mapInstanceRef.current;
-      const isDesktop = window.innerWidth > 768;
-
-      if (isDesktop) {
-        // Desktop: center on venue (panel is on the left)
-        map.flyTo({
-          center: [venue.lng, venue.lat],
-          zoom: Math.max(map.getZoom(), 14.5),
-          duration: 400,
-          essential: true,
-        });
-      } else {
-        // Mobile: offset upward so venue isn't hidden by bottom card
-        const bounds = map.getBounds();
-        const latSpan = bounds.getNorth() - bounds.getSouth();
-        const offsetLat = venue.lat - latSpan * 0.15;
-        map.flyTo({
-          center: [venue.lng, offsetLat],
-          zoom: Math.max(map.getZoom(), 14.5),
-          duration: 400,
-          essential: true,
-        });
-      }
+      // Offset upward so venue dot isn't hidden by bottom sheet
+      const bounds = map.getBounds();
+      const latSpan = bounds.getNorth() - bounds.getSouth();
+      const offsetLat = venue.lat - latSpan * 0.12;
+      map.flyTo({
+        center: [venue.lng, offsetLat],
+        zoom: Math.max(map.getZoom(), 14.5),
+        duration: 400,
+        essential: true,
+      });
     }
   }, []);
 
@@ -82,11 +70,10 @@ export function TonightPage({
         onVenueClick={handleVenueClick}
         onMapTap={handleMapTap}
         mapInstanceRef={mapInstanceRef}
-        panelOpen={!!currentVenue}
       />
 
       {currentVenue && (
-        <VenueSidePanel
+        <VenueSheet
           venue={currentVenue}
           headcount={headcounts[currentVenue.id] ?? null}
           username={username}

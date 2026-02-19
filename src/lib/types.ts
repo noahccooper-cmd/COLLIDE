@@ -107,6 +107,16 @@ export interface VenueComment {
   day_of: string;
 }
 
+export interface VenueRecap {
+  id: string;
+  created_at: string;
+  venue_id: string;
+  username: string;
+  body: string;
+  stars: number;
+  day_of: string;
+}
+
 export interface ClickerLog {
   id: string;
   created_at: string;

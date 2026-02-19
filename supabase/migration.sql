@@ -190,6 +190,28 @@ CREATE POLICY "auth_insert_vc" ON venue_comments FOR INSERT WITH CHECK (true);
 ALTER PUBLICATION supabase_realtime ADD TABLE venue_comments;
 
 -- ============================================
+-- venue_recaps table (star ratings + reviews, noon-to-noon)
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS venue_recaps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  venue_id UUID NOT NULL REFERENCES venues(id) ON DELETE CASCADE,
+  username VARCHAR(24) NOT NULL,
+  body TEXT NOT NULL CHECK (char_length(body) <= 200),
+  stars SMALLINT NOT NULL CHECK (stars >= 1 AND stars <= 5),
+  day_of DATE NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_recaps_venue_day
+  ON venue_recaps(venue_id, day_of, created_at DESC);
+
+ALTER TABLE venue_recaps ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN CREATE POLICY "read_recaps" ON venue_recaps FOR SELECT USING (true); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "insert_recaps" ON venue_recaps FOR INSERT WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE venue_recaps; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ============================================
 -- Specials columns on venues
 -- ============================================
 

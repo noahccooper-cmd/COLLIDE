@@ -1,49 +1,53 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { Send } from 'lucide-react';
-import { formatCount, getCapacityPercent, getCapacityColor, timeAgo, getCommentDay } from '../../lib/utils';
-import { supabase, envReady } from '../../lib/supabase';
-import { useVenueComments } from '../../hooks/useVenueComments';
-import type { Venue, Headcount, VenueComment } from '../../lib/types';
+import { formatCount, getCapacityPercent, getCapacityColor, formatTime } from '../../lib/utils';
+import { useVenueRecaps } from '../../hooks/useVenueRecaps';
+import type { Venue, Headcount } from '../../lib/types';
 
-interface VenueSidePanelProps {
+type SheetState = 'hidden' | 'peeked' | 'expanded';
+
+interface VenueSheetProps {
   venue: Venue;
   headcount: Headcount | null;
   username: string;
   onClose: () => void;
 }
 
-/* ── Photo Hero ──────────────────────────── */
+/* ── Bar Photo with LIVE Badge ───────── */
 
-function VenuePhoto({ venue }: { venue: Venue }) {
-  if (venue.image_url) {
-    return (
-      <div className="sp-photo-wrap">
-        <img src={venue.image_url} className="sp-photo" alt="" />
-      </div>
-    );
-  }
+function BarPhoto({ venue, isLive }: { venue: Venue; isLive: boolean }) {
   const hash = venue.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   const hue = (hash * 47) % 360;
+
   return (
-    <div className="sp-photo-wrap">
-      <div
-        className="sp-photo-placeholder"
-        style={{
-          background: `linear-gradient(135deg, hsl(${hue}, 40%, 18%) 0%, hsl(${(hue + 60) % 360}, 30%, 10%) 100%)`,
-        }}
-      >
-        <span className="sp-big-initial">{venue.name.charAt(0)}</span>
-        <span className="sp-photo-name">{venue.name}</span>
-      </div>
+    <div className="bar-photo-wrap">
+      {venue.image_url ? (
+        <img src={venue.image_url} className="bar-photo" alt={venue.name} />
+      ) : (
+        <div
+          className="bar-photo-placeholder"
+          style={{
+            background: `linear-gradient(135deg, hsl(${hue}, 40%, 18%) 0%, hsl(${(hue + 60) % 360}, 30%, 10%) 100%)`,
+          }}
+        >
+          <span className="bar-photo-initial">{venue.name.charAt(0)}</span>
+          <span className="bar-photo-name">{venue.name}</span>
+        </div>
+      )}
+      {isLive && (
+        <div className="photo-live-badge">
+          <span className="live-dot" /> LIVE
+        </div>
+      )}
     </div>
   );
 }
 
-/* ── Live Count Section ─────────────────── */
+/* ── Live Count Section ──────────────── */
 
 function LiveCountSection({ headcount, venue }: { headcount: Headcount | null; venue: Venue }) {
   const isLive = headcount?.is_live ?? false;
   const count = headcount?.current_count ?? 0;
+  const peak = headcount?.peak_count ?? 0;
 
   if (!isLive) {
     return (
@@ -63,6 +67,9 @@ function LiveCountSection({ headcount, venue }: { headcount: Headcount | null; v
         </span>
         <span className="live-count-num">{formatCount(count)}</span>
         <span className="live-count-label">inside</span>
+        {peak > 0 && (
+          <span className="live-peak-label">Peak: {formatCount(peak)}</span>
+        )}
       </div>
       {pct !== null && (
         <div className="live-bar-row">
@@ -76,109 +83,65 @@ function LiveCountSection({ headcount, venue }: { headcount: Headcount | null; v
   );
 }
 
-/* ── Comment Section ──────────────────── */
+/* ── Action Buttons: Uber, Call, Recap ── */
 
-function CommentSection({ venue, username }: { venue: Venue; username: string }) {
-  const { comments, sendComment } = useVenueComments(venue.id);
-  const [commentText, setCommentText] = useState('');
-  const [expanded, setExpanded] = useState(false);
-  const [previewComment, setPreviewComment] = useState<VenueComment | null>(null);
-  const [previewCount, setPreviewCount] = useState(0);
-  const listRef = useRef<HTMLDivElement>(null);
+function ActionButtons({ venue, onOpenRecap }: { venue: Venue; onOpenRecap: () => void }) {
+  const uberDeepLink = `uber://?action=setPickup&dropoff[latitude]=${venue.lat}&dropoff[longitude]=${venue.lng}&dropoff[nickname]=${encodeURIComponent(venue.name)}`;
+  const uberWebFallback = `https://m.uber.com/ul/?action=setPickup&dropoff[latitude]=${venue.lat}&dropoff[longitude]=${venue.lng}&dropoff[nickname]=${encodeURIComponent(venue.name)}`;
 
-  useEffect(() => {
-    if (!envReady) return;
-    const dayOf = getCommentDay();
-    supabase
-      .from('venue_comments')
-      .select('*', { count: 'exact' })
-      .eq('venue_id', venue.id)
-      .eq('day_of', dayOf)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .then(({ data, count }) => {
-        setPreviewComment((data?.[0] as VenueComment) || null);
-        setPreviewCount(count || 0);
-      });
-  }, [venue.id]);
-
-  useEffect(() => {
-    if (comments.length > 0) {
-      setPreviewComment(comments[0]);
-      setPreviewCount(comments.length);
-    }
-  }, [comments]);
-
-  const handleSend = useCallback(async () => {
-    if (!commentText.trim()) return;
-    await sendComment(null, username, commentText.trim());
-    setCommentText('');
-  }, [commentText, sendComment, username]);
+  const handleUber = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.location.href = uberDeepLink;
+    setTimeout(() => {
+      window.location.href = uberWebFallback;
+    }, 500);
+  };
 
   return (
-    <div className="sp-comments-section">
-      {/* Preview row */}
-      <div className="card-comments" onClick={!expanded ? () => setExpanded(true) : undefined}>
-        <div className="card-comments-row">
-          <span className="card-comments-label">
-            {'\uD83D\uDCAC'} {previewCount > 0 ? `${previewCount} tonight` : 'No comments yet'}
-          </span>
-          {!expanded && previewCount > 0 && (
-            <span className="card-comments-more">See all &#9656;</span>
-          )}
-        </div>
-        {!expanded && previewComment && (
-          <div className="card-comments-preview">
-            <span className="card-comments-user">@{previewComment.username}: </span>
-            {previewComment.body}
-          </div>
-        )}
-      </div>
-
-      {/* Expanded comments */}
-      {expanded && (
-        <div className="expanded-comments-inline">
-          <div className="expanded-input-row">
-            <input
-              value={commentText}
-              onChange={e => setCommentText(e.target.value.slice(0, 200))}
-              placeholder="Say something..."
-              className="expanded-input"
-              onKeyDown={e => e.key === 'Enter' && handleSend()}
-              maxLength={200}
-            />
-            <button
-              onClick={handleSend}
-              disabled={!commentText.trim()}
-              className="expanded-send"
-            >
-              <Send size={14} strokeWidth={2} />
-            </button>
-          </div>
-          <div className="expanded-list" ref={listRef}>
-            {comments.length === 0 ? (
-              <p className="expanded-empty">
-                Be the first to say something about {venue.name} tonight
-              </p>
-            ) : (
-              comments.map(c => (
-                <div key={c.id} className="expanded-comment">
-                  <div className="expanded-comment-top">
-                    <span className="expanded-comment-user">@{c.username}</span>
-                    <span className="expanded-comment-time">{timeAgo(c.created_at)}</span>
-                  </div>
-                  <p className="expanded-comment-body">{c.body}</p>
-                </div>
-              ))
-            )}
-          </div>
+    <div className="action-row">
+      <a href={uberDeepLink} onClick={handleUber} className="action-btn">
+        <span className="action-icon">{'\uD83D\uDE97'}</span>
+        <span className="action-label">Uber</span>
+      </a>
+      {venue.phone ? (
+        <a href={`tel:${venue.phone}`} className="action-btn">
+          <span className="action-icon">{'\uD83D\uDCDE'}</span>
+          <span className="action-label">Call</span>
+        </a>
+      ) : (
+        <div className="action-btn disabled">
+          <span className="action-icon">{'\uD83D\uDCDE'}</span>
+          <span className="action-label">Call</span>
         </div>
       )}
+      <button onClick={onOpenRecap} className="action-btn">
+        <span className="action-icon">{'\u2B50'}</span>
+        <span className="action-label">Recap</span>
+      </button>
     </div>
   );
 }
 
-/* ── Directions helper ──────────────────── */
+/* ── Specials Row (scrollable chips) ──── */
+
+function SpecialsRow({ venue }: { venue: Venue }) {
+  if (!venue.tonight_special) return null;
+  const specials = venue.tonight_special.split('|').map(s => s.trim()).filter(Boolean);
+  if (specials.length === 0) return null;
+
+  return (
+    <div className="specials-section">
+      <div className="specials-label">{'\uD83C\uDF89'} TONIGHT</div>
+      <div className="specials-scroll">
+        {specials.map((special, i) => (
+          <div key={i} className="special-chip">{special}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Directions helper ──────────────── */
 
 function getDirectionsUrl(venue: Venue): string {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -188,96 +151,225 @@ function getDirectionsUrl(venue: Venue): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}&travelmode=walking`;
 }
 
-/* ── Main Side Panel ──────────────────── */
+/* ── Recap Card ──────────────────────── */
 
-export function VenueSidePanel({
+function RecapCard({ recap, index }: { recap: any; index: number }) {
+  return (
+    <div className="recap-card" style={{ zIndex: 100 - index }}>
+      <div className="recap-header">
+        <span className="recap-user">{'\uD83D\uDC64'} @{recap.username}</span>
+        <div className="recap-stars">
+          {[1, 2, 3, 4, 5].map(s => (
+            <span key={s} className={`star ${s <= recap.stars ? 'filled' : 'empty'}`}>{'\u2605'}</span>
+          ))}
+        </div>
+      </div>
+      <p className="recap-body">{recap.body}</p>
+      <span className="recap-time">{formatTime(recap.created_at)}</span>
+    </div>
+  );
+}
+
+/* ── Leave a Recap ───────────────────── */
+
+function LeaveRecap({ venue, username, submitRecap }: { venue: Venue; username: string; submitRecap: (u: string, b: string, s: number) => Promise<void> }) {
+  const [stars, setStars] = useState(0);
+  const [text, setText] = useState('');
+
+  const submit = useCallback(async () => {
+    if (stars === 0 || !text.trim()) return;
+    await submitRecap(username, text.trim(), stars);
+    setStars(0);
+    setText('');
+  }, [stars, text, username, submitRecap]);
+
+  return (
+    <div className="leave-recap">
+      <div className="recap-input-label">{'\u2B50'} Leave your recap</div>
+      <div className="star-selector">
+        {[1, 2, 3, 4, 5].map(s => (
+          <button
+            key={s}
+            className={`star-btn ${s <= stars ? 'active' : ''}`}
+            onClick={() => setStars(s)}
+          >
+            {'\u2605'}
+          </button>
+        ))}
+      </div>
+      <div className="recap-input-row">
+        <input
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="How was tonight?"
+          maxLength={200}
+          className="recap-input"
+          onKeyDown={e => e.key === 'Enter' && submit()}
+        />
+        <button onClick={submit} className="recap-submit" disabled={stars === 0 || !text.trim()}>
+          Post
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Recap Section ───────────────────── */
+
+function RecapSection({ venue, username }: { venue: Venue; username: string }) {
+  const { recaps, submitRecap } = useVenueRecaps(venue.id);
+
+  return (
+    <div className="recap-section">
+      <div className="recap-header-row">
+        <span className="recap-title">{'\u2B50'} THE RECAP</span>
+        <span className="recap-count">{recaps.length > 0 ? `${recaps.length} \u2B50` : ''}</span>
+      </div>
+      <div className="recap-list">
+        {recaps.length === 0 ? (
+          <p className="recap-empty">No recaps yet tonight. Be the first!</p>
+        ) : (
+          recaps.map((r, i) => <RecapCard key={r.id} recap={r} index={i} />)
+        )}
+      </div>
+      <LeaveRecap venue={venue} username={username} submitRecap={submitRecap} />
+    </div>
+  );
+}
+
+/* ── Main VenueSheet (Pull-Up Bottom Sheet) ── */
+
+export function VenueSheet({
   venue,
   headcount,
   username,
   onClose,
-}: VenueSidePanelProps) {
-  const [dismissing, setDismissing] = useState(false);
+}: VenueSheetProps) {
+  const [sheetState, setSheetState] = useState<SheetState>('peeked');
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const recapRef = useRef<HTMLDivElement>(null);
+  const startY = useRef(0);
+  const isLive = headcount?.is_live ?? false;
 
-  const dismiss = useCallback(() => {
-    setDismissing(true);
-    setTimeout(() => onClose(), 250);
-  }, [onClose]);
-
+  // Reset state when venue changes
   useEffect(() => {
-    setDismissing(false);
+    setSheetState('peeked');
+    if (sheetRef.current) sheetRef.current.scrollTop = 0;
   }, [venue.id]);
 
+  const dismiss = useCallback(() => {
+    setSheetState('hidden');
+    setTimeout(onClose, 300);
+  }, [onClose]);
+
+  const handleOpenRecap = useCallback(() => {
+    setSheetState('expanded');
+    setTimeout(() => {
+      recapRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 400);
+  }, []);
+
+  // Swipe gesture handling
+  const onTouchStart = (e: React.TouchEvent) => {
+    startY.current = e.touches[0].clientY;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const diff = startY.current - e.changedTouches[0].clientY;
+
+    if (sheetState === 'peeked') {
+      if (diff > 50) setSheetState('expanded');
+      else if (diff < -50) dismiss();
+    } else if (sheetState === 'expanded') {
+      // Only collapse if scrolled to top
+      if (diff < -50 && (sheetRef.current?.scrollTop ?? 0) < 5) {
+        setSheetState('peeked');
+      }
+    }
+  };
+
   return (
-    <div className={`side-panel${dismissing ? ' dismissing' : ''}`}>
-      <button className="side-panel-close" onClick={dismiss}>&#10005;</button>
+    <div
+      ref={sheetRef}
+      className={`venue-sheet ${sheetState}`}
+      onClick={e => e.stopPropagation()}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Drag handle */}
+      <div className="sheet-handle" />
+
+      {/* Close button (expanded only via CSS) */}
+      <button className="sheet-close-btn" onClick={dismiss}>{'\u2715'}</button>
 
       {/* Photo */}
-      <VenuePhoto venue={venue} />
+      <BarPhoto venue={venue} isLive={isLive} />
 
-      {/* Content */}
-      <div className="side-panel-content">
-        <div className="sp-header">
-          <h2 className="sp-name">{venue.name}</h2>
+      {/* Info */}
+      <div className="sheet-info">
+        <div className="sheet-name-row">
+          <h2 className="sheet-name">{venue.name}</h2>
           {venue.rating && (
-            <div className="sp-rating">
-              <span className="sp-stars">{'★'.repeat(Math.round(venue.rating))}</span>
-              <span className="sp-rating-num">{venue.rating}</span>
-              {venue.review_count && <span className="sp-reviews">({venue.review_count})</span>}
-            </div>
+            <span className="sheet-rating">
+              {'\u2605'} {venue.rating}
+              {venue.review_count ? <span className="sheet-rating-count"> ({venue.review_count})</span> : null}
+            </span>
           )}
         </div>
-
-        {venue.address && <p className="sp-address">{venue.address}</p>}
-
-        {venue.description && (
-          <p className="sp-description">{venue.description}</p>
+        {venue.address && (
+          <a
+            href={getDirectionsUrl(venue)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="venue-address-link"
+          >
+            {'\uD83D\uDCCD'} {venue.address}
+          </a>
         )}
+      </div>
 
-        {/* Tonight's Special */}
-        {venue.tonight_special && (
-          <div className="sp-special">
-            <span className="sp-special-badge">{'\uD83C\uDF89'} TONIGHT</span>
-            <p className="sp-special-text">{venue.tonight_special}</p>
-          </div>
-        )}
-
-        {/* Live Count */}
+      {/* Live Count */}
+      <div className="sheet-section">
         <LiveCountSection headcount={headcount} venue={venue} />
+      </div>
 
-        {/* Info Grid */}
-        <div className="sp-info-grid">
-          {venue.hours && (
-            <div className="sp-info-item">
-              <span className="sp-info-icon">{'\uD83D\uDD50'}</span>
-              <span>{venue.hours}</span>
-            </div>
-          )}
-          {venue.phone && (
-            <a href={`tel:${venue.phone}`} className="sp-info-item clickable">
-              <span className="sp-info-icon">{'\uD83D\uDCDE'}</span>
-              <span>{venue.phone}</span>
+      {/* Action Buttons */}
+      <ActionButtons venue={venue} onOpenRecap={handleOpenRecap} />
+
+      {/* Swipe hint (hidden when expanded via CSS) */}
+      <div className="swipe-hint">{'\u2191'} Swipe up for more</div>
+
+      {/* ─── Expanded content below ─── */}
+
+      {/* Description */}
+      {venue.description && (
+        <p className="sheet-description">{venue.description}</p>
+      )}
+
+      {/* Specials */}
+      <SpecialsRow venue={venue} />
+
+      {/* Hours / Website */}
+      <div className="sheet-meta">
+        {venue.hours && (
+          <span className="sheet-meta-item">{'\uD83D\uDD50'} {venue.hours}</span>
+        )}
+        {venue.website && (
+          <span className="sheet-meta-item">
+            {'\uD83C\uDF10'}{' '}
+            <a href={`https://${venue.website}`} target="_blank" rel="noopener noreferrer" className="sheet-meta-link">
+              {venue.website}
             </a>
-          )}
-          {venue.website && (
-            <a href={`https://${venue.website}`} target="_blank" rel="noopener noreferrer" className="sp-info-item clickable">
-              <span className="sp-info-icon">{'\uD83C\uDF10'}</span>
-              <span>{venue.website}</span>
-            </a>
-          )}
-        </div>
+          </span>
+        )}
+      </div>
 
-        {/* Directions */}
-        <a
-          href={getDirectionsUrl(venue)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="sp-directions-btn"
-        >
-          {'\uD83D\uDCCD'} Get Directions
-        </a>
+      {/* Divider */}
+      <div className="sheet-divider" />
 
-        {/* Comments */}
-        <CommentSection venue={venue} username={username} />
+      {/* The Recap */}
+      <div ref={recapRef}>
+        <RecapSection venue={venue} username={username} />
       </div>
     </div>
   );

@@ -25,16 +25,15 @@ interface MapViewProps {
   onVenueClick: (venue: Venue) => void;
   onMapTap?: () => void;
   mapInstanceRef?: MutableRefObject<mapboxgl.Map | null>;
-  panelOpen?: boolean;
 }
 
 const HEATMAP_SOURCE = 'venue-heat';
 const HEATMAP_LAYER = 'venue-heatmap';
 
-/* ── Power T Canvas Image ────────────── */
+/* ── Power T Canvas Image (512px, crisp) ── */
 
 function createPowerTImage(): { width: number; height: number; data: Uint8Array } {
-  const size = 200;
+  const size = 512;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -54,84 +53,31 @@ function createPowerTImage(): { width: number; height: number; data: Uint8Array 
     ctx.closePath();
   }
 
-  // Tennessee Orange
   ctx.fillStyle = '#FF8200';
 
-  // Top bar of T
   const topW = size * 0.85;
   const topH = size * 0.28;
   const topX = (size - topW) / 2;
   const topY = size * 0.05;
-  roundRect(topX, topY, topW, topH, 8);
+  roundRect(topX, topY, topW, topH, 16);
   ctx.fill();
 
-  // Vertical bar of T
   const vertW = size * 0.32;
   const vertH = size * 0.65;
   const vertX = (size - vertW) / 2;
-  const vertY = topY + topH - 2;
-  roundRect(vertX, vertY, vertW, vertH, 8);
+  const vertY = topY + topH - 4;
+  roundRect(vertX, vertY, vertW, vertH, 16);
   ctx.fill();
 
-  // Subtle bevel highlight
   ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-  roundRect(topX + 3, topY + 3, topW - 6, topH * 0.4, 6);
+  roundRect(topX + 6, topY + 6, topW - 12, topH * 0.4, 12);
   ctx.fill();
-  roundRect(vertX + 3, vertY + 3, vertW - 6, vertH * 0.15, 6);
+  roundRect(vertX + 6, vertY + 6, vertW - 12, vertH * 0.15, 12);
   ctx.fill();
 
   const imageData = ctx.getImageData(0, 0, size, size);
   return { width: size, height: size, data: new Uint8Array(imageData.data.buffer) };
 }
-
-/* ── Nightlife Streets GeoJSON ────────── */
-
-const NIGHTLIFE_STREETS: GeoJSON.FeatureCollection = {
-  type: 'FeatureCollection',
-  features: [
-    {
-      type: 'Feature',
-      properties: { name: 'Cumberland Ave', intensity: 1.0 },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [-83.9400, 35.9565],
-          [-83.9350, 35.9560],
-          [-83.9300, 35.9555],
-          [-83.9250, 35.9553],
-          [-83.9200, 35.9555],
-          [-83.9150, 35.9560],
-        ],
-      },
-    },
-    {
-      type: 'Feature',
-      properties: { name: 'The Strip', intensity: 0.9 },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [-83.9320, 35.9575],
-          [-83.9300, 35.9568],
-          [-83.9280, 35.9560],
-          [-83.9260, 35.9555],
-        ],
-      },
-    },
-    {
-      type: 'Feature',
-      properties: { name: 'Central St / Old City', intensity: 0.7 },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [-83.9175, 35.9695],
-          [-83.9170, 35.9675],
-          [-83.9168, 35.9660],
-          [-83.9170, 35.9645],
-        ],
-      },
-    },
-  ],
-};
 
 /* ── Neyland Stadium polygon for 3D tint ── */
 
@@ -148,7 +94,7 @@ const NEYLAND_POLYGON = {
 
 /* ── Main MapView Component ──────────── */
 
-export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onVenueClick, onMapTap, mapInstanceRef, panelOpen }: MapViewProps) {
+export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onVenueClick, onMapTap, mapInstanceRef }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
@@ -159,7 +105,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
   venuesRef.current = venues;
   countsRef.current = counts;
 
-  // Build GeoJSON from current venues + counts
   const buildHeatGeoJSON = useCallback((): GeoJSON.FeatureCollection => ({
     type: 'FeatureCollection',
     features: venuesRef.current.map(v => ({
@@ -172,7 +117,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     })),
   }), []);
 
-  // Initialize map once
   useEffect(() => {
     if (!mapContainer.current || !mapboxReady) return;
 
@@ -194,7 +138,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     map.dragRotate.disable();
     map.touchZoomRotate.disableRotation();
 
-    // Zoom-aware marker fade
     const updateMarkerVisibility = () => {
       const zoom = map.getZoom();
       document.querySelectorAll('.venue-marker').forEach(node => {
@@ -215,7 +158,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
 
     map.on('zoom', updateMarkerVisibility);
 
-    // Auto-pitch for 3D buildings at high zoom
     map.on('zoom', () => {
       const zoom = map.getZoom();
       if (zoom >= 15.5) {
@@ -229,7 +171,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     });
 
     map.on('load', () => {
-      // Find first label layer for inserting glow layers below
       const layers = map.getStyle().layers || [];
       let firstLabelLayer: string | undefined;
       for (const layer of layers) {
@@ -239,51 +180,36 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         }
       }
 
-      // ── Nightlife Street Glow (3 layers) ──────────────
-      map.addSource('nightlife-streets', {
-        type: 'geojson',
-        data: NIGHTLIFE_STREETS,
-      });
-
-      // Outer glow (wide, faint warm gold)
+      // ── Road Glow (composite source, real road geometry) ──
       map.addLayer({
-        id: 'street-glow-outer',
+        id: 'road-glow',
         type: 'line',
-        source: 'nightlife-streets',
+        source: 'composite',
+        'source-layer': 'road',
+        filter: ['in', 'class', 'primary', 'secondary', 'tertiary', 'street'],
         paint: {
-          'line-color': 'rgba(255, 210, 140, 0.06)',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 8, 15, 40, 18, 80],
-          'line-blur': ['interpolate', ['linear'], ['zoom'], 12, 8, 15, 30, 18, 50],
+          'line-color': 'rgba(255, 215, 140, 0.06)',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 6, 15, 30, 18, 60],
+          'line-blur': ['interpolate', ['linear'], ['zoom'], 12, 6, 15, 25, 18, 45],
           'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.5, 16, 0.8],
         },
       }, firstLabelLayer);
 
-      // Mid glow
       map.addLayer({
-        id: 'street-glow-mid',
+        id: 'road-glow-inner',
         type: 'line',
-        source: 'nightlife-streets',
+        source: 'composite',
+        'source-layer': 'road',
+        filter: ['in', 'class', 'primary', 'secondary', 'tertiary', 'street'],
         paint: {
-          'line-color': 'rgba(255, 190, 100, 0.12)',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 3, 15, 16, 18, 30],
-          'line-blur': ['interpolate', ['linear'], ['zoom'], 12, 4, 15, 12, 18, 20],
-          'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.6, 16, 0.9],
+          'line-color': 'rgba(255, 200, 120, 0.12)',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2, 15, 8, 18, 16],
+          'line-blur': ['interpolate', ['linear'], ['zoom'], 12, 2, 15, 6, 18, 10],
+          'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.6, 16, 1],
         },
       }, firstLabelLayer);
 
-      // Inner bright line
-      map.addLayer({
-        id: 'street-glow-inner',
-        type: 'line',
-        source: 'nightlife-streets',
-        paint: {
-          'line-color': 'rgba(255, 220, 170, 0.25)',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 15, 4, 18, 8],
-          'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.7, 16, 1],
-        },
-      }, firstLabelLayer);
-
-      // ── Power T on UTK Campus ─────────────────────
+      // ── Power T on UTK Campus (centered, bigger, 512px) ──
       const tImage = createPowerTImage();
       map.addImage('power-t', tImage, { sdf: false });
 
@@ -291,10 +217,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         type: 'geojson',
         data: {
           type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [-83.9295, 35.9544],
-          },
+          geometry: { type: 'Point', coordinates: [-83.9300, 35.9490] },
           properties: {},
         },
       });
@@ -305,16 +228,16 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         source: 'power-t-source',
         layout: {
           'icon-image': 'power-t',
-          'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.25, 14, 0.5, 16, 0.8, 18, 1.2],
+          'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.5, 14, 1.0, 16, 1.5, 18, 2.2],
           'icon-allow-overlap': true,
           'icon-ignore-placement': true,
         },
         paint: {
-          'icon-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.15, 14, 0.3, 16, 0.4],
+          'icon-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12.5, 0.12, 14, 0.22, 16, 0.30, 18, 0.35],
         },
       });
 
-      // ── 3D Buildings with Neyland Orange Tint ──────
+      // ── 3D Buildings with Neyland Orange Tint ──
       map.addLayer({
         id: '3d-buildings',
         source: 'composite',
@@ -324,10 +247,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         paint: {
           'fill-extrusion-color': [
             'case',
-            ['all',
-              ['>=', ['get', 'height'], 30],
-              ['within', NEYLAND_POLYGON],
-            ],
+            ['all', ['>=', ['get', 'height'], 30], ['within', NEYLAND_POLYGON]],
             'rgba(255, 130, 0, 0.6)',
             'rgba(30, 30, 35, 0.6)',
           ] as any,
@@ -337,11 +257,8 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         },
       });
 
-      // ── Heatmap Layer ─────────────────────────────
-      map.addSource(HEATMAP_SOURCE, {
-        type: 'geojson',
-        data: buildHeatGeoJSON(),
-      });
+      // ── Heatmap Layer ──
+      map.addSource(HEATMAP_SOURCE, { type: 'geojson', data: buildHeatGeoJSON() });
 
       map.addLayer({
         id: HEATMAP_LAYER,
@@ -380,47 +297,26 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     });
 
     mapRef.current = map;
-    if (mapInstanceRef) {
-      mapInstanceRef.current = map;
-    }
+    if (mapInstanceRef) mapInstanceRef.current = map;
 
     return () => {
       markersRef.current.forEach(entry => entry.marker.remove());
       markersRef.current.clear();
       map.remove();
       mapRef.current = null;
-      if (mapInstanceRef) {
-        mapInstanceRef.current = null;
-      }
+      if (mapInstanceRef) mapInstanceRef.current = null;
       setMapLoaded(false);
     };
   }, []);
 
-  // Handle map click (tap on empty map area = dismiss panel)
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
     const map = mapRef.current;
-
-    const handleClick = () => {
-      onMapTap?.();
-    };
-
+    const handleClick = () => { onMapTap?.(); };
     map.on('click', handleClick);
-    return () => {
-      map.off('click', handleClick);
-    };
+    return () => { map.off('click', handleClick); };
   }, [mapLoaded, onMapTap]);
 
-  // Resize map when panel opens/closes (desktop)
-  useEffect(() => {
-    if (!mapRef.current || !mapLoaded) return;
-    const timer = setTimeout(() => {
-      mapRef.current?.resize();
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [panelOpen, mapLoaded]);
-
-  // Fly to new city when city changes
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
     const config = CITIES[city];
@@ -432,13 +328,10 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     });
   }, [city, mapLoaded]);
 
-  // Create markers for new venues, remove stale ones
   const syncMarkers = useCallback(() => {
     if (!mapRef.current || !mapLoaded) return;
-
     const currentIds = new Set(venues.map(v => v.id));
 
-    // Remove markers for venues no longer present
     markersRef.current.forEach((entry, id) => {
       if (!currentIds.has(id)) {
         entry.marker.remove();
@@ -446,7 +339,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       }
     });
 
-    // Create markers for new venues
     venues.forEach(venue => {
       if (markersRef.current.has(venue.id)) return;
 
@@ -484,23 +376,14 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         .addTo(mapRef.current!);
 
       markersRef.current.set(venue.id, {
-        marker,
-        el,
-        dotEl,
-        countEl,
-        labelEl,
-        liveEl,
-        currentTier: 'dot-t0',
-        currentCount: 0,
+        marker, el, dotEl, countEl, labelEl, liveEl,
+        currentTier: 'dot-t0', currentCount: 0,
       });
     });
   }, [venues, mapLoaded, onVenueClick]);
 
-  useEffect(() => {
-    syncMarkers();
-  }, [syncMarkers]);
+  useEffect(() => { syncMarkers(); }, [syncMarkers]);
 
-  // Update marker visuals + heatmap when counts/live status change
   useEffect(() => {
     markersRef.current.forEach((entry, venueId) => {
       const count = counts[venueId] ?? 0;
@@ -508,14 +391,12 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       const isPulsed = pulsedVenueId === venueId;
       const newTier = getDotTier(count);
 
-      // Update dot class if changed
       if (newTier !== entry.currentTier) {
         entry.dotEl.classList.remove(entry.currentTier);
         entry.dotEl.classList.add(newTier);
         entry.currentTier = newTier;
       }
 
-      // Update count text — empty dots show nothing (no dash)
       if (count !== entry.currentCount) {
         entry.countEl.textContent = count > 0 ? formatCount(count) : '';
         entry.countEl.classList.remove('bumping');
@@ -524,29 +405,19 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         entry.currentCount = count;
       }
 
-      // Live badge
       entry.liveEl.style.display = isLive ? 'flex' : 'none';
+      if (isLive) entry.dotEl.classList.add('live-ring');
+      else entry.dotEl.classList.remove('live-ring');
 
-      // Live ring on dot
-      if (isLive) {
-        entry.dotEl.classList.add('live-ring');
-      } else {
-        entry.dotEl.classList.remove('live-ring');
-      }
-
-      // Pulsed (count just changed via real-time)
       if (isPulsed) {
         entry.dotEl.classList.add('count-updated');
         setTimeout(() => entry.dotEl.classList.remove('count-updated'), 500);
       }
     });
 
-    // Update heatmap data
     if (mapRef.current && mapLoaded) {
       const source = mapRef.current.getSource(HEATMAP_SOURCE) as mapboxgl.GeoJSONSource | undefined;
-      if (source) {
-        source.setData(buildHeatGeoJSON());
-      }
+      if (source) source.setData(buildHeatGeoJSON());
     }
   }, [counts, liveVenueIds, pulsedVenueId, mapLoaded, buildHeatGeoJSON]);
 
@@ -560,10 +431,5 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     );
   }
 
-  return (
-    <div
-      ref={mapContainer}
-      className={`w-full h-full map-container${panelOpen ? ' panel-open' : ''}`}
-    />
-  );
+  return <div ref={mapContainer} className="w-full h-full" />;
 }

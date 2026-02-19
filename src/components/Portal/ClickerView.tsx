@@ -252,11 +252,14 @@ export function ClickerView({
           </p>
           <input
             value={specialText}
-            onChange={e => setSpecialText(e.target.value.slice(0, 100))}
-            placeholder="$3 wells til midnight"
+            onChange={e => setSpecialText(e.target.value.slice(0, 200))}
+            placeholder="$3 wells | Wings half off"
             className="w-full h-10 px-3 bg-[#050507] border border-[#2A2A30] rounded-lg text-white text-sm outline-none focus:border-[#FF5E1A] transition-colors"
             style={{ fontFamily: 'Satoshi, sans-serif' }}
           />
+          <p className="text-[#55555F] text-[10px] mt-1" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            Separate with |
+          </p>
           <button
             onClick={handleUpdateSpecial}
             className="w-full h-9 rounded-lg text-white text-sm font-bold mt-2 active:scale-[0.98] transition-transform"
