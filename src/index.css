@@ -924,6 +924,209 @@ body::after {
 .mapboxgl-canvas { outline: none; }
 
 /* ============================================
+   Precap — AI Chat Tab
+   ============================================ */
+
+.precap-page {
+  position: absolute;
+  inset: 0;
+  top: 108px;
+  bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  background: #050507;
+}
+
+.precap-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #2A2A30;
+  background: #050507;
+  flex-shrink: 0;
+}
+
+.precap-header-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.precap-header-title {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: white;
+}
+
+.precap-header-sub {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  color: #55555F;
+  margin-left: 4px;
+}
+
+.precap-messages {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.precap-bubble {
+  display: flex;
+  gap: 8px;
+  max-width: 88%;
+  animation: fade-in 200ms ease-out;
+}
+
+.precap-bubble.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.precap-bubble.assistant {
+  align-self: flex-start;
+}
+
+.precap-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 94, 26, 0.2), rgba(255, 45, 5, 0.1));
+  border: 1px solid rgba(255, 94, 26, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.precap-bubble-content {
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.precap-bubble-content.assistant {
+  background: #111114;
+  border: 1px solid #2A2A30;
+  color: #E5E5EA;
+  border-bottom-left-radius: 4px;
+}
+
+.precap-bubble-content.user {
+  background: linear-gradient(135deg, #FF5E1A, #FF2D05);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+/* Typing indicator */
+.precap-typing {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #55555F;
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Suggestion chips */
+.precap-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+  animation: fade-in 300ms ease-out;
+}
+
+.precap-chip {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 94, 26, 0.15);
+  border-radius: 20px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #C0C0C5;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.precap-chip:active {
+  background: rgba(255, 94, 26, 0.12);
+  border-color: rgba(255, 94, 26, 0.3);
+  color: #FF5E1A;
+  transform: scale(0.97);
+}
+
+/* Input row */
+.precap-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid #2A2A30;
+  background: #050507;
+  flex-shrink: 0;
+}
+
+.precap-input {
+  flex: 1;
+  height: 42px;
+  border-radius: 21px;
+  background: #111114;
+  border: 1px solid #2A2A30;
+  padding: 0 16px;
+  color: white;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.precap-input::placeholder { color: #55555F; }
+.precap-input:focus { border-color: rgba(255, 94, 26, 0.4); }
+
+.precap-send {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF5E1A, #FF2D05);
+  border: none;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.precap-send:active { transform: scale(0.92); }
+.precap-send:disabled { opacity: 0.3; cursor: default; }
+
+/* ============================================
    Selection
    ============================================ */
 

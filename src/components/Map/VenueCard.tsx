@@ -92,7 +92,7 @@ function RecapCard({ recap, index }: { recap: any; index: number }) {
 
 /* ── Leave a Recap ── */
 
-function LeaveRecap({ venue, username, submitRecap }: { venue: Venue; username: string; submitRecap: (u: string, b: string, s: number) => Promise<void> }) {
+function LeaveRecap({ username, submitRecap }: { venue: Venue; username: string; submitRecap: (u: string, b: string, s: number) => Promise<void> }) {
   const [stars, setStars] = useState(0);
   const [text, setText] = useState('');
 

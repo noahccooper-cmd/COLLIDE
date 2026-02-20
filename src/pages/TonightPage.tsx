@@ -3,7 +3,6 @@ import { MapView } from '../components/Map/MapView';
 import { VenueSheet } from '../components/Map/VenueCard';
 import type { Venue, Headcount } from '../lib/types';
 import type { CityKey } from '../lib/constants';
-import type mapboxgl from 'mapbox-gl';
 
 interface TonightPageProps {
   city: CityKey;
@@ -25,7 +24,7 @@ export function TonightPage({
   username,
 }: TonightPageProps) {
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
-  const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
+  const mapInstanceRef = useRef<any>(null);
 
   // Keep selectedVenue in sync with venues array (for realtime special updates)
   const currentVenue = selectedVenue
@@ -38,6 +37,7 @@ export function TonightPage({
       const map = mapInstanceRef.current;
       // Offset upward so venue dot isn't hidden by bottom sheet
       const bounds = map.getBounds();
+      if (!bounds) return;
       const latSpan = bounds.getNorth() - bounds.getSouth();
       const offsetLat = venue.lat - latSpan * 0.12;
       map.flyTo({

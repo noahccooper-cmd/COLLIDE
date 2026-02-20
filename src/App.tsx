@@ -6,6 +6,7 @@ import { useHeadcounts } from './hooks/useHeadcounts';
 import { Header } from './components/Layout/Header';
 import { BottomNav, type Tab } from './components/Layout/BottomNav';
 import { TonightPage } from './pages/TonightPage';
+import { PrecapPage } from './pages/PrecapPage';
 import { PortalPage } from './pages/PortalPage';
 import { UsernameScreen } from './components/UsernameScreen';
 
@@ -88,6 +89,15 @@ export default function App() {
           headcounts={headcounts}
           liveVenueIds={liveVenueIds}
           pulsedVenueId={pulsedVenueId}
+          username={username}
+        />
+      </div>
+
+      {/* Precap tab — AI nightlife assistant */}
+      <div className={tab === 'precap' ? '' : 'hidden'}>
+        <PrecapPage
+          venues={venues}
+          headcounts={headcounts}
           username={username}
         />
       </div>
