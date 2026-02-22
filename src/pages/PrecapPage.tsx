@@ -63,17 +63,25 @@ LIVE VENUE DATA (real-time):
 ${venueContext}
 
 LOCAL KNOWLEDGE:
-- "The Strip" = Cumberland Ave corridor near campus — The Hill, Half Barrel, Sunspot, Hanna's Lil Dive are all here
-- "Old City" = downtown district — Old City Sports Bar, Fieldhouse Social, Sapphire are here
-- "Market Square" = downtown square — Preservation Pub is the anchor
-- Cotton Eyed Joe's is out west, 20 min drive — big country music venue, worth the Uber for a wild night
+- "The Strip" = Cumberland Ave corridor near campus — Half Barrel, Sunspot, Hanna's, Taqueria Mares, LiterBoard, The Bookstore are all on or just off Cumberland
+- The Hill is on Forest Ave, just NORTH of Cumberland, in Fort Sanders — a short walk from The Strip
+- Cool Beans is SOUTH of the strip on Lake Ave — the patio bar with pool, darts, Bushwhackers
+- Yacht Club is on S 17th St, tucked between the strip and campus — THE barcade
+- Old City Sports Bar is DOWNTOWN on S Central St (Old City district) — separate from the strip, ~10 min drive
 - Game days (especially football Saturdays) = everything on The Strip is packed by noon
 - Typical peak hours: 10:30 PM – 1:30 AM on weekends
 - Bar close = 3 AM in Knoxville
-- If someone says "where's the move" they want to know the busiest/best spot RIGHT NOW
-- Hanna's is small and intimate (120 cap), Half Barrel is craft beer focused, The Hill is THE college bar, Sunspot has the best rooftop
-- Preservation Pub has 3 floors + rooftop, live music every night
-- Sapphire is the only real nightclub — DJ, bottle service, dress code
+- If someone says "where's the move" they want the busiest/best spot RIGHT NOW
+- The Hill = THE college bar, wings & live music, 350 cap
+- Cool Beans = dive bar energy, cheap pitchers, game day patio, 200 cap
+- Half Barrel = bourbon & craft beer HQ, chill vibe, 180 cap
+- Sunspot = SW/Caribbean food, balcony bar, best brunch, closes earlier (10pm)
+- Old City Sports Bar = downtown sports bar, 160-inch video wall, FREE beer til first score, 250 cap
+- Taqueria Mares = late-night Mexican food, Barbie Margarita, open til 3am F-Sat
+- Hanna's = Cumberland institution since '94, two floors + patio, 100+ beers, THE 21st birthday bar, 400 cap
+- Yacht Club = retro barcade, 25-cent games, Smash Bros, shot+PBR deal, intimate 120 cap
+- LiterBoard = two-floor gaming bar, balcony overlooking Cumberland, trivia & karaoke
+- The Bookstore = intimate cocktail spot on Melrose Place, newest bar, low-key curated vibes
 
 RULES:
 - Reference actual live headcounts when available — cite specific numbers

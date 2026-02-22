@@ -225,23 +225,82 @@ ALTER TABLE venues ADD COLUMN IF NOT EXISTS special_updated_at TIMESTAMPTZ DEFAU
 DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE venues; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ============================================
--- Replace Knoxville venue data with 10 real bars
+-- Knoxville venues — UPDATE existing 5, INSERT 5 new
+-- Uses UPSERT (ON CONFLICT) to preserve foreign key refs
 -- ============================================
 
-DELETE FROM venues WHERE city = 'knoxville';
+-- Update existing venues with correct coordinates & data
+UPDATE venues SET
+  lat = 35.96389, lng = -83.92806,
+  address = '1105 Forest Ave, Knoxville, TN 37916',
+  phone = '(865) 540-1011',
+  website = 'https://thehillknox.com',
+  hours = '11am-3am daily',
+  description = 'Live music joint, bar, restaurant & caterer in the Fort Sanders area near UT. Award-winning wings, Taco Tuesday, Wing Wednesday. Big screens for every game, trivia nights, cold beer, and an unbeatable patio. College favorite since 2007.',
+  vibe = 'Award-winning wings, live music, sports. THE college bar.',
+  rating = 4.0, review_count = 239, capacity = 350, staff_code = 'HILL01'
+WHERE slug = 'the-hill';
 
-INSERT INTO venues (name, slug, city, category, lat, lng, address, vibe, hours, phone, website, instagram, description, rating, review_count, capacity, staff_code, is_active, sort_order, cam_coming_soon)
+UPDATE venues SET
+  lat = 35.95470, lng = -83.93518,
+  address = '1817 Lake Ave, Knoxville, TN 37916',
+  phone = '(865) 522-6417',
+  website = 'https://coolbeansbar.com',
+  hours = '11am-3am daily',
+  description = 'The hottest dive bar on UT campus. Pool, darts, beer pong, cornhole, foosball. Cheap pitchers, famous Bushwhacker drinks, and an outdoor patio that is the spot on game days.',
+  vibe = 'Dive bar. Pool tables, cheap pitchers, Bushwhackers. THE patio.',
+  rating = 4.2, review_count = 494, capacity = 200, staff_code = 'COOL01'
+WHERE slug = 'cool-beans';
+
+UPDATE venues SET
+  lat = 35.95582, lng = -83.93492,
+  address = '1829 Cumberland Ave, Knoxville, TN 37916',
+  phone = '(865) 595-4848',
+  website = 'https://hb.smithbars.com',
+  hours = '4pm-3am daily',
+  description = 'The strip''s bourbon headquarters. 35+ draft beers and one of the best bourbon/whiskey collections outside Kentucky. American food, chill atmosphere. The PB&J Mixtape drink is a must-try.',
+  vibe = '35 taps, best bourbon outside Kentucky. Craft beer heaven.',
+  rating = 4.0, review_count = 46, capacity = 180, staff_code = 'HALF01'
+WHERE slug = 'half-barrel';
+
+UPDATE venues SET
+  lat = 35.95373, lng = -83.93928,
+  address = '2200 Cumberland Ave, Knoxville, TN 37916',
+  phone = '(865) 637-4663',
+  website = 'https://sunspotrestaurant.com',
+  hours = '11am-10pm daily, brunch Sat-Sun 10am',
+  description = 'Where tie-dyes and neckties unite. Southwestern, Caribbean & Latin American fare with 40+ beers on tap. Famous shrimp and grits, rattlesnake pasta, and BGLT. Upstairs balcony bar.',
+  vibe = 'Southwestern-Caribbean fusion. 40+ beers. Upstairs balcony.',
+  rating = 4.5, review_count = 187, capacity = 220, staff_code = 'SUNSP1'
+WHERE slug = 'sunspot';
+
+UPDATE venues SET
+  lat = 35.97023, lng = -83.91827,
+  address = '106 S Central St, Knoxville, TN 37902',
+  phone = '(865) 474-1039',
+  website = 'https://oldcitysportsbar.com',
+  hours = 'M-W 5pm-12:30am, Th 5pm-1am, F 5pm-1:30am, Sat 12pm-1:30am, Sun 12pm-1am',
+  description = 'Knoxville''s premier sports bar in the historic Old City. 30+ HD TVs, two balconies, 160-inch video wall. FREE beer until first score on game days. Food from Southern Grit.',
+  vibe = 'Sports, cold drinks, Old City energy. FREE beer til first score.',
+  rating = 4.9, review_count = 540, capacity = 250, staff_code = 'OCSB01'
+WHERE slug = 'old-city-sports';
+
+-- Remove old venues that are no longer in the lineup
+DELETE FROM venue_recaps WHERE venue_id IN (SELECT id FROM venues WHERE slug IN ('hannas-lil-dive', 'fieldhouse-social', 'cotton-eyed-joes', 'preservation-pub', 'sapphire'));
+DELETE FROM venue_comments WHERE venue_id IN (SELECT id FROM venues WHERE slug IN ('hannas-lil-dive', 'fieldhouse-social', 'cotton-eyed-joes', 'preservation-pub', 'sapphire'));
+DELETE FROM headcounts WHERE venue_id IN (SELECT id FROM venues WHERE slug IN ('hannas-lil-dive', 'fieldhouse-social', 'cotton-eyed-joes', 'preservation-pub', 'sapphire'));
+DELETE FROM clicker_logs WHERE venue_id IN (SELECT id FROM venues WHERE slug IN ('hannas-lil-dive', 'fieldhouse-social', 'cotton-eyed-joes', 'preservation-pub', 'sapphire'));
+DELETE FROM venues WHERE slug IN ('hannas-lil-dive', 'fieldhouse-social', 'cotton-eyed-joes', 'preservation-pub', 'sapphire');
+
+-- Insert 5 new venues
+INSERT INTO venues (name, slug, city, category, lat, lng, address, vibe, hours, phone, website, description, rating, review_count, capacity, staff_code, is_active, sort_order, cam_coming_soon)
 VALUES
-  ('The Hill Bar & Grill', 'the-hill', 'knoxville', 'bar', 35.95746, -83.92467, '1105 Forest Ave, Knoxville, TN 37916', 'Award-winning wings, live music, sports. THE college bar.', '11 AM – 3 AM, 7 days', '(865) 540-1011', 'thehillknox.com', '@thehillknox', 'Award-winning wings, live music & sports on 20+ TVs. The iconic college bar on The Strip.', 4.0, 239, 350, 'HILL01', true, 1, true),
-  ('Cool Beans', 'cool-beans', 'knoxville', 'bar', 35.95610, -83.93005, '1817 Lake Ave, Knoxville, TN 37916', 'Classic strip bar. Pool tables, cheap drinks, late nights.', '5 PM – 3 AM', '(865) 673-0608', null, null, 'Chill patio vibes, pool tables & cheap drinks. The laid-back spot on Lake Ave everyone ends up at.', 4.2, 494, 200, 'COOL01', true, 2, true),
-  ('Half Barrel', 'half-barrel', 'knoxville', 'bar', 35.95590, -83.93495, '1829 Cumberland Ave, Knoxville, TN 37916', '35 taps, best bourbon outside Kentucky. Craft beer heaven.', '3 PM – 3 AM daily', '(865) 595-4848', 'hb.smithbars.com', '@halfbarrelut', 'Wood-paneled haunt with 35 craft taps, bourbon flights & trivia nights on Cumberland.', 4.0, 46, 180, 'HALF01', true, 3, true),
-  ('Old City Sports Bar', 'old-city-sports', 'knoxville', 'bar', 35.96725, -83.91690, '106 S Central St, Knoxville, TN 37902', 'Sports, cold drinks, Old City energy. 4.9 stars.', '11 AM – 3 AM', null, null, null, 'Downtown sports bar in the Old City. Pool tables, darts & big-game watch party energy.', 4.9, 540, 250, 'OCSB01', true, 4, true),
-  ('Sunspot', 'sunspot', 'knoxville', 'bar', 35.95530, -83.93655, '2200 Cumberland Ave, Knoxville, TN 37916', 'Southwestern-Caribbean fusion. Craft brews. Patio scene.', '11 AM – 12 AM', '(865) 637-4663', 'sunspotrestaurant.com', null, 'Funky rooftop bar with live music, local brews & late-night food on The Strip.', 4.5, 187, 220, 'SUNSP1', true, 5, true),
-  ('Hanna''s Lil Dive', 'hannas-lil-dive', 'knoxville', 'bar', 35.95688, -83.93210, '1931 Cumberland Ave, Knoxville, TN 37916', 'Dive bar energy. Karaoke nights. Everyone knows your name.', '5 PM – 3 AM', '(865) 999-5510', null, '@hannaslildive', 'Tiny dive bar with huge energy. Karaoke, cheap PBR & the best jukebox on The Strip.', 4.4, 312, 120, 'HANNA1', true, 6, true),
-  ('Fieldhouse Social', 'fieldhouse-social', 'knoxville', 'bar', 35.96530, -83.91925, '107 S Central St, Knoxville, TN 37902', 'Upscale sports bar. Great food, craft cocktails. Old City.', '11 AM – 2 AM', '(865) 312-5480', 'fieldhousesocial.com', '@fieldhousesocial', 'Elevated sports bar in Old City — craft cocktails, full kitchen, game day central.', 4.3, 185, 300, 'FIELD1', true, 7, true),
-  ('Cotton Eyed Joe''s', 'cotton-eyed-joes', 'knoxville', 'club', 35.89070, -84.01580, '11220 Outlet Dr, Knoxville, TN 37932', 'Country bar & live music venue. Line dancing. Huge space.', '7 PM – 3 AM Thu–Sat', '(865) 675-5637', 'cottoneyedjoes.com', '@cottoneyedjoes', 'Massive country bar with live bands, line dancing & mechanical bull. West Knox destination.', 4.1, 890, 1000, 'COTTO1', true, 8, true),
-  ('Preservation Pub', 'preservation-pub', 'knoxville', 'bar', 35.96500, -83.92020, '28 Market Square, Knoxville, TN 37902', 'Live music 7 nights. Rooftop bar. Market Square icon.', '11 AM – 3 AM', '(865) 524-2224', 'preservationpub.com', '@preservationpub', 'Market Square institution — 3 floors of live music, a rooftop patio & local beer on tap.', 4.2, 621, 400, 'PPUB01', true, 9, true),
-  ('Sapphire', 'sapphire', 'knoxville', 'club', 35.96375, -83.91760, '428 S Gay St, Knoxville, TN 37902', 'Premier nightclub. DJs, bottle service, dance floor.', '9 PM – 3 AM Thu–Sat', null, null, '@sapphireknox', 'Downtown Knoxville''s premier nightclub. DJs, VIP tables, rooftop lounge & themed event nights.', 4.0, 328, 500, 'SAPPH1', true, 10, true);
+  ('Taqueria Mares', 'taqueria-mares', 'knoxville', 'bar', 35.95461, -83.93718, '2008 Cumberland Ave, Knoxville, TN 37916', 'Authentic Mexican. Burritos, tacos, margaritas. THE late-night food spot.', 'M-T 11am-9:30pm, W-Th 11am-2am, F-Sat 11am-3am, Sun 12pm-9:30pm', '(865) 240-3547', 'https://taqueriamaresnew.toast.site', 'Authentic Mexican on the strip. Order at the counter, sit anywhere. Burritos, tacos, bowls, quesadillas, nachos. Famous Barbie Margarita, horchata, frozen Piña Colada marg. THE late-night food spot.', 4.3, 350, 150, 'MARE01', true, 6, true),
+  ('Hanna''s', 'hannas', 'knoxville', 'bar', 35.95506, -83.93535, '1836 Cumberland Ave, Knoxville, TN 37916', 'Two floors, huge patio. 100+ beers, dancing, live music. THE 21st birthday spot.', 'Thu-Sat 9pm-3am', '(865) 522-9933', null, 'A Cumberland strip institution since 1994. Two floors plus huge patio and outdoor bar. 100+ beers, 200+ liquors. Dancing, pool, live music. THE spot for 21st birthdays and post-game celebrations.', 4.4, 620, 400, 'HANN01', true, 7, true),
+  ('Yacht Club', 'yacht-club', 'knoxville', 'bar', 35.95671, -83.93268, '721 S 17th St, Knoxville, TN 37916', 'Barcade. Retro 25-cent games, Smash Bros, craft beer. PBR + shot deal.', 'M-Th 4pm-3am, F 8pm-3am, Sat 4pm-3am, Sun closed', '(865) 673-3500', null, 'Knoxville''s barcade gem. Retro 25-cent arcade games, N64 and GameCube consoles for Smash Bros. Nearly 100 beers, warm lighting, cozy booth seating. Shot plus PBR pregame deal is legendary.', 4.5, 280, 120, 'YACHT1', true, 8, true),
+  ('LiterBoard', 'literboard', 'knoxville', 'bar', 35.95504, -83.93570, '1848 Cumberland Ave, Knoxville, TN 37916', 'Two-floor gaming bar. Retro consoles, balcony, trivia, karaoke.', 'W-Sat 8pm-3am', '(865) 247-4582', 'https://literboardknox.com', 'Two-floor gaming bar. Retro consoles downstairs, another bar and balcony upstairs overlooking Cumberland. Craft hot dogs, diverse beer selection, trivia nights, karaoke, live DJs on weekends.', 4.2, 195, 200, 'LITER1', true, 9, true),
+  ('The Bookstore', 'the-bookstore', 'knoxville', 'bar', 35.95585, -83.93214, '821 Melrose Pl, Knoxville, TN 37916', 'Intimate newer spot. Cocktail-focused, curated atmosphere.', 'W-Sat 8pm-2am', null, null, 'Intimate newer spot just off the strip on Melrose Place. Low-key vibes, cocktail-focused, curated atmosphere.', 4.1, 85, 80, 'BOOK01', true, 10, true)
+ON CONFLICT (slug) DO NOTHING;
 
 -- ============================================
 -- Seed staff codes for Tampa venues
