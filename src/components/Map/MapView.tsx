@@ -27,22 +27,6 @@ interface MapViewProps {
   mapInstanceRef?: MutableRefObject<mapboxgl.Map | null>;
 }
 
-const HEATMAP_SOURCE = 'venue-heat';
-const HEATMAP_LAYER = 'venue-heatmap';
-
-/* ── Neyland Stadium polygon for 3D tint ── */
-
-const NEYLAND_POLYGON = {
-  type: 'Polygon' as const,
-  coordinates: [[
-    [-83.9260, 35.9570],
-    [-83.9200, 35.9570],
-    [-83.9200, 35.9530],
-    [-83.9260, 35.9530],
-    [-83.9260, 35.9570],
-  ]],
-};
-
 /* ── Main MapView Component ──────────── */
 
 export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onVenueClick, onMapTap, mapInstanceRef }: MapViewProps) {
@@ -56,18 +40,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
   const countsRef = useRef(counts);
   venuesRef.current = venues;
   countsRef.current = counts;
-
-  const buildHeatGeoJSON = useCallback((): GeoJSON.FeatureCollection => ({
-    type: 'FeatureCollection',
-    features: venuesRef.current.map(v => ({
-      type: 'Feature' as const,
-      geometry: { type: 'Point' as const, coordinates: [v.lng, v.lat] },
-      properties: {
-        count: countsRef.current[v.id] || 0,
-        intensity: Math.min((countsRef.current[v.id] || 0) / 100, 1),
-      },
-    })),
-  }), []);
 
   useEffect(() => {
     if (!mapContainer.current || !mapboxReady) return;
@@ -132,19 +104,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
 
     map.on('zoom', updateZoomVisibility);
 
-    // ── 3D pitch when zoomed way in ──
-    map.on('zoom', () => {
-      const zoom = map.getZoom();
-      if (zoom >= 15.5) {
-        const targetPitch = Math.min((zoom - 15.5) * 15, 45);
-        if (Math.abs(map.getPitch() - targetPitch) > 2) {
-          map.easeTo({ pitch: targetPitch, duration: 300 });
-        }
-      } else if (map.getPitch() > 0) {
-        map.easeTo({ pitch: 0, duration: 300 });
-      }
-    });
-
     map.on('load', () => {
       const layers = map.getStyle().layers || [];
       let firstLabelLayer: string | undefined;
@@ -184,61 +143,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
           'line-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, 0, 13, 0.6, 16, 1],
         },
       }, firstLabelLayer);
-
-      // ── 3D Buildings with Neyland Orange Tint ──
-      map.addLayer({
-        id: '3d-buildings',
-        source: 'composite',
-        'source-layer': 'building',
-        type: 'fill-extrusion',
-        minzoom: 14,
-        paint: {
-          'fill-extrusion-color': [
-            'case',
-            ['all', ['>=', ['get', 'height'], 30], ['within', NEYLAND_POLYGON]],
-            'rgba(255, 130, 0, 0.6)',
-            'rgba(30, 30, 35, 0.6)',
-          ] as any,
-          'fill-extrusion-height': ['get', 'height'],
-          'fill-extrusion-base': ['get', 'min_height'],
-          'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 14, 0, 15, 0.5, 17, 0.7],
-        },
-      });
-
-      // ── Heatmap Layer — only visible zoom >= 12.5 ──
-      map.addSource(HEATMAP_SOURCE, { type: 'geojson', data: buildHeatGeoJSON() });
-
-      map.addLayer({
-        id: HEATMAP_LAYER,
-        type: 'heatmap',
-        source: HEATMAP_SOURCE,
-        paint: {
-          'heatmap-radius': [
-            'interpolate', ['linear'], ['get', 'count'],
-            0, 0, 10, 30, 50, 60, 100, 90, 200, 130, 300, 170,
-          ],
-          'heatmap-weight': [
-            'interpolate', ['linear'], ['get', 'count'],
-            0, 0, 10, 0.3, 50, 0.5, 100, 0.7, 200, 0.9, 300, 1,
-          ],
-          'heatmap-intensity': 0.75,
-          'heatmap-color': [
-            'interpolate', ['linear'], ['heatmap-density'],
-            0, 'rgba(0, 0, 0, 0)',
-            0.1, 'rgba(40, 120, 50, 0.15)',
-            0.25, 'rgba(80, 180, 60, 0.25)',
-            0.4, 'rgba(200, 190, 40, 0.35)',
-            0.55, 'rgba(240, 160, 30, 0.4)',
-            0.7, 'rgba(255, 94, 26, 0.45)',
-            0.85, 'rgba(240, 50, 15, 0.5)',
-            1.0, 'rgba(200, 20, 5, 0.55)',
-          ],
-          'heatmap-opacity': [
-            'interpolate', ['linear'], ['zoom'],
-            12, 0, 12.5, 0, 13, 0.8, 15, 0.6, 18, 0.4,
-          ],
-        },
-      });
 
       // ── Power T — simple SVG marker (visible zoomed OUT, hidden zoomed IN) ──
       const tEl = document.createElement('div');
@@ -380,11 +284,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       }
     });
 
-    if (mapRef.current && mapLoaded) {
-      const source = mapRef.current.getSource(HEATMAP_SOURCE) as mapboxgl.GeoJSONSource | undefined;
-      if (source) source.setData(buildHeatGeoJSON());
-    }
-  }, [counts, liveVenueIds, pulsedVenueId, mapLoaded, buildHeatGeoJSON]);
+  }, [counts, liveVenueIds, pulsedVenueId, mapLoaded]);
 
   if (!mapboxReady) {
     return (

@@ -60,7 +60,7 @@ export function TonightPage({
   }, [selectedVenue]);
 
   return (
-    <div className="absolute inset-0" style={{ top: '108px', bottom: '64px' }}>
+    <div className="absolute inset-0" style={{ top: '108px', bottom: '60px' }}>
       <MapView
         city={city}
         venues={venues}
