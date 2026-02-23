@@ -219,10 +219,10 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       coverEl.className = 'venue-cover-bubble';
       coverEl.textContent = 'FREE';
 
+      dotEl.appendChild(coverEl);
       el.appendChild(dotEl);
       el.appendChild(labelEl);
       el.appendChild(liveEl);
-      el.appendChild(coverEl);
 
       el.addEventListener('click', (e) => {
         e.stopPropagation();

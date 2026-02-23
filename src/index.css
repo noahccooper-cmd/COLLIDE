@@ -70,12 +70,14 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  overflow: visible;
   font-family: 'Satoshi', sans-serif;
   font-weight: 900;
   color: white;
   transition: none !important;  /* NEVER transition anything on the dot */
   pointer-events: auto;
   cursor: pointer;
+  z-index: 1;
 }
 
 
@@ -139,8 +141,9 @@ body {
 
 .venue-cover-bubble {
   position: absolute;
-  top: -6px;
-  right: -10px;
+  top: -4px;
+  right: -4px;
+  transform: translate(50%, -50%);
   background: #22C55E;
   color: white;
   font-size: 9px;
@@ -153,7 +156,7 @@ body {
   justify-content: center;
   padding: 0 3px;
   border: 1.5px solid #166534;
-  z-index: 2;
+  z-index: 3;
   pointer-events: none;
   white-space: nowrap;
   font-family: 'Satoshi', sans-serif;
