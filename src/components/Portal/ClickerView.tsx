@@ -72,10 +72,33 @@ export function ClickerView({
   }, [onEndNight]);
 
   const handleUpdateSpecial = useCallback(async () => {
+    if (!specialText.trim()) return;
     await onUpdateSpecial(specialText);
     setSpecialSaved(true);
-    setTimeout(() => setSpecialSaved(false), 2000);
+    setTimeout(() => setSpecialSaved(false), 3000);
   }, [specialText, onUpdateSpecial]);
+
+  const handleClearSpecial = useCallback(async () => {
+    await onUpdateSpecial('');
+    setSpecialText('');
+  }, [onUpdateSpecial]);
+
+  // Auto-clear special at 6am
+  useEffect(() => {
+    const scheduleAutoClear = () => {
+      const now = new Date();
+      const sixAm = new Date(now);
+      sixAm.setHours(6, 0, 0, 0);
+      if (now >= sixAm) sixAm.setDate(sixAm.getDate() + 1);
+      const ms = sixAm.getTime() - now.getTime();
+      return setTimeout(() => {
+        onUpdateSpecial('');
+        setSpecialText('');
+      }, ms);
+    };
+    const timer = scheduleAutoClear();
+    return () => clearTimeout(timer);
+  }, [onUpdateSpecial]);
 
   // Show end-of-night summary
   if (endSummary) {
@@ -247,29 +270,66 @@ export function ClickerView({
         {/* Tonight's Special input */}
         <div className="mt-4 mb-2 p-4 bg-[#111114] border border-[#2A2A30] rounded-xl"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
-          <p className="text-[#8A8A95] text-xs font-bold mb-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            {'\uD83C\uDF89'} Set tonight's special
+          <p className="text-[#8A8A95] text-xs font-bold tracking-wider mb-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            {'\uD83C\uDF89'} TONIGHT'S SPECIAL
           </p>
-          <input
-            value={specialText}
-            onChange={e => setSpecialText(e.target.value.slice(0, 200))}
-            placeholder="$3 wells | Wings half off"
-            className="w-full h-10 px-3 bg-[#050507] border border-[#2A2A30] rounded-lg text-white text-sm outline-none focus:border-[#FF5E1A] transition-colors"
-            style={{ fontFamily: 'Satoshi, sans-serif' }}
-          />
-          <p className="text-[#55555F] text-[10px] mt-1" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            Separate with |
-          </p>
-          <button
-            onClick={handleUpdateSpecial}
-            className="w-full h-9 rounded-lg text-white text-sm font-bold mt-2 active:scale-[0.98] transition-transform"
-            style={{
-              fontFamily: 'Satoshi, sans-serif',
-              background: specialSaved ? '#00E676' : 'linear-gradient(135deg, #FF5E1A, #FF2D05)',
-            }}
-          >
-            {specialSaved ? 'Saved!' : 'Update'}
-          </button>
+          {venue.tonight_special && !specialSaved ? (
+            <div className="mb-3">
+              <div className="flex flex-wrap gap-2 mb-2">
+                {venue.tonight_special.split('|').map((s, i) => (
+                  <span key={i} className="px-3 py-1.5 rounded-full text-white text-sm font-medium"
+                    style={{ fontFamily: 'Satoshi, sans-serif', background: 'rgba(255, 94, 26, 0.25)', border: '1px solid rgba(255, 94, 26, 0.4)' }}>
+                    {s.trim()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {specialSaved ? (
+            <div className="flex items-center gap-2 py-3 justify-center">
+              <span className="text-[#00E676] text-sm font-bold" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                {'\u2705'} Special set!
+              </span>
+              <span className="text-[#8A8A95] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                {specialText}
+              </span>
+            </div>
+          ) : (
+            <>
+              <input
+                value={specialText}
+                onChange={e => setSpecialText(e.target.value.slice(0, 200))}
+                placeholder="e.g. $3 wells til midnight | $20 cover til 9"
+                className="w-full h-11 px-3 bg-[#050507] border border-[#2A2A30] rounded-lg text-white text-sm outline-none focus:border-[#FF5E1A] transition-colors placeholder-[#444]"
+                style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '16px' }}
+              />
+              <p className="text-[#55555F] text-[10px] mt-1 mb-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                Use | to separate multiple specials
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUpdateSpecial}
+                  disabled={!specialText.trim()}
+                  className="flex-1 h-11 rounded-lg text-white text-sm font-bold active:scale-[0.98] transition-transform disabled:opacity-40"
+                  style={{
+                    fontFamily: 'Satoshi, sans-serif',
+                    background: 'linear-gradient(135deg, #FF5E1A, #FF2D05)',
+                  }}
+                >
+                  Set Special
+                </button>
+                {venue.tonight_special && (
+                  <button
+                    onClick={handleClearSpecial}
+                    className="h-11 px-4 rounded-lg text-[#8A8A95] text-sm font-medium bg-[#1A1A22] border border-[#2A2A30] active:scale-[0.98] transition-transform"
+                    style={{ fontFamily: 'Satoshi, sans-serif' }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

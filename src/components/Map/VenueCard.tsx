@@ -52,6 +52,24 @@ function getDirectionsUrl(venue: Venue): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}&travelmode=walking`;
 }
 
+/* ── Tonight Banner (peek-visible, below venue name) ── */
+
+function TonightBanner({ venue }: { venue: Venue }) {
+  if (!venue.tonight_special) return null;
+  const specials = venue.tonight_special.split('|').map(s => s.trim()).filter(Boolean);
+  if (specials.length === 0) return null;
+
+  return (
+    <div className="tonight-banner">
+      <div className="tonight-banner-scroll">
+        {specials.map((special, i) => (
+          <span key={i} className="tonight-pill">{'\uD83C\uDF89'} {special}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── Specials Row (scrollable chips) ── */
 
 function SpecialsRow({ venue }: { venue: Venue }) {
@@ -337,6 +355,9 @@ export function VenueSheet({
             </a>
           )}
         </div>
+
+        {/* Tonight's Specials Banner (visible in peek) */}
+        <TonightBanner venue={venue} />
 
         {/* Live Count */}
         {isLive ? (

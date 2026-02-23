@@ -668,7 +668,41 @@ body::after {
 }
 
 /* ============================================
-   Specials (scrollable chips)
+   Tonight Banner (peek-visible specials)
+   ============================================ */
+
+.tonight-banner {
+  padding: 6px 16px 0;
+  overflow: hidden;
+}
+
+.tonight-banner-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
+.tonight-banner-scroll::-webkit-scrollbar { display: none; }
+
+.tonight-pill {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  background: rgba(255, 94, 26, 0.2);
+  border: 1px solid rgba(255, 94, 26, 0.35);
+  border-radius: 20px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+/* ============================================
+   Specials (scrollable chips — expanded view)
    ============================================ */
 
 .specials-section { margin: 8px 0 0; }
