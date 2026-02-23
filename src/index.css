@@ -580,8 +580,8 @@ body::after {
 
 .sheet-actions {
   display: flex;
-  gap: 10px;
-  padding: 6px 16px;
+  gap: 8px;
+  padding: 8px 16px;
 }
 
 .sheet-action-btn {
@@ -590,12 +590,11 @@ body::after {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-height: 56px;
-  padding: 10px 0;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
+  height: 56px;
+  padding: 0;
+  background: #1A1A22;
+  border: 1px solid #2A2A35;
+  border-radius: 12px;
   text-decoration: none;
   color: white;
   cursor: pointer;
@@ -604,8 +603,8 @@ body::after {
 }
 
 .sheet-action-btn:active {
-  background: rgba(255, 255, 255, 0.08);
-  transform: scale(0.96);
+  background: #252530;
+  transform: scale(0.95);
 }
 
 .sheet-action-btn.disabled {
@@ -613,12 +612,13 @@ body::after {
   pointer-events: none;
 }
 
-.sa-icon { font-size: 20px; line-height: 1; }
+.sa-icon { font-size: 24px; line-height: 1; }
 
 .sa-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  margin-top: 4px;
 }
 
 /* ============================================
@@ -648,9 +648,9 @@ body::after {
 
 .sheet-description {
   font-family: 'Satoshi', sans-serif;
-  font-size: 13px;
-  color: #999;
-  line-height: 1.4;
+  font-size: 15px;
+  color: #A0A0A8;
+  line-height: 1.5;
   font-style: italic;
   margin: 4px 0 12px;
 }
@@ -702,24 +702,24 @@ body::after {
 .sheet-meta {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 8px 0;
+  gap: 6px;
+  margin: 10px 0;
 }
 
 .sheet-meta-item {
   font-family: 'Satoshi', sans-serif;
-  font-size: 13px;
-  color: #777;
+  font-size: 15px;
+  color: white;
   text-decoration: none;
 }
 
 .sheet-meta-link {
   color: #FF5E1A;
+  font-size: 15px;
   text-decoration: none;
 }
 
 .sheet-meta-item.link:active { color: #FF5E1A; }
-.sheet-meta-link { color: #FF5E1A; text-decoration: none; }
 .sheet-meta-link:active { opacity: 0.7; }
 
 /* ============================================
@@ -837,35 +837,35 @@ body::after {
 }
 
 .star-btn {
-  width: 36px; height: 36px;
+  width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid #2A2A30;
-  border-radius: 8px;
-  font-size: 18px;
+  border-radius: 10px;
+  font-size: 24px;
   color: #2A2A30;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .star-btn.active {
-  color: #FFAA00;
-  background: rgba(255, 170, 0, 0.08);
-  border-color: rgba(255, 170, 0, 0.3);
+  color: #FFD700;
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.35);
 }
 
 .recap-input-row { display: flex; gap: 8px; }
 
 .recap-input {
   flex: 1;
-  height: 40px;
+  height: 48px;
   border-radius: 10px;
   background: #050507;
   border: 1px solid #2A2A30;
-  padding: 0 12px;
+  padding: 0 14px;
   color: white;
   font-family: 'Satoshi', sans-serif;
-  font-size: 13px;
+  font-size: 16px;
   outline: none;
   transition: border-color 0.2s;
 }
@@ -874,14 +874,14 @@ body::after {
 .recap-input:focus { border-color: #FF5E1A; }
 
 .recap-submit {
-  height: 40px;
-  padding: 0 18px;
+  height: 48px;
+  padding: 0 20px;
   border-radius: 10px;
   background: linear-gradient(135deg, #FF5E1A, #FF2D05);
   border: none;
   color: white;
   font-family: 'Satoshi', sans-serif;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.1s;
@@ -889,6 +889,29 @@ body::after {
 
 .recap-submit:active { transform: scale(0.95); }
 .recap-submit:disabled { opacity: 0.3; }
+
+.recap-input-full {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.recap-submit-full {
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  background: #FF5E1A;
+  border: none;
+  color: white;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.15s;
+}
+
+.recap-submit-full:active { transform: scale(0.96); background: #E85015; }
+.recap-submit-full:disabled { opacity: 0.35; }
 
 /* ============================================
    Shared Animations

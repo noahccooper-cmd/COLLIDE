@@ -117,19 +117,17 @@ function LeaveRecap({ username, submitRecap }: { venue: Venue; username: string;
           </button>
         ))}
       </div>
-      <div className="recap-input-row">
-        <input
-          value={text}
-          onChange={e => setText(e.target.value)}
-          placeholder="How was tonight?"
-          maxLength={200}
-          className="recap-input"
-          onKeyDown={e => e.key === 'Enter' && submit()}
-        />
-        <button onClick={submit} className="recap-submit" disabled={stars === 0 || !text.trim()}>
-          Post
-        </button>
-      </div>
+      <input
+        value={text}
+        onChange={e => setText(e.target.value)}
+        placeholder="How was tonight?"
+        maxLength={200}
+        className="recap-input recap-input-full"
+        onKeyDown={e => e.key === 'Enter' && submit()}
+      />
+      <button onClick={submit} className="recap-submit-full" disabled={stars === 0 || !text.trim()}>
+        POST RECAP
+      </button>
     </div>
   );
 }
