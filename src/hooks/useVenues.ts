@@ -18,14 +18,14 @@ export function useVenues(city: CityKey) {
       .from('venues')
       .select('*')
       .eq('city', city)
-      .eq('is_active', true)
+      .or('is_active.eq.true,is_active.is.null')
       .order('sort_order')
       .then(({ data, error }) => {
         if (error) {
-          console.error('useVenues fetch error:', error);
+          console.error('[venUe] useVenues fetch error:', error);
         }
         const venues = (data as Venue[]) ?? [];
-        console.log(`[venUe] Loaded ${venues.length} venues for ${city}:`, venues.map(v => v.name));
+        console.log(`[venUe] Loaded ${venues.length} venues for ${city}:`, venues.map(v => `${v.name} (${v.lat}, ${v.lng}) is_active=${v.is_active}`));
         setVenues(venues);
         setLoading(false);
       });

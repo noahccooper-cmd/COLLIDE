@@ -137,12 +137,13 @@ body::after {
    6-Tier Dot System
    ============================================ */
 
-/* T0 — Empty / no count: dim gold coin */
+/* T0 — No count: gold dot with warm glow */
 .dot-t0 {
-  width: 22px; height: 22px; font-size: 0;
-  background: radial-gradient(circle at 40% 35%, #6B5A2E, #3D3420);
-  border: 1.5px solid rgba(200, 170, 80, 0.2);
-  box-shadow: 0 0 6px 2px rgba(180, 150, 50, 0.12);
+  width: 24px; height: 24px; font-size: 0;
+  background: radial-gradient(circle, #FFD700 0%, #DAA520 60%, #B8860B 100%);
+  border: 2px solid rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.4), 0 0 16px rgba(255, 215, 0, 0.15);
+  cursor: pointer;
 }
 
 /* T1 — 1-20: warm gold */
