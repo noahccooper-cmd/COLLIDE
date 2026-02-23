@@ -51,7 +51,6 @@ body {
   overflow: visible;
   cursor: pointer;
   pointer-events: none;         /* children opt-in individually */
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
 }
 
 .venue-marker:active .venue-dot {
@@ -79,14 +78,6 @@ body {
   cursor: pointer;
 }
 
-.venue-dot::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  transition: none !important;  /* no transitions on pseudo-elements either */
-}
 
 .venue-count { line-height: 1; }
 
@@ -164,7 +155,6 @@ body {
   font-weight: 800;
   color: white;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
   pointer-events: none;
   z-index: 2;
 }
@@ -173,74 +163,49 @@ body {
    6-Tier Dot System
    ============================================ */
 
-/* T0 — No count: gold dot with warm glow */
+/* T0 — No count: gold dot */
 .dot-t0 {
   width: 24px; height: 24px; font-size: 0;
-  background: radial-gradient(circle, #FFD700 0%, #DAA520 60%, #B8860B 100%);
+  background: #FFD700;
   border: 2px solid rgba(255, 215, 0, 0.6);
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.4), 0 0 16px rgba(255, 215, 0, 0.15);
   cursor: pointer;
 }
 
 /* T1 — 1-20: warm gold */
 .dot-t1 {
   width: 30px; height: 30px; font-size: 11px;
-  background: radial-gradient(circle at 40% 35%, #B8952E, #8A7020);
+  background: #B8952E;
   border: 1.5px solid #D4AA40;
-  box-shadow: 0 0 10px 3px rgba(200, 160, 50, 0.25);
 }
 
-/* T2 — 21-60: bright gold, starting to glow */
+/* T2 — 21-60: bright gold */
 .dot-t2 {
   width: 38px; height: 38px; font-size: 13px;
-  background: radial-gradient(circle at 40% 35%, #D4A830, #B89020);
+  background: #D4A830;
   border: 2px solid #E8C040;
-  box-shadow: 0 0 16px 5px rgba(212, 168, 48, 0.3), inset 0 0 6px rgba(255,220,140,0.1);
-  animation: pulse-t2 3s ease-in-out infinite;
 }
-.dot-t2::before { border-color: rgba(212, 168, 48, 0.15); }
 
-/* T3 — 61-120: hot amber-gold */
+/* T3 — 61-120: hot amber */
 .dot-t3 {
   width: 48px; height: 48px; font-size: 16px;
-  background: radial-gradient(circle at 40% 35%, #E8A028, #CC8518);
+  background: #E8A028;
   border: 2px solid #FFB840;
-  box-shadow: 0 0 22px 8px rgba(232, 160, 40, 0.35), inset 0 0 10px rgba(255,200,100,0.12);
-  animation: pulse-t3 2s ease-in-out infinite;
 }
-.dot-t3::before { border-color: rgba(232, 160, 40, 0.2); inset: -8px; animation: ring-t3 2s ease-in-out infinite; }
 
 /* T4 — 121-200: fire orange */
 .dot-t4 {
   width: 58px; height: 58px; font-size: 19px;
-  background: radial-gradient(circle at 40% 35%, #E87020, #C55015);
+  background: #E87020;
   border: 2px solid #FF8535;
-  box-shadow: 0 0 35px 14px rgba(232, 112, 32, 0.45), 0 0 70px 25px rgba(232, 112, 32, 0.15), inset 0 0 14px rgba(255,180,60,0.18);
-  animation: pulse-t4 1.5s ease-in-out infinite;
 }
-.dot-t4::before { border-color: rgba(232, 112, 32, 0.25); inset: -12px; animation: ring-t4 1.5s ease-in-out infinite; }
 
 /* T5 — 200+: volcanic red-orange */
 .dot-t5 {
   width: 70px; height: 70px; font-size: 23px;
-  background: radial-gradient(circle at 40% 35%, #E83818, #B82010);
+  background: #E83818;
   border: 2.5px solid #FF5030;
-  box-shadow: 0 0 50px 22px rgba(232, 56, 24, 0.55), 0 0 100px 40px rgba(232, 56, 24, 0.2), 0 0 150px 60px rgba(232, 56, 24, 0.08), inset 0 0 18px rgba(255,120,50,0.22);
-  animation: pulse-t5 1s ease-in-out infinite;
 }
-.dot-t5::before { border-color: rgba(232, 56, 24, 0.3); inset: -18px; animation: ring-t5 1s ease-in-out infinite; }
 
-/* Pulse uses the CSS `scale` property (separate from `transform`)
-   so it never conflicts with the centering translate(-50%,-50%). */
-@keyframes pulse-t2 { 0%,100% { scale:1; } 50% { scale:1.04; } }
-@keyframes pulse-t3 { 0%,100% { scale:1; } 50% { scale:1.07; } }
-@keyframes pulse-t4 { 0%,100% { scale:1; } 50% { scale:1.12; } }
-@keyframes pulse-t5 { 0%,100% { scale:1; } 50% { scale:1.16; } }
-
-/* Ring animations: only animate opacity, NOT inset (layout) */
-@keyframes ring-t3 { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
-@keyframes ring-t4 { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
-@keyframes ring-t5 { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
 /* ============================================
    Count Bump + Flash
@@ -254,24 +219,11 @@ body {
 
 .venue-count.bumping { animation: count-bump 0.3s ease-out; }
 
-@keyframes count-flash {
-  0% { filter: brightness(1); }
-  50% { filter: brightness(1.3); }
-  100% { filter: brightness(1); }
-}
-
-.venue-dot.count-updated { animation: count-flash 0.4s ease-out; }
 
 /* ============================================
    LIVE Ring Pulse (green)
    ============================================ */
 
-@keyframes live-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.4); }
-  50% { box-shadow: 0 0 8px 3px rgba(0, 230, 118, 0.2); }
-}
-
-.live-ring { animation: live-pulse 2s ease-in-out infinite; }
 
 /* ============================================
    Capacity Bar
@@ -359,7 +311,6 @@ body {
 .power-t-marker svg {
   width: 32px;
   height: 32px;
-  filter: drop-shadow(0 2px 4px rgba(255, 130, 0, 0.3));
 }
 
 /* ============================================
