@@ -60,15 +60,29 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       minZoom: 1,
       maxZoom: 18,
       attributionControl: false,
-      projection: 'globe',
+      failIfMajorPerformanceCaveat: false,
+      preserveDrawingBuffer: true,
+      antialias: false,
     });
 
     map.dragRotate.disable();
     map.touchZoomRotate.disableRotation();
 
+    /* ── Debug: catch WebGL crashes ── */
+    map.on('error', (e: any) => {
+      console.error('MAP ERROR:', e.error?.message || e);
+    });
+    map.getCanvas().addEventListener('webglcontextlost', (e) => {
+      console.error('WEBGL CONTEXT LOST', e);
+    });
+    map.getCanvas().addEventListener('webglcontextrestored', () => {
+      console.log('WEBGL CONTEXT RESTORED');
+    });
+
     /* ── Zoom-aware visibility: simple binary show/hide ── */
     const updateZoomVisibility = () => {
       const zoom = map.getZoom();
+      console.log('ZOOM:', zoom.toFixed(2));
 
       // ── Venue markers: hidden when zoom < 12, visible when >= 12 ──
       document.querySelectorAll('.venue-marker').forEach(node => {
@@ -99,47 +113,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     map.on('zoom', updateZoomVisibility);
 
     map.on('load', () => {
-      const layers = map.getStyle().layers || [];
-      let firstLabelLayer: string | undefined;
-      for (const layer of layers) {
-        if (layer.type === 'symbol' && (layer as any).layout?.['text-field']) {
-          firstLabelLayer = layer.id;
-          break;
-        }
-      }
-
-      // ── Road Glow (composite source, real road geometry) ──
-      // Only visible zoom >= 12.5
-      map.addLayer({
-        id: 'road-glow',
-        type: 'line',
-        source: 'composite',
-        'source-layer': 'road',
-        minzoom: 12,
-        filter: ['in', 'class', 'primary', 'secondary', 'tertiary', 'street'],
-        paint: {
-          'line-color': 'rgba(255, 215, 140, 0.06)',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 12.5, 6, 15, 30, 18, 60],
-          'line-blur': ['interpolate', ['linear'], ['zoom'], 12.5, 6, 15, 25, 18, 45],
-          'line-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, 0, 13, 0.5, 16, 0.8],
-        },
-      }, firstLabelLayer);
-
-      map.addLayer({
-        id: 'road-glow-inner',
-        type: 'line',
-        source: 'composite',
-        'source-layer': 'road',
-        minzoom: 12,
-        filter: ['in', 'class', 'primary', 'secondary', 'tertiary', 'street'],
-        paint: {
-          'line-color': 'rgba(255, 200, 120, 0.12)',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 12.5, 2, 15, 8, 18, 16],
-          'line-blur': ['interpolate', ['linear'], ['zoom'], 12.5, 2, 15, 6, 18, 10],
-          'line-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, 0, 13, 0.6, 16, 1],
-        },
-      }, firstLabelLayer);
-
       // ── Power T — fixed geographic marker at UTK campus ──
       // Stays at fixed coordinates; Mapbox handles positioning via transform.
       // We ONLY touch opacity on the inner element for zoom-based fading.
