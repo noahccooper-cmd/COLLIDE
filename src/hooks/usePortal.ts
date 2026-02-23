@@ -215,9 +215,13 @@ export function usePortal() {
 
     setVenue(prev => prev ? { ...prev, cover_charge: coverText } : null);
 
-    // Notify useVenues to refetch (fallback if realtime isn't firing)
+    // Push cover update directly into useVenues state (same pattern as headcount realtime)
+    // This is immediate — no async refetch, no race condition
     if (!error) {
-      window.dispatchEvent(new Event('venues-changed'));
+      console.log('DISPATCHING venues-cover-update:', venue.id, coverText);
+      window.dispatchEvent(new CustomEvent('venues-cover-update', {
+        detail: { venueId: venue.id, cover_charge: coverText },
+      }));
     }
   }, [venue]);
 

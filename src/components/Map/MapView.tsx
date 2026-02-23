@@ -254,9 +254,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
   useEffect(() => { syncMarkers(); }, [syncMarkers]);
 
   useEffect(() => {
-    // Build a lookup for venue cover_charge
-    const venueMap = new Map(venues.map(v => [v.id, v]));
-
     markersRef.current.forEach((entry, venueId) => {
       const count = counts[venueId] ?? 0;
       const isLive = liveVenueIds.has(venueId);
@@ -286,18 +283,27 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         setTimeout(() => entry.dotEl.classList.remove('count-updated'), 500);
       }
 
-      // Cover bubble — always visible, shows "FREE" when no cover
-      const v = venueMap.get(venueId);
-      const cover = v?.cover_charge;
-      const newText = cover ? getCoverLabel(cover) : 'FREE';
-      if (entry.coverEl.textContent !== newText) {
-        console.log('MARKER UPDATE for', v?.name, 'cover:', cover);
-        entry.coverEl.textContent = newText;
-        console.log('BUBBLE UPDATED:', v?.name, '->', newText);
-      }
     });
 
-  }, [counts, liveVenueIds, pulsedVenueId, venues, mapLoaded]);
+  }, [counts, liveVenueIds, pulsedVenueId, mapLoaded]);
+
+  // ── Cover bubble sync — dedicated effect watching ONLY venues ──
+  // Mirrors the headcount pattern: state changes → effect fires → DOM updates
+  useEffect(() => {
+    if (!mapLoaded) return;
+    console.log('COVER SYNC: venues changed, updating', venues.length, 'bubbles');
+
+    venues.forEach(venue => {
+      const entry = markersRef.current.get(venue.id);
+      if (!entry) return;
+      const cover = venue.cover_charge;
+      const newText = cover ? getCoverLabel(cover) : 'FREE';
+      if (entry.coverEl.textContent !== newText) {
+        console.log('BUBBLE UPDATED:', venue.name, entry.coverEl.textContent, '->', newText);
+        entry.coverEl.textContent = newText;
+      }
+    });
+  }, [venues, mapLoaded]);
 
   if (!mapboxReady) {
     return (

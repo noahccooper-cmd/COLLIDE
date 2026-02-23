@@ -67,16 +67,19 @@ export function useVenues(city: CityKey) {
     };
   }, [city]);
 
-  // Fallback: listen for 'venues-changed' custom event (fired by Portal after save)
-  // This ensures the map updates even if Supabase realtime is not configured
+  // Direct cover update from Portal — applies immediately into venues state
+  // Same pattern as useHeadcounts realtime: event fires → state updates → map re-renders
   useEffect(() => {
-    const handler = () => {
-      console.log('[venUe] venues-changed event received, refetching...');
-      fetchVenues();
+    const handler = (e: Event) => {
+      const { venueId, cover_charge } = (e as CustomEvent).detail;
+      console.log('VENUES COVER UPDATE received:', venueId, 'cover:', cover_charge);
+      setVenues(prev =>
+        prev.map(v => v.id === venueId ? { ...v, cover_charge } : v)
+      );
     };
-    window.addEventListener('venues-changed', handler);
-    return () => window.removeEventListener('venues-changed', handler);
-  }, [fetchVenues]);
+    window.addEventListener('venues-cover-update', handler);
+    return () => window.removeEventListener('venues-cover-update', handler);
+  }, []);
 
   return { venues, loading };
 }
