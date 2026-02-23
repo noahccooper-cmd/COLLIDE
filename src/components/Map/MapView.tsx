@@ -82,13 +82,14 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         }
       });
 
-      // ── Power T marker: fade based on zoom (NEVER set transform — Mapbox uses it for positioning) ──
-      const tEl = document.querySelector('.power-t-marker') as HTMLElement | null;
-      if (tEl) {
+      // ── Power T marker: fade based on zoom ──
+      // Set opacity on the inner .power-t-marker div, NOT the wrapper (which has transform)
+      const tInner = tMarkerRef.current?.getElement()?.querySelector('.power-t-marker') as HTMLElement | null;
+      if (tInner) {
         if (zoom >= 13) {
-          tEl.style.opacity = String(Math.max(0, 1 - (zoom - 13)));
+          tInner.style.opacity = String(Math.max(0, 1 - (zoom - 13)));
         } else {
-          tEl.style.opacity = '1';
+          tInner.style.opacity = '1';
         }
       }
     };
@@ -135,11 +136,11 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         },
       }, firstLabelLayer);
 
-      // ── Power T — fixed geographic marker, fade only via opacity ──
+      // ── Power T — fixed geographic marker at UTK campus ──
+      // Stays at fixed coordinates; Mapbox handles positioning via transform.
+      // We ONLY touch opacity on the inner element for zoom-based fading.
       const tEl = document.createElement('div');
       tEl.className = 'power-t-marker';
-      tEl.style.width = '32px';
-      tEl.style.height = '32px';
       tEl.innerHTML = `<svg width="32" height="32" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <rect x="6" y="4" width="52" height="16" rx="3" fill="#FF8200"/>
         <rect x="22" y="18" width="20" height="42" rx="3" fill="#FF8200"/>
@@ -148,6 +149,13 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       const tMarker = new mapboxgl.Marker({ element: tEl, anchor: 'center' })
         .setLngLat([-83.9295, 35.9544])
         .addTo(map);
+
+      // Prevent the Mapbox wrapper from ever transitioning its transform.
+      // getElement() returns the .mapboxgl-marker wrapper that Mapbox positions.
+      const tWrapperEl = tMarker.getElement();
+      tWrapperEl.style.transition = 'none';
+      tWrapperEl.style.willChange = 'transform';
+
       tMarkerRef.current = tMarker;
 
       setMapLoaded(true);
