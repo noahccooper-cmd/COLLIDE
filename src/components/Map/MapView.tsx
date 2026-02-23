@@ -60,6 +60,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       minZoom: 1,
       maxZoom: 18,
       attributionControl: false,
+      projection: 'globe',
     });
 
     map.dragRotate.disable();
@@ -98,6 +99,15 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     map.on('zoom', updateZoomVisibility);
 
     map.on('load', () => {
+      // Globe atmosphere — gives a subtle halo around the earth when zoomed out
+      map.setFog({
+        color: '#0a0a12',
+        'high-color': '#0a0a18',
+        'horizon-blend': 0.02,
+        'space-color': '#050507',
+        'star-intensity': 0.15,
+      });
+
       const layers = map.getStyle().layers || [];
       let firstLabelLayer: string | undefined;
       for (const layer of layers) {
