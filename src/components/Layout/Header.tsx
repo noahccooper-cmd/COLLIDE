@@ -9,11 +9,11 @@ interface HeaderProps {
   username: string;
 }
 
-export function Header({ city, onCityChange, username }: HeaderProps) {
+export function Header({ city, onCityChange, totalCount, username }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#050507] border-b border-[#2A2A30]"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-      <div className="px-4 pt-2 pb-3 flex items-center justify-between">
+      <div className="px-4 pt-2 pb-2 flex items-center justify-between">
         <div>
           <h1
             style={{
@@ -39,6 +39,30 @@ export function Header({ city, onCityChange, username }: HeaderProps) {
             }}
           >
             Your Cheat Code for Nightlife
+          </p>
+          <p
+            style={{
+              fontFamily: 'Satoshi, sans-serif',
+              fontSize: '14px',
+              marginTop: '4px',
+              lineHeight: 1,
+            }}
+          >
+            {totalCount > 0 ? (
+              <>
+                {'\uD83D\uDD25'}{' '}
+                <span style={{ color: '#fff', fontWeight: 700, fontSize: '16px' }}>
+                  {totalCount}
+                </span>{' '}
+                <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                  people out right now
+                </span>
+              </>
+            ) : (
+              <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                No one out yet tonight
+              </span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
