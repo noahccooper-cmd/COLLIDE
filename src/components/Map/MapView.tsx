@@ -289,7 +289,12 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       // Cover bubble — always visible, shows "FREE" when no cover
       const v = venueMap.get(venueId);
       const cover = v?.cover_charge;
-      entry.coverEl.textContent = cover ? getCoverLabel(cover) : 'FREE';
+      const newText = cover ? getCoverLabel(cover) : 'FREE';
+      if (entry.coverEl.textContent !== newText) {
+        console.log('MARKER UPDATE for', v?.name, 'cover:', cover);
+        entry.coverEl.textContent = newText;
+        console.log('BUBBLE UPDATED:', v?.name, '->', newText);
+      }
     });
 
   }, [counts, liveVenueIds, pulsedVenueId, venues, mapLoaded]);

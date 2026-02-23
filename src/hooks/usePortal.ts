@@ -214,6 +214,11 @@ export function usePortal() {
     console.log('COVER SAVE RESULT:', error || 'success');
 
     setVenue(prev => prev ? { ...prev, cover_charge: coverText } : null);
+
+    // Notify useVenues to refetch (fallback if realtime isn't firing)
+    if (!error) {
+      window.dispatchEvent(new Event('venues-changed'));
+    }
   }, [venue]);
 
   const endNight = useCallback(async () => {
