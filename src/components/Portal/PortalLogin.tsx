@@ -37,9 +37,7 @@ export function PortalLogin({ savedCode, loading, error, onSubmit }: PortalLogin
         <div className="text-center mb-10">
           <h1 className="text-white font-black text-2xl tracking-[0.05em] mb-1"
             style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            <span className="text-white">ven</span>
-            <span className="text-[#FF5E1A]">U</span>
-            <span className="text-white">e</span>
+            <span className="text-white">venuu</span>
             <span className="text-[#8A8A95] font-bold text-lg ml-2">Portal</span>
           </h1>
           <p className="text-[#8A8A95] text-sm mt-3" style={{ fontFamily: 'Satoshi, sans-serif' }}>
@@ -92,7 +90,7 @@ export function PortalLogin({ savedCode, loading, error, onSubmit }: PortalLogin
             Don't have a code?
           </p>
           <p className="text-[#8A8A95] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            Contact us to get your bar on venUe
+            Contact us to get your bar on venuu
           </p>
         </div>
       </div>

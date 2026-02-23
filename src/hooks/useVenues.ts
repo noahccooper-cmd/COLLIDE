@@ -17,11 +17,11 @@ export function useVenues(city: CityKey) {
       .order('sort_order');
 
     if (error) {
-      console.error('[venUe] useVenues fetch error:', error);
+      console.error('[venuu] useVenues fetch error:', error);
       return;
     }
     const rows = (data as Venue[]) ?? [];
-    console.log(`[venUe] Loaded ${rows.length} venues for ${city}:`, rows.map(v => `${v.name} (${v.lat}, ${v.lng}) is_active=${v.is_active}`));
+    console.log(`[venuu] Loaded ${rows.length} venues for ${city}:`, rows.map(v => `${v.name} (${v.lat}, ${v.lng}) is_active=${v.is_active}`));
     setVenues(rows);
     setLoading(false);
   }, [city]);

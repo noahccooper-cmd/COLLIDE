@@ -182,7 +182,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
 
   const syncMarkers = useCallback(() => {
     if (!mapRef.current || !mapLoaded) return;
-    console.log(`[venUe] syncMarkers: ${venues.length} venues`, venues.map(v => `${v.name} (${v.lat}, ${v.lng})`));
+    console.log(`[venuu] syncMarkers: ${venues.length} venues`, venues.map(v => `${v.name} (${v.lat}, ${v.lng})`));
     const currentIds = new Set(venues.map(v => v.id));
 
     markersRef.current.forEach((entry, id) => {

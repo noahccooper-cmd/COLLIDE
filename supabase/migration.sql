@@ -1,4 +1,4 @@
--- venUe Database Migration
+-- venuu Database Migration
 -- Run this in your Supabase SQL editor
 
 -- ============================================

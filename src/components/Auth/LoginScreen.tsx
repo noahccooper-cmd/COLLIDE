@@ -54,12 +54,12 @@ export function LoginScreen({ onSendLink, onBrowseAsGuest }: LoginScreenProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
       <h1 className="text-white font-black text-3xl tracking-[0.05em] mb-2"
-        style={{ fontFamily: 'Satoshi, sans-serif', textShadow: '0 0 20px rgba(255, 94, 26, 0.3)' }}>
-        ven<span className="text-[#FF5E1A]" style={{ fontSize: '36px' }}>U</span>e
+        style={{ fontFamily: 'Satoshi, sans-serif' }}>
+        venuu
       </h1>
       <div className="text-center mb-8">
         <p className="text-[#8A8A95] text-sm leading-relaxed" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-          Real numbers. Every bar. Right now.
+          your cheat code for nightlife
         </p>
       </div>
 

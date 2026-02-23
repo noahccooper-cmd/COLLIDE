@@ -28,11 +28,11 @@ export function UsernameScreen({ onComplete }: UsernameScreenProps) {
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
           <h1 className="text-white font-black text-3xl tracking-[0.05em] mb-3"
-            style={{ fontFamily: 'Satoshi, sans-serif', textShadow: '0 0 30px rgba(255, 94, 26, 0.3)' }}>
-            ven<span style={{ color: '#FF5E1A' }}>U</span>e
+            style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            venuu
           </h1>
           <p className="text-[#8A8A95] text-base" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            See what's happening tonight.
+            your cheat code for nightlife
           </p>
         </div>
 
