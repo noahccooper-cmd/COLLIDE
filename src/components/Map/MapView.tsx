@@ -115,6 +115,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         type: 'line',
         source: 'composite',
         'source-layer': 'road',
+        minzoom: 12,
         filter: ['in', 'class', 'primary', 'secondary', 'tertiary', 'street'],
         paint: {
           'line-color': 'rgba(255, 215, 140, 0.06)',
@@ -129,6 +130,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         type: 'line',
         source: 'composite',
         'source-layer': 'road',
+        minzoom: 12,
         filter: ['in', 'class', 'primary', 'secondary', 'tertiary', 'street'],
         paint: {
           'line-color': 'rgba(255, 200, 120, 0.12)',
