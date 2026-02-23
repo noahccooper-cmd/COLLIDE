@@ -39,8 +39,10 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
   const initialCityRef = useRef(city);
   const venuesRef = useRef(venues);
   const countsRef = useRef(counts);
+  const onVenueClickRef = useRef(onVenueClick);
   venuesRef.current = venues;
   countsRef.current = counts;
+  onVenueClickRef.current = onVenueClick;
 
   useEffect(() => {
     if (!mapContainer.current || !mapboxReady) return;
@@ -254,19 +256,26 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
 
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        onVenueClick(venue);
+        onVenueClickRef.current(venue);
       });
 
       const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
         .setLngLat([venue.lng, venue.lat])
         .addTo(mapRef.current!);
 
+      // Lock the Mapbox wrapper so CSS transitions never catch its transform.
+      // Belt-and-suspenders with the CSS rule — this also covers browsers
+      // that don't support :has().
+      const wrapperEl = marker.getElement();
+      wrapperEl.style.transition = 'none';
+      wrapperEl.style.willChange = 'transform';
+
       markersRef.current.set(venue.id, {
         marker, el, dotEl, countEl, labelEl, liveEl, coverEl,
         currentTier: 'dot-t0', currentCount: 0,
       });
     });
-  }, [venues, mapLoaded, onVenueClick]);
+  }, [venues, mapLoaded]);
 
   useEffect(() => { syncMarkers(); }, [syncMarkers]);
 

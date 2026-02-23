@@ -76,7 +76,10 @@ body::after {
   font-family: 'Satoshi', sans-serif;
   font-weight: 900;
   color: white;
-  transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* Only transition visual properties — NEVER width/height/margin/transform.
+     Transitioning layout properties shifts the marker's center point because
+     Mapbox uses translate(-50%,-50%) which is size-relative. */
+  transition: background 0.6s ease, box-shadow 0.6s ease, border-color 0.6s ease;
   position: relative;
 }
 
@@ -86,7 +89,7 @@ body::after {
   inset: -4px;
   border-radius: 50%;
   border: 2px solid transparent;
-  transition: all 0.6s ease;
+  transition: border-color 0.6s ease, opacity 0.6s ease;
 }
 
 .venue-count { line-height: 1; }
@@ -328,6 +331,7 @@ body::after {
 
 /* The Mapbox wrapper (.mapboxgl-marker) uses CSS transform for positioning.
    If ANY transition catches transform, the marker drifts during panning. */
+.mapboxgl-marker:has(.venue-marker),
 .mapboxgl-marker:has(.power-t-marker) {
   transition: none !important;
   will-change: transform;
