@@ -54,8 +54,9 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       zoom: config.zoom,
       bearing: 0,
       pitch: 0,
-      minZoom: 2,
+      minZoom: 11,
       maxZoom: 18,
+      maxBounds: [[-84.00, 35.90], [-83.85, 36.02]],
       attributionControl: false,
     });
 
