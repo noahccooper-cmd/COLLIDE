@@ -1053,8 +1053,8 @@ body::after {
   padding: 10px 14px;
   border-radius: 16px;
   font-family: 'Satoshi', sans-serif;
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .precap-bubble-content.assistant {
@@ -1103,12 +1103,13 @@ body::after {
 }
 
 .precap-chip {
-  padding: 8px 16px;
+  padding: 10px 16px;
+  min-height: 44px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 94, 26, 0.15);
-  border-radius: 20px;
+  border-radius: 22px;
   font-family: 'Satoshi', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #C0C0C5;
   cursor: pointer;
@@ -1135,14 +1136,14 @@ body::after {
 
 .precap-input {
   flex: 1;
-  height: 42px;
-  border-radius: 21px;
+  height: 44px;
+  border-radius: 22px;
   background: #111114;
   border: 1px solid #2A2A30;
   padding: 0 16px;
   color: white;
   font-family: 'Satoshi', sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   outline: none;
   transition: border-color 0.2s;
 }
@@ -1151,8 +1152,8 @@ body::after {
 .precap-input:focus { border-color: rgba(255, 94, 26, 0.4); }
 
 .precap-send {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: linear-gradient(135deg, #FF5E1A, #FF2D05);
   border: none;
