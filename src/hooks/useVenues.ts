@@ -45,8 +45,8 @@ export function useVenues(city: CityKey) {
           table: 'venues',
         },
         (payload) => {
-          console.log('📍 VENUE UPDATE:', payload.new);
           const updated = payload.new as Venue;
+          console.log('📍 VENUE UPDATE:', updated.name, 'cover:', updated.cover_charge);
           if (updated.city !== city) return;
           setVenues(prev =>
             prev.map(v => v.id === updated.id ? { ...v, ...updated } : v)
