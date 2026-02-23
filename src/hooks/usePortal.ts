@@ -206,10 +206,12 @@ export function usePortal() {
   const updateCover = useCallback(async (text: string) => {
     if (!venue || !envReady) return;
     const coverText = text.trim() || null;
-    await supabase
+    console.log('SAVING COVER:', coverText, 'for venue:', venue.id);
+    const { error } = await supabase
       .from('venues')
       .update({ cover_charge: coverText })
       .eq('id', venue.id);
+    console.log('COVER SAVE RESULT:', error || 'success');
 
     setVenue(prev => prev ? { ...prev, cover_charge: coverText } : null);
   }, [venue]);

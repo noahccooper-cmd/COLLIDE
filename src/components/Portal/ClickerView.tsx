@@ -17,7 +17,7 @@ interface ClickerViewProps {
   onDisconnect: () => void;
 }
 
-const COVER_PRESETS = ['FREE', '$5', '$10', '$15', '$20', '$25', '$30', '$35', '$40'];
+const COVER_PRESETS = ['FREE', '$10', '$20', '$40'];
 
 export function ClickerView({
   venue,
@@ -36,6 +36,13 @@ export function ClickerView({
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [specialText, setSpecialText] = useState(venue.tonight_special ?? '');
   const [specialSaved, setSpecialSaved] = useState(false);
+  const [selectedCover, setSelectedCover] = useState<string>(() => {
+    const current = venue.cover_charge;
+    if (!current || current === 'FREE') return 'FREE';
+    const match = COVER_PRESETS.find(p => p === current);
+    return match ?? 'FREE';
+  });
+  const [coverConfirm, setCoverConfirm] = useState('');
   const count = headcount?.current_count ?? 0;
   const peak = headcount?.peak_count ?? 0;
   const isLive = headcount?.is_live ?? false;
@@ -87,9 +94,11 @@ export function ClickerView({
     setSpecialText('');
   }, [onUpdateSpecial]);
 
-  const handleSetCover = useCallback(async (text: string) => {
-    await onUpdateCover(text);
-  }, [onUpdateCover]);
+  const handleSetCover = useCallback(async () => {
+    await onUpdateCover(selectedCover);
+    setCoverConfirm(`Cover set to ${selectedCover} \u2713`);
+    setTimeout(() => setCoverConfirm(''), 2000);
+  }, [selectedCover, onUpdateCover]);
 
   // Auto-clear special at 6am
   useEffect(() => {
@@ -205,28 +214,27 @@ export function ClickerView({
       {/* Cover Charge */}
       <div className="px-4 pb-2">
         <div className="p-4 bg-[#111114] border border-[#2A2A30] rounded-xl">
-          <p className="text-[#8A8A95] text-xs font-bold tracking-wider mb-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+          <p className="text-[#8A8A95] text-xs font-bold tracking-wider mb-3" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             {'\uD83D\uDCB5'} COVER
           </p>
-          <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex gap-2 justify-between mb-3">
             {COVER_PRESETS.map(preset => {
-              const isActive = venue.cover_charge === preset
-                || (!venue.cover_charge && preset === 'FREE');
+              const isSelected = selectedCover === preset;
               return (
                 <button
                   key={preset}
-                  onClick={() => handleSetCover(preset)}
-                  className="shrink-0 flex items-center justify-center active:scale-[0.95] transition-transform"
+                  onClick={() => setSelectedCover(preset)}
+                  className="flex items-center justify-center active:scale-[0.95] transition-transform"
                   style={{
                     fontFamily: 'Satoshi, sans-serif',
-                    width: 40,
-                    height: 32,
-                    borderRadius: 16,
-                    background: '#22C55E',
-                    color: 'white',
+                    width: 70,
+                    height: 40,
+                    borderRadius: 20,
+                    background: isSelected ? '#22C55E' : '#1A1A24',
+                    color: isSelected ? 'white' : '#22C55E',
                     fontWeight: 'bold',
-                    fontSize: 12,
-                    border: isActive ? '2px solid white' : '2px solid transparent',
+                    fontSize: 14,
+                    border: '2px solid #22C55E',
                   }}
                 >
                   {preset}
@@ -234,9 +242,28 @@ export function ClickerView({
               );
             })}
           </div>
-          <p className="text-[#8A8A95] text-xs mt-1" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            Cover: <span className="text-white font-bold">{venue.cover_charge || 'FREE'}</span>
-          </p>
+          {coverConfirm ? (
+            <p className="text-[#22C55E] text-sm font-bold text-center py-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+              {coverConfirm}
+            </p>
+          ) : (
+            <button
+              onClick={handleSetCover}
+              className="w-full flex items-center justify-center active:scale-[0.98] transition-transform"
+              style={{
+                fontFamily: 'Satoshi, sans-serif',
+                height: 48,
+                borderRadius: 12,
+                background: '#22C55E',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: 16,
+                border: 'none',
+              }}
+            >
+              SET COVER
+            </button>
+          )}
         </div>
       </div>
 
