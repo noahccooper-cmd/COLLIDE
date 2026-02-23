@@ -285,6 +285,9 @@ UPDATE venues SET
   rating = 4.9, review_count = 540, capacity = 250, staff_code = 'OCSB01'
 WHERE slug = 'old-city-sports';
 
+-- Ensure slug has a unique index (required for ON CONFLICT)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_venues_slug ON venues(slug);
+
 -- Remove old venues that are no longer in the lineup
 DELETE FROM venue_recaps WHERE venue_id IN (SELECT id FROM venues WHERE slug IN ('hannas-lil-dive', 'fieldhouse-social', 'cotton-eyed-joes', 'preservation-pub', 'sapphire'));
 DELETE FROM venue_comments WHERE venue_id IN (SELECT id FROM venues WHERE slug IN ('hannas-lil-dive', 'fieldhouse-social', 'cotton-eyed-joes', 'preservation-pub', 'sapphire'));

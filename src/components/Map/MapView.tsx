@@ -82,22 +82,13 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         }
       });
 
-      // ── Power T marker: visible zoom 6-12.5, fade out 12.5-14, hidden otherwise ──
+      // ── Power T marker: fade based on zoom (NEVER set transform — Mapbox uses it for positioning) ──
       const tEl = document.querySelector('.power-t-marker') as HTMLElement | null;
       if (tEl) {
-        if (zoom < 6) {
-          tEl.style.opacity = '0';
-          tEl.style.transform = 'scale(0.5)';
-        } else if (zoom >= 6 && zoom <= 12.5) {
-          tEl.style.opacity = '0.85';
-          tEl.style.transform = 'scale(1)';
-        } else if (zoom > 12.5 && zoom <= 14) {
-          const fade = 1 - ((zoom - 12.5) / 1.5);
-          tEl.style.opacity = String(Math.max(fade * 0.85, 0));
-          tEl.style.transform = `scale(${Math.max(fade, 0.5)})`;
+        if (zoom >= 13) {
+          tEl.style.opacity = String(Math.max(0, 1 - (zoom - 13)));
         } else {
-          tEl.style.opacity = '0';
-          tEl.style.transform = 'scale(0.5)';
+          tEl.style.opacity = '1';
         }
       }
     };
@@ -144,16 +135,18 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         },
       }, firstLabelLayer);
 
-      // ── Power T — simple SVG marker (visible zoomed OUT, hidden zoomed IN) ──
+      // ── Power T — fixed geographic marker, fade only via opacity ──
       const tEl = document.createElement('div');
       tEl.className = 'power-t-marker';
-      tEl.innerHTML = `<svg width="40" height="40" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      tEl.style.width = '32px';
+      tEl.style.height = '32px';
+      tEl.innerHTML = `<svg width="32" height="32" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <rect x="6" y="4" width="52" height="16" rx="3" fill="#FF8200"/>
         <rect x="22" y="18" width="20" height="42" rx="3" fill="#FF8200"/>
       </svg>`;
 
       const tMarker = new mapboxgl.Marker({ element: tEl, anchor: 'center' })
-        .setLngLat([-83.9300, 35.9544])
+        .setLngLat([-83.9295, 35.9544])
         .addTo(map);
       tMarkerRef.current = tMarker;
 
@@ -199,6 +192,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
 
   const syncMarkers = useCallback(() => {
     if (!mapRef.current || !mapLoaded) return;
+    console.log(`[venUe] syncMarkers: ${venues.length} venues`, venues.map(v => `${v.name} (${v.lat}, ${v.lng})`));
     const currentIds = new Set(venues.map(v => v.id));
 
     markersRef.current.forEach((entry, id) => {

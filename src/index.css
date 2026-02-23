@@ -298,8 +298,8 @@ body::after {
    ============================================ */
 
 .power-t-marker {
-  opacity: 0.85;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 1;
+  transition: opacity 0.3s ease;
   pointer-events: none;
   filter: drop-shadow(0 2px 4px rgba(255, 130, 0, 0.3));
 }
