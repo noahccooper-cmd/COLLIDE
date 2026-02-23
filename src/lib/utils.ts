@@ -35,6 +35,15 @@ export function getShortName(name: string): string {
   return name.replace(/\s*(Bar\s*&?\s*Grill|Bar\s*and\s*Grill|Restaurant)\s*$/i, '').trim();
 }
 
+/** Extract a short label for the map cover bubble (e.g. "$20", "FREE") */
+export function getCoverLabel(cover: string): string {
+  const t = cover.trim().toUpperCase();
+  if (t === 'FREE' || t === 'FREE ENTRY' || t === 'NO COVER') return 'FREE';
+  const m = cover.match(/\$\d+/);
+  if (m) return m[0];
+  return cover.length > 5 ? cover.slice(0, 5) : cover;
+}
+
 export function getCommentDay(): string {
   const now = new Date();
   if (now.getHours() < 12) {

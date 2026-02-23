@@ -13,8 +13,11 @@ interface ClickerViewProps {
   onExit: (count?: number) => Promise<void>;
   onEndNight: () => Promise<void>;
   onUpdateSpecial: (text: string) => Promise<void>;
+  onUpdateCover: (text: string) => Promise<void>;
   onDisconnect: () => void;
 }
+
+const COVER_PRESETS = ['FREE', '$5', '$10', '$15', '$20', '$25'];
 
 export function ClickerView({
   venue,
@@ -25,6 +28,7 @@ export function ClickerView({
   onExit,
   onEndNight,
   onUpdateSpecial,
+  onUpdateCover,
   onDisconnect,
 }: ClickerViewProps) {
   const [flashClass, setFlashClass] = useState('');
@@ -32,6 +36,8 @@ export function ClickerView({
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [specialText, setSpecialText] = useState(venue.tonight_special ?? '');
   const [specialSaved, setSpecialSaved] = useState(false);
+  const [coverText, setCoverText] = useState('');
+  const [coverSaved, setCoverSaved] = useState(false);
   const count = headcount?.current_count ?? 0;
   const peak = headcount?.peak_count ?? 0;
   const isLive = headcount?.is_live ?? false;
@@ -82,6 +88,18 @@ export function ClickerView({
     await onUpdateSpecial('');
     setSpecialText('');
   }, [onUpdateSpecial]);
+
+  const handleSetCover = useCallback(async (text: string) => {
+    await onUpdateCover(text);
+    setCoverText('');
+    setCoverSaved(true);
+    setTimeout(() => setCoverSaved(false), 2500);
+  }, [onUpdateCover]);
+
+  const handleClearCover = useCallback(async () => {
+    await onUpdateCover('');
+    setCoverText('');
+  }, [onUpdateCover]);
 
   // Auto-clear special at 6am
   useEffect(() => {
@@ -192,6 +210,74 @@ export function ClickerView({
             Peak: {formatCount(peak)} at {formatTime(headcount.updated_at)}
           </p>
         )}
+      </div>
+
+      {/* Cover Charge */}
+      <div className="px-4 pb-2">
+        <div className="p-4 bg-[#111114] border border-[#2A2A30] rounded-xl">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[#8A8A95] text-xs font-bold tracking-wider" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+              {'\uD83D\uDCB5'} SET COVER
+            </p>
+            {venue.cover_charge && (
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full"
+                style={{ fontFamily: 'Satoshi, sans-serif', background: '#22C55E', color: 'white' }}>
+                {venue.cover_charge}
+              </span>
+            )}
+          </div>
+          {coverSaved ? (
+            <div className="flex items-center gap-2 py-2 justify-center">
+              <span className="text-[#22C55E] text-sm font-bold" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+                {'\u2705'} Cover set!
+              </span>
+            </div>
+          ) : (
+            <>
+              {/* Quick-select presets */}
+              <div className="flex gap-1.5 mb-2 flex-wrap">
+                {COVER_PRESETS.map(preset => (
+                  <button
+                    key={preset}
+                    onClick={() => handleSetCover(preset)}
+                    className="h-9 px-3 rounded-lg text-white text-sm font-bold active:scale-[0.96] transition-transform"
+                    style={{ fontFamily: 'Satoshi, sans-serif', background: '#166534', border: '1px solid #22C55E44' }}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+              {/* Custom cover input */}
+              <div className="flex gap-2">
+                <input
+                  value={coverText}
+                  onChange={e => setCoverText(e.target.value.slice(0, 100))}
+                  placeholder="$10 girls / $20 guys"
+                  className="flex-1 h-10 px-3 bg-[#050507] border border-[#2A2A30] rounded-lg text-white text-sm outline-none focus:border-[#22C55E] transition-colors placeholder-[#444]"
+                  style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '16px' }}
+                />
+                <button
+                  onClick={() => coverText.trim() && handleSetCover(coverText.trim())}
+                  disabled={!coverText.trim()}
+                  className="h-10 px-4 rounded-lg text-white text-sm font-bold active:scale-[0.98] transition-transform disabled:opacity-40"
+                  style={{ fontFamily: 'Satoshi, sans-serif', background: '#22C55E' }}
+                >
+                  Set
+                </button>
+              </div>
+              {/* No Cover button */}
+              {venue.cover_charge && (
+                <button
+                  onClick={handleClearCover}
+                  className="w-full h-9 mt-2 rounded-lg text-[#8A8A95] text-xs font-medium bg-[#1A1A22] border border-[#2A2A30] active:scale-[0.98] transition-transform"
+                  style={{ fontFamily: 'Satoshi, sans-serif' }}
+                >
+                  No Cover (clear)
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Main Buttons */}

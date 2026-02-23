@@ -22,6 +22,7 @@ export function PortalPage({ initialCode, onExit }: PortalPageProps) {
     handleEnter,
     handleExit,
     updateSpecial,
+    updateCover,
     endNight,
     disconnect,
   } = usePortal();
@@ -71,6 +72,7 @@ export function PortalPage({ initialCode, onExit }: PortalPageProps) {
       onExit={handleExit}
       onEndNight={endNight}
       onUpdateSpecial={updateSpecial}
+      onUpdateCover={updateCover}
       onDisconnect={handleDisconnect}
     />
   );

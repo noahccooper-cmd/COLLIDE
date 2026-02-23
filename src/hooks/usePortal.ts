@@ -203,6 +203,17 @@ export function usePortal() {
     setVenue(prev => prev ? { ...prev, tonight_special: specialText, special_updated_at: specialText ? new Date().toISOString() : null } : null);
   }, [venue]);
 
+  const updateCover = useCallback(async (text: string) => {
+    if (!venue || !envReady) return;
+    const coverText = text.trim() || null;
+    await supabase
+      .from('venues')
+      .update({ cover_charge: coverText })
+      .eq('id', venue.id);
+
+    setVenue(prev => prev ? { ...prev, cover_charge: coverText } : null);
+  }, [venue]);
+
   const endNight = useCallback(async () => {
     if (!venue) return;
     const nightOf = getNightOf();
@@ -248,6 +259,7 @@ export function usePortal() {
     handleEnter,
     handleExit,
     updateSpecial,
+    updateCover,
     endNight,
     disconnect,
   };

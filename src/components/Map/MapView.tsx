@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState, type MutableRefObject } from 
 import mapboxgl from 'mapbox-gl';
 import { CITIES, MAPBOX_STYLE, type CityKey } from '../../lib/constants';
 import { mapboxToken, mapboxReady } from '../../lib/supabase';
-import { getDotTier, getShortName, formatCount } from '../../lib/utils';
+import { getDotTier, getShortName, formatCount, getCoverLabel } from '../../lib/utils';
 import type { Venue } from '../../lib/types';
 
 interface MarkerEntry {
@@ -12,6 +12,7 @@ interface MarkerEntry {
   countEl: HTMLSpanElement;
   labelEl: HTMLDivElement;
   liveEl: HTMLDivElement;
+  coverEl: HTMLDivElement;
   currentTier: string;
   currentCount: number;
 }
@@ -242,9 +243,14 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       liveEl.innerHTML = '<span class="blink"></span>LIVE';
       liveEl.style.display = 'none';
 
+      const coverEl = document.createElement('div');
+      coverEl.className = 'venue-cover-bubble';
+      coverEl.style.display = 'none';
+
       el.appendChild(dotEl);
       el.appendChild(labelEl);
       el.appendChild(liveEl);
+      el.appendChild(coverEl);
 
       el.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -256,7 +262,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         .addTo(mapRef.current!);
 
       markersRef.current.set(venue.id, {
-        marker, el, dotEl, countEl, labelEl, liveEl,
+        marker, el, dotEl, countEl, labelEl, liveEl, coverEl,
         currentTier: 'dot-t0', currentCount: 0,
       });
     });
@@ -265,6 +271,9 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
   useEffect(() => { syncMarkers(); }, [syncMarkers]);
 
   useEffect(() => {
+    // Build a lookup for venue cover_charge
+    const venueMap = new Map(venues.map(v => [v.id, v]));
+
     markersRef.current.forEach((entry, venueId) => {
       const count = counts[venueId] ?? 0;
       const isLive = liveVenueIds.has(venueId);
@@ -293,9 +302,19 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         entry.dotEl.classList.add('count-updated');
         setTimeout(() => entry.dotEl.classList.remove('count-updated'), 500);
       }
+
+      // Cover bubble
+      const v = venueMap.get(venueId);
+      const cover = v?.cover_charge;
+      if (cover) {
+        entry.coverEl.textContent = getCoverLabel(cover);
+        entry.coverEl.style.display = 'flex';
+      } else {
+        entry.coverEl.style.display = 'none';
+      }
     });
 
-  }, [counts, liveVenueIds, pulsedVenueId, mapLoaded]);
+  }, [counts, liveVenueIds, pulsedVenueId, venues, mapLoaded]);
 
   if (!mapboxReady) {
     return (

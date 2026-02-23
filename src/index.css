@@ -49,6 +49,7 @@ body::after {
    ============================================ */
 
 .venue-marker {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -131,6 +132,33 @@ body::after {
 @keyframes live-blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.15; }
+}
+
+/* ============================================
+   Venue Marker — Cover Charge Bubble (GREEN)
+   ============================================ */
+
+.venue-cover-bubble {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: -8px;
+  right: -14px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 5px;
+  border-radius: 13px;
+  background: #22C55E;
+  border: 2px solid #166534;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: white;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* ============================================
@@ -670,6 +698,22 @@ body::after {
 /* ============================================
    Tonight Banner (peek-visible specials)
    ============================================ */
+
+.cover-banner {
+  padding: 6px 16px 0;
+}
+
+.cover-pill {
+  display: inline-block;
+  padding: 5px 14px;
+  background: #22C55E;
+  border-radius: 20px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
 
 .tonight-banner {
   padding: 6px 16px 0;

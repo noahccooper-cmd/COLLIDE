@@ -356,6 +356,15 @@ export function VenueSheet({
           )}
         </div>
 
+        {/* Cover Charge Banner (visible in peek) */}
+        {venue.cover_charge && (
+          <div className="cover-banner">
+            <span className="cover-pill">
+              {'\uD83D\uDCB5'} {venue.cover_charge.toUpperCase() === 'FREE' || venue.cover_charge.toUpperCase() === 'NO COVER' ? 'FREE ENTRY' : `COVER: ${venue.cover_charge}`}
+            </span>
+          </div>
+        )}
+
         {/* Tonight's Specials Banner (visible in peek) */}
         <TonightBanner venue={venue} />
 

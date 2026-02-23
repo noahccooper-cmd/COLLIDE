@@ -44,6 +44,7 @@ export interface Venue {
   review_count: number | null;
   tonight_special: string | null;
   special_updated_at: string | null;
+  cover_charge: string | null;
 }
 
 export interface Checkin {
