@@ -54,9 +54,8 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       zoom: config.zoom,
       bearing: 0,
       pitch: 0,
-      minZoom: 11,
+      minZoom: 1,
       maxZoom: 18,
-      maxBounds: [[-84.00, 35.90], [-83.85, 36.02]],
       attributionControl: false,
     });
 
@@ -67,30 +66,39 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     const updateZoomVisibility = () => {
       const zoom = map.getZoom();
 
-      // ── Venue dots: visible zoom >= 13, fade 12-13, hidden < 12 ──
+      // ── Venue markers: hidden < 12, fade in 12-13, full >= 13 ──
       document.querySelectorAll('.venue-marker').forEach(node => {
         const el = node as HTMLElement;
         if (zoom >= 13) {
+          el.style.display = '';
           el.style.opacity = '1';
           el.style.pointerEvents = 'auto';
         } else if (zoom >= 12) {
+          el.style.display = '';
           const fade = (zoom - 12) / 1;
           el.style.opacity = String(Math.max(0, Math.min(1, fade)));
           el.style.pointerEvents = fade > 0.3 ? 'auto' : 'none';
         } else {
-          el.style.opacity = '0';
+          el.style.display = 'none';
           el.style.pointerEvents = 'none';
         }
       });
 
-      // ── Power T marker: fade based on zoom ──
-      // Set opacity on the inner .power-t-marker div, NOT the wrapper (which has transform)
+      // ── Power T: hidden < 11, fade in 11-12, fade out 13-14, hidden >= 14 ──
       const tInner = tMarkerRef.current?.getElement()?.querySelector('.power-t-marker') as HTMLElement | null;
       if (tInner) {
-        if (zoom >= 13) {
-          tInner.style.opacity = String(Math.max(0, 1 - (zoom - 13)));
+        const tWrapper = tMarkerRef.current?.getElement() as HTMLElement | null;
+        if (zoom < 11) {
+          if (tWrapper) tWrapper.style.display = 'none';
         } else {
-          tInner.style.opacity = '1';
+          if (tWrapper) tWrapper.style.display = '';
+          if (zoom < 12) {
+            tInner.style.opacity = String((zoom - 11) / 1);
+          } else if (zoom >= 13) {
+            tInner.style.opacity = String(Math.max(0, 1 - (zoom - 13)));
+          } else {
+            tInner.style.opacity = '1';
+          }
         }
       }
     };
