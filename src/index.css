@@ -138,25 +138,25 @@ body {
    ============================================ */
 
 .venue-cover-bubble {
-  display: none;
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background: #22C55E;
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  top: -18px;                   /* above center (above dot top) */
-  left: 8px;                    /* right of center */
-  min-width: 26px;
-  height: 26px;
-  padding: 0 5px;
-  border-radius: 13px;
-  background: #22C55E;
-  border: 2px solid #166534;
-  font-family: 'Satoshi', sans-serif;
-  font-size: 11px;
-  font-weight: 800;
-  color: white;
-  white-space: nowrap;
-  pointer-events: none;
+  padding: 0 3px;
+  border: 1.5px solid #166534;
   z-index: 2;
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: 'Satoshi', sans-serif;
 }
 
 /* ============================================

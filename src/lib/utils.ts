@@ -41,6 +41,7 @@ export function getCoverLabel(cover: string): string {
   if (t === 'FREE' || t === 'FREE ENTRY' || t === 'NO COVER') return 'FREE';
   const m = cover.match(/\$\d+/);
   if (m) return m[0];
+  if (/^\d+$/.test(t)) return `$${t}`;
   return cover.length > 5 ? cover.slice(0, 5) : cover;
 }
 

@@ -217,7 +217,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
 
       const coverEl = document.createElement('div');
       coverEl.className = 'venue-cover-bubble';
-      coverEl.style.display = 'none';
+      coverEl.textContent = 'FREE';
 
       el.appendChild(dotEl);
       el.appendChild(labelEl);
@@ -286,15 +286,10 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         setTimeout(() => entry.dotEl.classList.remove('count-updated'), 500);
       }
 
-      // Cover bubble
+      // Cover bubble — always visible, shows "FREE" when no cover
       const v = venueMap.get(venueId);
       const cover = v?.cover_charge;
-      if (cover) {
-        entry.coverEl.textContent = getCoverLabel(cover);
-        entry.coverEl.style.display = 'flex';
-      } else {
-        entry.coverEl.style.display = 'none';
-      }
+      entry.coverEl.textContent = cover ? getCoverLabel(cover) : 'FREE';
     });
 
   }, [counts, liveVenueIds, pulsedVenueId, venues, mapLoaded]);
