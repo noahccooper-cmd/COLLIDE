@@ -65,46 +65,32 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     map.dragRotate.disable();
     map.touchZoomRotate.disableRotation();
 
-    /* ── Zoom-aware visibility for ALL elements ── */
+    /* ── Zoom-aware visibility: simple binary show/hide ── */
     const updateZoomVisibility = () => {
       const zoom = map.getZoom();
 
-      // ── Venue markers: hidden < 12, fade in 12-13, full >= 13 ──
-      // Target the .mapboxgl-marker wrapper (parent of .venue-marker)
-      // so display/opacity changes don't interact with the 0×0 anchor layout.
+      // ── Venue markers: hidden when zoom < 12, visible when >= 12 ──
       document.querySelectorAll('.venue-marker').forEach(node => {
         const wrapper = node.parentElement as HTMLElement | null;
         if (!wrapper) return;
-        if (zoom >= 13) {
+        if (zoom >= 12) {
           wrapper.style.display = '';
           wrapper.style.opacity = '1';
           wrapper.style.pointerEvents = 'auto';
-        } else if (zoom >= 12) {
-          wrapper.style.display = '';
-          const fade = (zoom - 12) / 1;
-          wrapper.style.opacity = String(Math.max(0, Math.min(1, fade)));
-          wrapper.style.pointerEvents = fade > 0.3 ? 'auto' : 'none';
         } else {
           wrapper.style.display = 'none';
           wrapper.style.pointerEvents = 'none';
         }
       });
 
-      // ── Power T: hidden < 11, fade in 11-12, fade out 13-14, hidden >= 14 ──
-      const tInner = tMarkerRef.current?.getElement()?.querySelector('.power-t-marker') as HTMLElement | null;
-      if (tInner) {
-        const tWrapper = tMarkerRef.current?.getElement() as HTMLElement | null;
-        if (zoom < 11) {
-          if (tWrapper) tWrapper.style.display = 'none';
+      // ── Power T: hidden when zoom < 11, visible when >= 11 ──
+      const tWrapper = tMarkerRef.current?.getElement() as HTMLElement | null;
+      if (tWrapper) {
+        if (zoom >= 11) {
+          tWrapper.style.display = '';
+          tWrapper.style.opacity = '1';
         } else {
-          if (tWrapper) tWrapper.style.display = '';
-          if (zoom < 12) {
-            tInner.style.opacity = String((zoom - 11) / 1);
-          } else if (zoom >= 13) {
-            tInner.style.opacity = String(Math.max(0, 1 - (zoom - 13)));
-          } else {
-            tInner.style.opacity = '1';
-          }
+          tWrapper.style.display = 'none';
         }
       }
     };
