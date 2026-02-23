@@ -43,17 +43,17 @@ export function ClickerView({
     return match ?? 'FREE';
   });
 
-  // Sync selectedCover when venue changes (re-login or refetch from DB)
+  // Sync selectedCover when venue or its cover_charge changes (re-login, refetch, realtime)
   useEffect(() => {
     const current = venue.cover_charge;
-    console.log('PORTAL MOUNT: venue.cover_charge =', current);
+    console.log('PORTAL COVER SYNC: venue.cover_charge =', current, 'for', venue.name);
     if (!current || current === 'FREE') {
       setSelectedCover('FREE');
     } else {
       const match = COVER_PRESETS.find(p => p === current);
       setSelectedCover(match ?? 'FREE');
     }
-  }, [venue.id]);
+  }, [venue.id, venue.cover_charge]);
   const count = headcount?.current_count ?? 0;
   const peak = headcount?.peak_count ?? 0;
   const isLive = headcount?.is_live ?? false;
@@ -135,7 +135,7 @@ export function ClickerView({
         <div className="text-center max-w-sm">
           <h1 className="text-white font-black text-2xl tracking-[0.05em] mb-6"
             style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            <span>ven</span><span className="text-[#FF5E1A]">U</span><span>e</span>
+            venuu
           </h1>
           <div className="bg-[#111114] border border-[#2A2A30] rounded-2xl p-6">
             <p className="text-[#8A8A95] text-sm mb-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>Tonight at</p>
@@ -172,9 +172,7 @@ export function ClickerView({
         <div>
           <h1 className="text-white font-black text-lg tracking-[0.05em]"
             style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            <span>ven</span>
-            <span className="text-[#FF5E1A]">U</span>
-            <span>e</span>
+            <span>venuu</span>
             <span className="text-[#8A8A95] font-bold text-sm ml-2">Portal</span>
           </h1>
           <p className="text-white text-sm font-bold" style={{ fontFamily: 'Satoshi, sans-serif' }}>

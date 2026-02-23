@@ -217,7 +217,9 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
 
       const coverEl = document.createElement('div');
       coverEl.className = 'venue-cover-bubble';
-      coverEl.textContent = 'FREE';
+      const initCover = venue.cover_charge;
+      coverEl.textContent = initCover ? getCoverLabel(initCover) : 'FREE';
+      console.log('MARKER CREATED:', venue.name, 'cover_charge:', initCover, '→ bubble:', coverEl.textContent);
 
       dotEl.appendChild(coverEl);
       el.appendChild(dotEl);

@@ -21,7 +21,7 @@ export function useVenues(city: CityKey) {
       return;
     }
     const rows = (data as Venue[]) ?? [];
-    console.log(`[venuu] Loaded ${rows.length} venues for ${city}:`, rows.map(v => `${v.name} (${v.lat}, ${v.lng}) is_active=${v.is_active}`));
+    console.log(`[venuu] Loaded ${rows.length} venues for ${city}:`, rows.map(v => `${v.name} cover=${v.cover_charge ?? 'null'} active=${v.is_active}`));
     setVenues(rows);
     setLoading(false);
   }, [city]);
