@@ -34,6 +34,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
+  const markersVisibleRef = useRef(true);
   const tMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const initialCityRef = useRef(city);
@@ -73,44 +74,49 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       console.error('MAP ERROR:', e.error?.message || e);
     });
     map.getCanvas().addEventListener('webglcontextlost', (e) => {
-      console.error('WEBGL CONTEXT LOST', e);
+      e.preventDefault(); // Prevent permanent loss
+      console.warn('WebGL context lost — will restore');
     });
     map.getCanvas().addEventListener('webglcontextrestored', () => {
       console.log('WEBGL CONTEXT RESTORED');
+      map.triggerRepaint();
     });
 
-    /* ── Zoom-aware visibility: simple binary show/hide ── */
-    const updateZoomVisibility = () => {
+    /* ── Zoom-aware: remove/add markers to free GPU entirely ── */
+    let markersVisible = true;
+    let tVisible = true;
+
+    map.on('zoom', () => {
       const zoom = map.getZoom();
-      console.log('ZOOM:', zoom.toFixed(2));
 
-      // ── Venue markers: hidden when zoom < 12, visible when >= 12 ──
-      document.querySelectorAll('.venue-marker').forEach(node => {
-        const wrapper = node.parentElement as HTMLElement | null;
-        if (!wrapper) return;
-        if (zoom >= 12) {
-          wrapper.style.display = '';
-          wrapper.style.opacity = '1';
-          wrapper.style.pointerEvents = 'auto';
-        } else {
-          wrapper.style.display = 'none';
-          wrapper.style.pointerEvents = 'none';
-        }
-      });
-
-      // ── Power T: hidden when zoom < 11, visible when >= 11 ──
-      const tWrapper = tMarkerRef.current?.getElement() as HTMLElement | null;
-      if (tWrapper) {
-        if (zoom >= 11) {
-          tWrapper.style.display = '';
-          tWrapper.style.opacity = '1';
-        } else {
-          tWrapper.style.display = 'none';
-        }
+      // Venue markers: remove from map when zoom < 12, re-add when >= 12
+      if (zoom < 12 && markersVisible) {
+        markersRef.current.forEach(entry => entry.marker.remove());
+        markersVisible = false;
+        markersVisibleRef.current = false;
       }
-    };
+      if (zoom >= 12 && !markersVisible) {
+        markersRef.current.forEach(entry => entry.marker.addTo(map));
+        markersVisible = true;
+        markersVisibleRef.current = true;
+      }
 
-    map.on('zoom', updateZoomVisibility);
+      // Power T: remove from map when zoom < 11, re-add when >= 11
+      if (zoom < 11 && tVisible) {
+        tMarkerRef.current?.remove();
+        tVisible = false;
+      }
+      if (zoom >= 11 && !tVisible) {
+        if (tMarkerRef.current) tMarkerRef.current.addTo(map);
+        tVisible = true;
+      }
+    });
+
+    // Set initial state in case map starts zoomed out
+    if (map.getZoom() < 12) {
+      markersVisible = false;
+      markersVisibleRef.current = false;
+    }
 
     map.on('load', () => {
       // ── Power T — fixed geographic marker at UTK campus ──
@@ -136,7 +142,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       tMarkerRef.current = tMarker;
 
       setMapLoaded(true);
-      updateZoomVisibility();
     });
 
     mapRef.current = map;
@@ -225,8 +230,12 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       });
 
       const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
-        .setLngLat([venue.lng, venue.lat])
-        .addTo(mapRef.current!);
+        .setLngLat([venue.lng, venue.lat]);
+
+      // Only attach to map if markers are currently visible (zoom >= 12)
+      if (markersVisibleRef.current) {
+        marker.addTo(mapRef.current!);
+      }
 
       // Lock the Mapbox wrapper so CSS transitions never catch its transform.
       // Belt-and-suspenders with the CSS rule — this also covers browsers
