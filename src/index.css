@@ -796,9 +796,9 @@ body::after {
   color: #FF5E1A;
 }
 
-.recap-stars { display: flex; gap: 1px; }
-.recap-stars .star { font-size: 12px; }
-.recap-stars .star.filled { color: #FFAA00; }
+.recap-stars { display: flex; gap: 2px; }
+.recap-stars .star { font-size: 14px; }
+.recap-stars .star.filled { color: #FFD700; }
 .recap-stars .star.empty { color: #2A2A30; }
 
 .recap-body {
