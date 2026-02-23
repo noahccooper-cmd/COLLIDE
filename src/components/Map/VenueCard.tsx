@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { formatCount, getCapacityPercent, formatTime } from '../../lib/utils';
+import { formatCount, getCapacityPercent, timeAgo } from '../../lib/utils';
 import { useVenueRecaps } from '../../hooks/useVenueRecaps';
 import type { Venue, Headcount } from '../../lib/types';
 
@@ -77,7 +77,7 @@ function RecapCard({ recap, index }: { recap: any; index: number }) {
   return (
     <div className="recap-card" style={{ zIndex: 100 - index }}>
       <div className="recap-header">
-        <span className="recap-user">{'\uD83D\uDC64'} @{recap.username}</span>
+        <span className="recap-user">@{recap.username}</span>
         <div className="recap-stars">
           {[1, 2, 3, 4, 5].map(s => (
             <span key={s} className={`star ${s <= recap.stars ? 'filled' : 'empty'}`}>{'\u2605'}</span>
@@ -85,7 +85,7 @@ function RecapCard({ recap, index }: { recap: any; index: number }) {
         </div>
       </div>
       <p className="recap-body">{recap.body}</p>
-      <span className="recap-time">{formatTime(recap.created_at)}</span>
+      <span className="recap-time">{timeAgo(recap.created_at)}</span>
     </div>
   );
 }
@@ -393,13 +393,13 @@ export function VenueSheet({
 
       {/* ═══ EXPANDED CONTENT (hidden when peeked via CSS) ═══ */}
       <div className="sheet-expanded-content">
+        {/* Specials */}
+        <SpecialsRow venue={venue} />
+
         {/* Description */}
         {venue.description && (
           <p className="sheet-description">{venue.description}</p>
         )}
-
-        {/* Specials */}
-        <SpecialsRow venue={venue} />
 
         {/* Hours / Website */}
         <div className="sheet-meta">
