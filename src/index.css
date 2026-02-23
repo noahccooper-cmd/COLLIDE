@@ -48,20 +48,23 @@ body::after {
    Venue Marker — Container
    ============================================ */
 
+/* ── NUCLEAR FIX: .venue-marker is a 0×0 anchor point.
+   Mapbox positions it via transform on the wrapper.  Because the marker
+   has no intrinsic size, translate(-50%,-50%) always resolves to (0,0),
+   so the anchor point NEVER shifts regardless of child sizes. ── */
+
 .venue-marker {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  width: 0;
+  height: 0;
+  overflow: visible;
   cursor: pointer;
-  pointer-events: auto;
-  transition: opacity 0.3s ease;
+  pointer-events: none;         /* children opt-in individually */
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
 }
 
 .venue-marker:active .venue-dot {
-  transform: scale(0.92) !important;
-  transition: transform 100ms ease !important;
+  scale: 0.92 !important;       /* press feedback, separate from transform */
 }
 
 /* ============================================
@@ -69,6 +72,10 @@ body::after {
    ============================================ */
 
 .venue-dot {
+  position: absolute;
+  top: 50%;                     /* 50% of 0 = 0 */
+  left: 50%;                    /* 50% of 0 = 0 */
+  transform: translate(-50%, -50%);  /* centers dot at the geo-coordinate */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,11 +83,9 @@ body::after {
   font-family: 'Satoshi', sans-serif;
   font-weight: 900;
   color: white;
-  /* Only transition visual properties — NEVER width/height/margin/transform.
-     Transitioning layout properties shifts the marker's center point because
-     Mapbox uses translate(-50%,-50%) which is size-relative. */
-  transition: background 0.6s ease, box-shadow 0.6s ease, border-color 0.6s ease;
-  position: relative;
+  transition: none !important;  /* NEVER transition anything on the dot */
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .venue-dot::before {
@@ -89,7 +94,7 @@ body::after {
   inset: -4px;
   border-radius: 50%;
   border: 2px solid transparent;
-  transition: border-color 0.6s ease, opacity 0.6s ease;
+  transition: none !important;  /* no transitions on pseudo-elements either */
 }
 
 .venue-count { line-height: 1; }
@@ -99,7 +104,10 @@ body::after {
    ============================================ */
 
 .venue-label {
-  margin-top: 4px;
+  position: absolute;
+  top: 18px;                    /* fixed offset below geo-coordinate center */
+  left: 0;
+  transform: translateX(-50%);
   font-family: 'Satoshi', sans-serif;
   font-size: 11px;
   font-weight: 700;
@@ -107,6 +115,7 @@ body::after {
   text-align: center;
   white-space: nowrap;
   text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
+  pointer-events: none;
 }
 
 /* ============================================
@@ -114,15 +123,20 @@ body::after {
    ============================================ */
 
 .venue-live-badge {
+  position: absolute;
+  top: 34px;                    /* fixed offset below label */
+  left: 0;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 3px;
-  margin-top: 2px;
   font-family: 'Satoshi', sans-serif;
   font-size: 9px;
   font-weight: 800;
   color: #00E676;
   letter-spacing: 0.05em;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .venue-live-badge .blink {
@@ -146,8 +160,8 @@ body::after {
   align-items: center;
   justify-content: center;
   position: absolute;
-  top: -8px;
-  right: -14px;
+  top: -18px;                   /* above center (above dot top) */
+  left: 8px;                    /* right of center */
   min-width: 26px;
   height: 26px;
   padding: 0 5px;
@@ -203,7 +217,7 @@ body::after {
   box-shadow: 0 0 22px 8px rgba(232, 160, 40, 0.35), inset 0 0 10px rgba(255,200,100,0.12);
   animation: pulse-t3 2s ease-in-out infinite;
 }
-.dot-t3::before { border-color: rgba(232, 160, 40, 0.2); animation: ring-t3 2s ease-in-out infinite; }
+.dot-t3::before { border-color: rgba(232, 160, 40, 0.2); inset: -8px; animation: ring-t3 2s ease-in-out infinite; }
 
 /* T4 — 121-200: fire orange */
 .dot-t4 {
@@ -213,7 +227,7 @@ body::after {
   box-shadow: 0 0 35px 14px rgba(232, 112, 32, 0.45), 0 0 70px 25px rgba(232, 112, 32, 0.15), inset 0 0 14px rgba(255,180,60,0.18);
   animation: pulse-t4 1.5s ease-in-out infinite;
 }
-.dot-t4::before { border-color: rgba(232, 112, 32, 0.25); animation: ring-t4 1.5s ease-in-out infinite; }
+.dot-t4::before { border-color: rgba(232, 112, 32, 0.25); inset: -12px; animation: ring-t4 1.5s ease-in-out infinite; }
 
 /* T5 — 200+: volcanic red-orange */
 .dot-t5 {
@@ -223,16 +237,19 @@ body::after {
   box-shadow: 0 0 50px 22px rgba(232, 56, 24, 0.55), 0 0 100px 40px rgba(232, 56, 24, 0.2), 0 0 150px 60px rgba(232, 56, 24, 0.08), inset 0 0 18px rgba(255,120,50,0.22);
   animation: pulse-t5 1s ease-in-out infinite;
 }
-.dot-t5::before { border-color: rgba(232, 56, 24, 0.3); animation: ring-t5 1s ease-in-out infinite; }
+.dot-t5::before { border-color: rgba(232, 56, 24, 0.3); inset: -18px; animation: ring-t5 1s ease-in-out infinite; }
 
-@keyframes pulse-t2 { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
-@keyframes pulse-t3 { 0%,100% { transform:scale(1); } 50% { transform:scale(1.07); } }
-@keyframes pulse-t4 { 0%,100% { transform:scale(1); } 50% { transform:scale(1.12); } }
-@keyframes pulse-t5 { 0%,100% { transform:scale(1); } 50% { transform:scale(1.16); } }
+/* Pulse uses the CSS `scale` property (separate from `transform`)
+   so it never conflicts with the centering translate(-50%,-50%). */
+@keyframes pulse-t2 { 0%,100% { scale:1; } 50% { scale:1.04; } }
+@keyframes pulse-t3 { 0%,100% { scale:1; } 50% { scale:1.07; } }
+@keyframes pulse-t4 { 0%,100% { scale:1; } 50% { scale:1.12; } }
+@keyframes pulse-t5 { 0%,100% { scale:1; } 50% { scale:1.16; } }
 
-@keyframes ring-t3 { 0%,100% { inset:-4px; opacity:1; } 50% { inset:-8px; opacity:0.6; } }
-@keyframes ring-t4 { 0%,100% { inset:-4px; opacity:1; } 50% { inset:-12px; opacity:0.5; } }
-@keyframes ring-t5 { 0%,100% { inset:-5px; opacity:1; } 50% { inset:-18px; opacity:0.4; } }
+/* Ring animations: only animate opacity, NOT inset (layout) */
+@keyframes ring-t3 { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+@keyframes ring-t4 { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+@keyframes ring-t5 { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
 /* ============================================
    Count Bump + Flash
@@ -330,9 +347,9 @@ body::after {
    ============================================ */
 
 /* The Mapbox wrapper (.mapboxgl-marker) uses CSS transform for positioning.
-   If ANY transition catches transform, the marker drifts during panning. */
-.mapboxgl-marker:has(.venue-marker),
-.mapboxgl-marker:has(.power-t-marker) {
+   If ANY transition catches transform, the marker drifts during panning.
+   Nuclear: kill transitions on ALL Mapbox markers globally. */
+.mapboxgl-marker {
   transition: none !important;
   will-change: transform;
 }

@@ -70,20 +70,23 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       const zoom = map.getZoom();
 
       // ── Venue markers: hidden < 12, fade in 12-13, full >= 13 ──
+      // Target the .mapboxgl-marker wrapper (parent of .venue-marker)
+      // so display/opacity changes don't interact with the 0×0 anchor layout.
       document.querySelectorAll('.venue-marker').forEach(node => {
-        const el = node as HTMLElement;
+        const wrapper = node.parentElement as HTMLElement | null;
+        if (!wrapper) return;
         if (zoom >= 13) {
-          el.style.display = '';
-          el.style.opacity = '1';
-          el.style.pointerEvents = 'auto';
+          wrapper.style.display = '';
+          wrapper.style.opacity = '1';
+          wrapper.style.pointerEvents = 'auto';
         } else if (zoom >= 12) {
-          el.style.display = '';
+          wrapper.style.display = '';
           const fade = (zoom - 12) / 1;
-          el.style.opacity = String(Math.max(0, Math.min(1, fade)));
-          el.style.pointerEvents = fade > 0.3 ? 'auto' : 'none';
+          wrapper.style.opacity = String(Math.max(0, Math.min(1, fade)));
+          wrapper.style.pointerEvents = fade > 0.3 ? 'auto' : 'none';
         } else {
-          el.style.display = 'none';
-          el.style.pointerEvents = 'none';
+          wrapper.style.display = 'none';
+          wrapper.style.pointerEvents = 'none';
         }
       });
 
