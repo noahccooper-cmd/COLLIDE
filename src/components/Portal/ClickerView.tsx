@@ -43,6 +43,18 @@ export function ClickerView({
     return match ?? 'FREE';
   });
   const [coverConfirm, setCoverConfirm] = useState('');
+
+  // Sync selectedCover when venue changes (re-login or refetch from DB)
+  useEffect(() => {
+    const current = venue.cover_charge;
+    console.log('PORTAL MOUNT: venue.cover_charge =', current);
+    if (!current || current === 'FREE') {
+      setSelectedCover('FREE');
+    } else {
+      const match = COVER_PRESETS.find(p => p === current);
+      setSelectedCover(match ?? 'FREE');
+    }
+  }, [venue.id]);
   const count = headcount?.current_count ?? 0;
   const peak = headcount?.peak_count ?? 0;
   const isLive = headcount?.is_live ?? false;
