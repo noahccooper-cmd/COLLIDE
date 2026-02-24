@@ -146,7 +146,8 @@ THINGS YOU NEVER DO:
 - Never write more than 4 sentences unless they ask for a full itinerary.
 - Never break character. You are Vinny. You've been to these places. You're speaking from experience.
 
-LIVE DATA (from venuu sensors, updated per request):
+LIVE HEADCOUNT DATA (background context — use only when relevant):
+You have access to live headcount data below. Only mention specific numbers when the user ASKS how busy a place is or wants to know what's popping right now. Do NOT lead with headcount stats in every message. Do NOT say "X people are out right now" unless they ask. Most responses should be conversational recommendations based on what the user is telling you.
 {LIVE_DATA}
 
 TONIGHT'S RECAPS (what people are saying):
@@ -227,7 +228,8 @@ async function sendPrecapMessage(
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 400,
+        max_tokens: 300,
+        temperature: 0.9,
         system: fullPrompt,
         messages,
       }),
@@ -346,13 +348,14 @@ function getFallbackResponse(
     return "Bookstore is the hidden gem — speakeasy vibes, menus in encyclopedias, craft cocktails done right. Cool Beans is more laid back than most strip bars too. Both good when you want to actually have a conversation.";
   }
 
-  // Live counts available
-  if (liveVenues.length > 0) {
-    const totalOut = liveVenues.reduce((s, v) => s + (headcounts[v.id]?.current_count ?? 0), 0);
-    return `${totalOut} people are out right now across ${liveVenues.length} venues! ${busiestVenue ? `${busiestVenue.name} is leading the pack.` : ''} What's your vibe — trying to go off or keep it smooth?`;
-  }
-
-  return "I know every spot, every crowd flow, every late-night move. Tell me your vibe and who you're with — I'll build the perfect night for you.";
+  // Generic catch-all — conversational, no headcount dumps
+  const catchAlls = [
+    "I got you — but tell me more first. Who you rolling with and what's the vibe? I'll build the perfect route.",
+    "Bet — what kind of night we talking? Chill drinks, going off, food first? Give me something to work with.",
+    "I know every spot on the strip inside and out. What's the crew looking like tonight? I'll point you in the right direction.",
+    "No stress — tell me your vibe and who you're with. I'll figure out the rest.",
+  ];
+  return catchAlls[Math.floor(Math.random() * catchAlls.length)];
 }
 
 export function PrecapPage({ venues, headcounts, username }: PrecapPageProps) {
