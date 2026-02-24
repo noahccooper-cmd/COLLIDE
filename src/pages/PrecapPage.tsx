@@ -371,6 +371,7 @@ export function PrecapPage({ venues, headcounts, username }: PrecapPageProps) {
   const handleSend = useCallback(async (text?: string) => {
     const msg = (text ?? input).trim();
     if (!msg || isTyping) return;
+    if (navigator.vibrate) navigator.vibrate(10);
 
     const userMsg: PrecapMessage = {
       id: `u-${Date.now()}`,

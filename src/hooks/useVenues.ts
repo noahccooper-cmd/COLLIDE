@@ -6,18 +6,22 @@ import type { CityKey } from '../lib/constants';
 export function useVenues(city: CityKey) {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const fetchVenues = useCallback(async () => {
     if (!envReady) return;
-    const { data, error } = await supabase
+    setError(false);
+    const { data, error: err } = await supabase
       .from('venues')
       .select('*')
       .eq('city', city)
       .or('is_active.eq.true,is_active.is.null')
       .order('sort_order');
 
-    if (error) {
-      console.error('[venuu] useVenues fetch error:', error);
+    if (err) {
+      console.error('[venuu] useVenues fetch error:', err);
+      setError(true);
+      setLoading(false);
       return;
     }
     const rows = (data as Venue[]) ?? [];
@@ -76,5 +80,5 @@ export function useVenues(city: CityKey) {
     return () => window.removeEventListener('venues-cover-update', handler);
   }, []);
 
-  return { venues, loading };
+  return { venues, loading, error, refetch: fetchVenues };
 }

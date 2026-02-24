@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { envReady } from './lib/supabase';
 import { useCity } from './hooks/useCity';
 import { useVenues } from './hooks/useVenues';
@@ -15,9 +15,20 @@ export default function App() {
   const [username, setUsername] = useState<string | null>(
     () => localStorage.getItem('venue_username')
   );
+  const [splashDone, setSplashDone] = useState(false);
   const { city, switchCity } = useCity();
-  const { venues } = useVenues(city);
+  const { venues, loading: venuesLoading, error: venuesError, refetch: refetchVenues } = useVenues(city);
   const { headcounts, pulsedVenueId } = useHeadcounts(city);
+
+  // Splash: dismiss after 1.5s OR when venues load, whichever comes first
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashDone(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!venuesLoading && venues.length > 0) setSplashDone(true);
+  }, [venuesLoading, venues.length]);
 
   // Build counts map from headcounts (portal data only)
   const counts = useMemo(() => {
@@ -69,6 +80,40 @@ export default function App() {
   // Username onboarding — first open
   if (!username) {
     return <UsernameScreen onComplete={setUsername} />;
+  }
+
+  // Splash screen
+  if (!splashDone) {
+    return (
+      <div className="splash-screen">
+        <h1 className="splash-logo">venuu</h1>
+        <p className="splash-tagline">Your Cheat Code for Nightlife</p>
+      </div>
+    );
+  }
+
+  // Connection error — venues failed to load
+  if (venuesError && venues.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#050507] flex items-center justify-center px-6">
+        <div className="text-center">
+          <h1 className="text-white font-black text-2xl tracking-[0.05em] mb-4"
+            style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            venuu
+          </h1>
+          <p className="text-[#8A8A95] text-sm mb-4" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            Having trouble connecting...
+          </p>
+          <button
+            onClick={refetchVenues}
+            className="px-6 py-3 rounded-xl text-white font-bold text-sm active:scale-[0.97] transition-transform"
+            style={{ fontFamily: 'Satoshi, sans-serif', background: 'linear-gradient(135deg, #FF5E1A, #FF2D05)' }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

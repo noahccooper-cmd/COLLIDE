@@ -100,6 +100,7 @@ function LeaveRecap({ username, submitRecap }: { venue: Venue; username: string;
 
   const submit = useCallback(async () => {
     if (stars === 0 || !text.trim()) return;
+    if (navigator.vibrate) navigator.vibrate(10);
     await submitRecap(username, text.trim(), stars);
     setStars(0);
     setText('');
@@ -147,7 +148,7 @@ function RecapSection({ venue, username }: { venue: Venue; username: string }) {
       </div>
       <div className="recap-list">
         {recaps.length === 0 ? (
-          <p className="recap-empty">No recaps yet tonight</p>
+          <p className="recap-empty">No recaps yet — be the first!</p>
         ) : (
           recaps.map((r, i) => <RecapCard key={r.id} recap={r} index={i} />)
         )}
@@ -340,13 +341,11 @@ export function VenueSheet({
         </div>
 
         {/* Cover Charge Banner (visible in peek) */}
-        {venue.cover_charge && (
-          <div className="cover-banner">
-            <span className="cover-pill">
-              {'\uD83D\uDCB5'} {venue.cover_charge.toUpperCase() === 'FREE' || venue.cover_charge.toUpperCase() === 'NO COVER' ? 'FREE ENTRY' : `COVER: ${venue.cover_charge}`}
-            </span>
-          </div>
-        )}
+        <div className="cover-banner">
+          <span className="cover-pill">
+            {'\uD83D\uDCB5'} {!venue.cover_charge || venue.cover_charge.toUpperCase() === 'FREE' || venue.cover_charge.toUpperCase() === 'NO COVER' ? 'FREE ENTRY' : `COVER: ${venue.cover_charge}`}
+          </span>
+        </div>
 
         {/* Tonight's Specials Banner (visible in peek) */}
         <TonightBanner venue={venue} />
