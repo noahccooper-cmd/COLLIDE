@@ -79,8 +79,13 @@ INSERT INTO venues (name, slug, city, category, lat, lng, address, hours, descri
 VALUES ('The Bookstore', 'the-bookstore', 'knoxville', 'bar', 35.95585, -83.93214, '821 Melrose Pl, Knoxville, TN 37916', 'W-Sat 8pm-2am', 'Intimate newer spot off the strip on Melrose Place. Low-key vibes, cocktail-focused.', 'BOOK01', true, 10, true)
 ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, lat=EXCLUDED.lat, lng=EXCLUDED.lng, address=EXCLUDED.address, hours=EXCLUDED.hours, description=EXCLUDED.description, staff_code=EXCLUDED.staff_code, is_active=true;
 
+-- 11. Undeclared
+INSERT INTO venues (name, slug, city, category, lat, lng, address, description, is_active, sort_order)
+VALUES ('Undeclared', 'undeclared', 'knoxville', 'bar', 35.95480, -83.93450, '713 17th St, Knoxville, TN 37916', 'Bar & grill on the Strip. Big freshman spot with food, drinks, and events.', true, 11)
+ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, lat=EXCLUDED.lat, lng=EXCLUDED.lng, address=EXCLUDED.address, description=EXCLUDED.description, is_active=true;
+
 -- Step 5: Set is_active on all
 UPDATE venues SET is_active = true WHERE city = 'knoxville';
 
--- Step 6: Verify — should show exactly 10 rows
+-- Step 6: Verify — should show exactly 11 rows
 SELECT name, slug, lat, lng, is_active FROM venues WHERE city = 'knoxville' ORDER BY sort_order;
