@@ -145,6 +145,67 @@ THINGS YOU NEVER DO:
 - Never recommend more than 2-3 places at once. Keep it focused.
 - Never write more than 4 sentences unless they ask for a full itinerary.
 - Never break character. You are Vinny. You've been to these places. You're speaking from experience.
+RESPONSE STYLE RULES:
+- If someone asks you something you don't have specific knowledge about, give your best answer based on what you DO know, then redirect to something you can help with. Example: "Honestly I don't know their exact hours tonight but I know they're usually open by 8 on weekends. Check the map for live updates — if their dot is lit up, they're open and counting heads."
+- If someone just says one word like "shots" or "food" or "chill" — don't ask 3 follow-up questions. Give them a quick answer AND THEN ask one follow-up. Example: "Berry bombs at Half Barrel — legendary. You going with a crew or just a few people?"
+ADDITIONAL KNOWLEDGE — ANSWER THESE CONFIDENTLY:
+DRINKS & SHOTS:
+- Best shots: Berry bombs at Half Barrel (legendary), shot+PBR combo at Yacht Club (the classic)
+- Cheap drinks: Cool Beans $2 beers, The Hill has cheap wells and specials
+- Wine: Sunspot $11 bottles, Wine Wednesday is the move
+- Margaritas: Mares has the biggest margs on the strip, multiple flavors
+- Cocktails: The Bookstore does craft cocktails hidden in encyclopedia menus. Radius Rooftop for upscale craft drinks with a view
+- If someone asks "where can I get drunk cheap" → Cool Beans or Half Barrel, no question
+FOOD:
+- Best wings: The Hill, Wing Wednesday is packed for a reason
+- Late night food: Parker's hot dogs outside Half Barrel at 3 AM — Knoxville institution
+- Tacos: Mares, build your own or order off the menu
+- Nice dinner: Sunspot downstairs, real restaurant with cloth napkins, under $40 for two
+- Cool Beans has food but kitchen closes at 9 PM
+- If someone asks "I'm hungry" → ask if they want quick/cheap (Mares) or nice sit-down (Sunspot)
+GAME DAY:
+- The Hill is THE game day bar. No debate. Live bands, every screen showing the game, all-day energy from 11 AM
+- Mares gets rowdy during big games too — USA chants during international games
+- Cool Beans outdoor Jumbotron is solid for watching
+- Get to any of these early on game day or you're waiting in line
+GETTING AROUND KNOXVILLE:
+- The Strip = Cumberland Avenue. Most bars are here within walking distance
+- Old City = downtown area, different vibe. Old City Sports Bar, Preservation Pub area
+- Gay Street = upscale downtown. Radius Rooftop is here
+- Fort Sanders = neighborhood south of the strip. Yacht Club, Half Barrel, Cool Beans, LiterBoard area
+- Everything on the strip is walkable. Fort Sanders bars are a short walk south
+- Downtown/Old City is a 5-10 min Uber from campus
+COVER CHARGES:
+- Tell users to check the venuu map — cover charges are shown live on every venue
+- Most strip bars have no cover on weeknights
+- Game days and weekends some places charge $10-$20+
+- Say "pull up the map and check the green bubbles — that's the live cover at each spot"
+SMOKING:
+- Half Barrel: smoke anywhere, smoker friendly
+- Cool Beans: outdoor patio is the smoking section
+- Most bars have outdoor areas for smoking
+MUSIC & DANCING:
+- DJs: The Hill (upstairs), Sunspot rooftop on Wine Wednesdays
+- Live bands: The Hill on game days, Preservation Pub regularly
+- Dancing: The Hill upstairs is the main dance floor scene
+- Chill background music: Cool Beans, The Bookstore
+GROUPS:
+- Big group (8+): The Hill has space, Half Barrel has three sections to spread out
+- Double date: Sunspot dinner → Bookstore cocktails
+- Just the boys: Yacht Club shots → Half Barrel berry bombs → The Hill to finish
+- Girls night: Sunspot rooftop → Cool Beans
+- Solo: Cool Beans bar seat, LiterBoard gaming, Bookstore cocktail bar
+WEATHER:
+- Cold night: Cool Beans has heated indoor-outdoor area, Half Barrel garage doors close
+- Hot night: Sunspot rooftop, Cool Beans patio, any bar with outdoor space
+- Rainy: Half Barrel front bar, The Bookstore, LiterBoard — all fully indoor options
+RANDOM QUESTIONS VINNY SHOULD HANDLE:
+- "What time do bars close?" → Most close around 2-3 AM
+- "What should I wear?" → Depends on the spot. Sunspot dress a little nicer. Half Barrel wear whatever. The Hill is casual.
+- "Is it safe to walk?" → The strip is well-lit and busy. Fort Sanders is a short walk. Uber for downtown.
+- "I'm underage" → Vinny does not help with that. "Gotta be 21 to hit the bars, but there's plenty to do on campus!"
+- "Best bar in Knoxville?" → Depends on what you want, that's why I'm here. But if you're making me pick one night, The Hill on a game day Saturday is undefeated.
+- "I've never been out in Knoxville" → "First time? Say less. Tell me your vibe and I'll build your whole night."
 
 LIVE HEADCOUNT DATA (background context — use only when relevant):
 You have access to live headcount data below. Only mention specific numbers when the user ASKS how busy a place is or wants to know what's popping right now. Do NOT lead with headcount stats in every message. Do NOT say "X people are out right now" unless they ask. Most responses should be conversational recommendations based on what the user is telling you.
@@ -194,6 +255,39 @@ async function fetchRecentRecaps(venues: Venue[]): Promise<string> {
   }
 }
 
+async function callVinnyAPI(
+  systemPrompt: string,
+  messages: { role: string; content: string }[],
+  apiKey: string,
+): Promise<string> {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 300,
+      temperature: 0.9,
+      system: systemPrompt,
+      messages,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`API ${res.status}: ${errText}`);
+  }
+
+  const data = await res.json();
+  const text = data.content?.[0]?.text;
+  if (!text) throw new Error('Empty response');
+  return text;
+}
+
 async function sendPrecapMessage(
   history: PrecapMessage[],
   venues: Venue[],
@@ -202,7 +296,7 @@ async function sendPrecapMessage(
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
 
   if (!apiKey) {
-    return getFallbackResponse(history[history.length - 1]?.content ?? '', venues, headcounts);
+    return "My bad, having trouble connecting. Try again in a sec \uD83E\uDD19";
   }
 
   const liveData = buildLiveData(venues, headcounts);
@@ -217,145 +311,18 @@ async function sendPrecapMessage(
     content: m.content,
   }));
 
+  // Try once, retry once on failure
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 300,
-        temperature: 0.9,
-        system: fullPrompt,
-        messages,
-      }),
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('Anthropic API error:', res.status, errText);
-      return getFallbackResponse(history[history.length - 1]?.content ?? '', venues, headcounts);
-    }
-
-    const data = await res.json();
-    return data.content?.[0]?.text ?? "Hmm, I couldn't think of anything. Try asking again!";
+    return await callVinnyAPI(fullPrompt, messages, apiKey);
   } catch (err) {
-    console.error('Precap API error:', err);
-    return getFallbackResponse(history[history.length - 1]?.content ?? '', venues, headcounts);
-  }
-}
-
-function getFallbackResponse(
-  userMsg: string,
-  venues: Venue[],
-  headcounts: Record<string, Headcount>,
-): string {
-  const liveVenues = venues.filter(v => headcounts[v.id]?.is_live);
-  const busiestVenue = [...liveVenues].sort(
-    (a, b) => (headcounts[b.id]?.current_count ?? 0) - (headcounts[a.id]?.current_count ?? 0)
-  )[0];
-
-  const msg = userMsg.toLowerCase();
-
-  // Food questions
-  if (msg.includes('food') || msg.includes('eat') || msg.includes('hungry') || msg.includes('wing') || msg.includes('taco')) {
-    return "Wing Wednesday at The Hill is PACKED for a reason — wings are the move there. Mares has build-your-own tacos and huge margs, perfect pre-bar fuel. Late night? Parker's hot dogs outside Half Barrel at 3 AM will save your life.";
-  }
-
-  // Gaming/arcade questions
-  if (msg.includes('game') || msg.includes('arcade') || msg.includes('video') || msg.includes('play') || msg.includes('gaming')) {
-    return "LiterBoard is the gaming bar — N64s, GameCubes, gaming PCs, Galaga, the works. Chill vibe, not a rager. Yacht Club's also got the shot + PBR combo if you want something grittier. Both solid for a unique night.";
-  }
-
-  // Plan/group questions
-  if (msg.includes('plan') || msg.includes('group') || msg.includes('night for')) {
-    return "Bet! Start at Mares for tacos and margs to fuel up, hit Cool Beans for $2 beers and the patio Jumbotron, then close it out wherever the energy takes you. Parker's hot dogs outside Half Barrel at 3 AM for the save. Classic strip crawl.";
-  }
-
-  // Date night
-  if (msg.includes('date') || msg.includes('romantic') || msg.includes('couple')) {
-    return "Date night? Start at Sunspot — dinner for two under $40, $11 wine bottles, the sunset hits the rooftop perfectly. Walk to The Bookstore for speakeasy cocktails (menus hidden in encyclopedias). If you want to level up, Radius Rooftop downtown for city views.";
-  }
-
-  // Chill vibes
-  if (msg.includes('chill') || msg.includes('lowkey') || msg.includes('low key') || msg.includes('relaxed')) {
-    return "Cool Beans is your spot — $2 beers, pool tables, garage doors open in warm weather. It's the grown-up version of the strip bars. Bookstore is even more lowkey if you want craft cocktails and speakeasy vibes.";
-  }
-
-  // Pregame/cheap
-  if (msg.includes('cheap') || msg.includes('pregame') || msg.includes('deal') || msg.includes('budget')) {
-    return "Cool Beans is pregame HQ — $2 beers, quarter pool tables, arcade games. Yacht Club's shot + PBR combo is iconic. Half Barrel's berry bombs are legendary if you want something with more kick. You won't break the bank at any of these.";
-  }
-
-  // Dancing/party/energy
-  if (msg.includes('dance') || msg.includes('dancing') || msg.includes('energy') || msg.includes('party') || msg.includes('rage') || msg.includes('hype')) {
-    return "The Hill is where the energy LIVES — two floors, DJs spinning hits, the crowd is always good-looking and going off. Game days it's wall-to-wall from 11 AM. If you want to rage, that's the answer. Always busy, always a good time.";
-  }
-
-  // Sports
-  if (msg.includes('sport') || msg.includes('game day') || msg.includes('football') || msg.includes('watch')) {
-    return "The Hill is THE game day spot — you'll be there from 11 AM to 1 AM and not want to leave. Games on every screen, live bands, DJs. Old City Sports Bar is the other move with a huge video wall. Both get packed so show up early!";
-  }
-
-  // Drinks/cocktails/bourbon
-  if (msg.includes('bourbon') || msg.includes('whiskey') || msg.includes('cocktail') || msg.includes('drink') || msg.includes('beer') || msg.includes('marg')) {
-    return "Berry bombs at Half Barrel are LEGENDARY — that's the signature. Mares has huge margs that'll sneak up on you. Bookstore does craft cocktails right with speakeasy energy. And Cool Beans? $2 beers all day. Depends on your vibe!";
-  }
-
-  // Cover charge
-  if (msg.includes('cover') || msg.includes('free entry')) {
-    return "Check the venuu map for real-time cover charges — it updates live. Most strip spots are free on regular nights. I'd check the dots before heading out so you know exactly what you're walking into.";
-  }
-
-  // Wine Wednesday
-  if (msg.includes('wine') || msg.includes('wednesday')) {
-    return "Wine Wednesday at Sunspot is THE event. $11 bottles, rooftop DJs, shoulder to shoulder by 7 PM. The sunset hits the bar perfectly — everyone's in sundresses and sunglasses up there. After Sunspot, the crowd flows to Cool Beans. That's the move.";
-  }
-
-  // Freshman/new
-  if (msg.includes('freshman') || msg.includes('new') || msg.includes('first time') || msg.includes('21')) {
-    return "Welcome to the strip! Half Barrel → Undeclared → Yacht Club is the freshman flow. Berry bombs at Half Barrel to start, Undeclared for the scene, Yacht Club for the shot + PBR combo to close it out. Parker's hot dogs at 3 AM. You'll thank me later.";
-  }
-
-  // Where to go / the move
-  if (msg.includes('move') || msg.includes('where') || msg.includes('go') || msg.includes('tonight') || msg.includes('recommend')) {
-    if (busiestVenue) {
-      const count = headcounts[busiestVenue.id]?.current_count ?? 0;
-      return `${busiestVenue.name} is popping right now with ${count} people inside! That's where the energy is. But real talk — what's YOUR vibe tonight? I'll give you the perfect route.`;
+    console.error('Vinny API attempt 1 failed:', err);
+    try {
+      return await callVinnyAPI(fullPrompt, messages, apiKey);
+    } catch (err2) {
+      console.error('Vinny API attempt 2 failed:', err2);
+      return "My bad, having trouble connecting. Try again in a sec \uD83E\uDD19";
     }
-    const day = new Date().getDay();
-    if (day === 2) return "Taco Tuesday! Mares is gonna be packed — huge margs and build-your-own tacos. Start there, then hit the strip bars. The Hill and Cool Beans will be lively later.";
-    if (day === 3) return "Wine Wednesday! Sunspot rooftop is THE move — $11 bottles, DJs, sunset vibes. Get there by 5 to grab a spot. After that, the crowd flows to Cool Beans. Wing Wednesday at The Hill is also going off.";
-    if (day === 4) return "Thursday the strip wakes up! Pregame at Cool Beans or Mares, then let the energy take you. The Hill and Half Barrel will both be going. What's your crew looking like?";
-    if (day === 5 || day === 6) return "Weekend vibes! Start at Sunspot or Mares to fuel up, hit Cool Beans for the patio, then wherever the energy takes you. Parker's hot dogs outside Half Barrel at 3 AM is the closer. What kind of night you going for?";
-    return "The strip always has something going on. But tell me — who are you with and what's the vibe? I'll build you the perfect route.";
   }
-
-  // Quiet/chill
-  if (msg.includes('quiet') || msg.includes('least') || msg.includes('crowd')) {
-    if (liveVenues.length > 0) {
-      const quietest = [...liveVenues].sort(
-        (a, b) => (headcounts[a.id]?.current_count ?? 0) - (headcounts[b.id]?.current_count ?? 0)
-      )[0];
-      if (quietest) {
-        return `${quietest.name} is the chillest right now with only ${headcounts[quietest.id]?.current_count ?? 0} people. Bookstore is always intimate, and Cool Beans has pockets where you can actually hear yourself think.`;
-      }
-    }
-    return "Bookstore is the hidden gem — speakeasy vibes, menus in encyclopedias, craft cocktails done right. Cool Beans is more laid back than most strip bars too. Both good when you want to actually have a conversation.";
-  }
-
-  // Generic catch-all — conversational, no headcount dumps
-  const catchAlls = [
-    "I got you — but tell me more first. Who you rolling with and what's the vibe? I'll build the perfect route.",
-    "Bet — what kind of night we talking? Chill drinks, going off, food first? Give me something to work with.",
-    "I know every spot on the strip inside and out. What's the crew looking like tonight? I'll point you in the right direction.",
-    "No stress — tell me your vibe and who you're with. I'll figure out the rest.",
-  ];
-  return catchAlls[Math.floor(Math.random() * catchAlls.length)];
 }
 
 export function PrecapPage({ venues, headcounts, username }: PrecapPageProps) {
