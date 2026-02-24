@@ -1,95 +1,140 @@
-import { useState, useEffect, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Loader2, ChevronDown } from 'lucide-react';
 
-interface PortalLoginProps {
-  savedCode: string;
-  loading: boolean;
-  error: string;
-  onSubmit: (code: string) => Promise<{ error: string | null }>;
+interface VenueOption {
+  id: string;
+  name: string;
 }
 
-export function PortalLogin({ savedCode, loading, error, onSubmit }: PortalLoginProps) {
-  const [code, setCode] = useState(savedCode);
-  const [shaking, setShaking] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+interface PortalLoginProps {
+  venues: VenueOption[];
+  loading: boolean;
+  error: string;
+  onSubmit: (venueId: string, pin: string) => Promise<{ error: string | null }>;
+}
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+export function PortalLogin({ venues, loading, error, onSubmit }: PortalLoginProps) {
+  const [selectedVenueId, setSelectedVenueId] = useState('');
+  const [digits, setDigits] = useState(['', '', '', '']);
+  const [shaking, setShaking] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     if (error) {
       setShaking(true);
-      setTimeout(() => setShaking(false), 400);
+      setDigits(['', '', '', '']);
+      setTimeout(() => {
+        setShaking(false);
+        inputRefs.current[0]?.focus();
+      }, 400);
     }
   }, [error]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Focus first PIN box when venue is selected
+  useEffect(() => {
+    if (selectedVenueId) {
+      inputRefs.current[0]?.focus();
+    }
+  }, [selectedVenueId]);
+
+  const handleDigitChange = useCallback((index: number, value: string) => {
+    // Only allow single digit
+    const digit = value.replace(/[^0-9]/g, '').slice(-1);
+    setDigits(prev => {
+      const next = [...prev];
+      next[index] = digit;
+      return next;
+    });
+    // Auto-advance to next box
+    if (digit && index < 3) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  }, []);
+
+  const handleKeyDown = useCallback((index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  }, [digits]);
+
+  const pin = digits.join('');
+  const canSubmit = selectedVenueId && pin.length === 4 && !loading;
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code.trim() || code.trim().length !== 6 || loading) return;
-    await onSubmit(code.trim());
-  };
+    if (!canSubmit) return;
+    await onSubmit(selectedVenueId, pin);
+  }, [canSubmit, selectedVenueId, pin, onSubmit]);
 
   return (
     <div className="min-h-screen bg-[#050507] flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-white font-black text-2xl tracking-[0.05em] mb-1"
-            style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            <span className="text-white">venuu</span>
-            <span className="text-[#8A8A95] font-bold text-lg ml-2">Portal</span>
+          <h1 style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '24px', fontWeight: 800, color: 'white' }}>
+            {'\uD83D\uDD10'} Bouncer Portal
           </h1>
-          <p className="text-[#8A8A95] text-sm mt-3" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            For venue staff only.
-          </p>
-          <p className="text-[#55555F] text-sm" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            Enter your venue code to start tracking tonight.
+          <p style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.5)', marginTop: '8px' }}>
+            Enter your venue code to start
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className={shaking ? 'shake' : ''}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
-              placeholder="HILL01"
-              maxLength={6}
-              className="w-full h-14 px-5 bg-[#111114] border border-[#2A2A30] rounded-xl text-white text-center text-xl font-bold tracking-[0.2em] placeholder-[#333338] outline-none focus:border-[#FF5E1A] transition-colors"
-              style={{ fontFamily: 'Satoshi, sans-serif' }}
-            />
+          {/* Venue Selector */}
+          <div className="portal-select-wrap">
+            <select
+              value={selectedVenueId}
+              onChange={e => setSelectedVenueId(e.target.value)}
+              className="portal-venue-select"
+            >
+              <option value="">Select your venue...</option>
+              {venues.map(v => (
+                <option key={v.id} value={v.id}>{v.name}</option>
+              ))}
+            </select>
+            <ChevronDown size={18} className="portal-select-icon" />
           </div>
-          <p className="text-[#55555F] text-xs mt-2 text-center" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-            6-character venue code
-          </p>
+
+          {/* PIN Input — 4 digit boxes */}
+          <div className={`portal-pin-row ${shaking ? 'shake' : ''}`}>
+            {[0, 1, 2, 3].map(i => (
+              <input
+                key={i}
+                ref={el => { inputRefs.current[i] = el; }}
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]"
+                maxLength={1}
+                value={digits[i]}
+                onChange={e => handleDigitChange(i, e.target.value)}
+                onKeyDown={e => handleKeyDown(i, e)}
+                className="portal-pin-box"
+                autoComplete="off"
+              />
+            ))}
+          </div>
 
           {error && (
-            <p className="text-[#FF2D05] text-sm text-center mt-3 font-medium" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            <p style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '14px', color: '#FF2D05', textAlign: 'center', marginTop: '12px', fontWeight: 600 }}>
               {error}
             </p>
           )}
 
+          {/* CLOCK IN button */}
           <button
             type="submit"
-            disabled={loading || code.trim().length !== 6}
-            className="w-full h-[52px] rounded-xl font-bold text-white text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-40 mt-5"
-            style={{
-              fontFamily: 'Satoshi, sans-serif',
-              background: 'linear-gradient(135deg, #FF5E1A, #FF2D05)',
-            }}
+            disabled={!canSubmit}
+            className="portal-clock-in-btn"
           >
-            {loading ? <Loader2 size={20} className="animate-spin" /> : 'START COUNTING'}
+            {loading ? <Loader2 size={20} className="animate-spin" /> : 'CLOCK IN'}
           </button>
         </form>
 
         <div className="text-center mt-8">
-          <p className="text-[#55555F] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+          <p style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '12px', color: '#55555F' }}>
             Don't have a code?
           </p>
-          <p className="text-[#8A8A95] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+          <p style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '12px', color: '#8A8A95' }}>
             Contact us to get your bar on venuu
           </p>
         </div>

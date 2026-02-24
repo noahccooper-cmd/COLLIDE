@@ -1,24 +1,25 @@
-import { useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { usePortal } from '../hooks/usePortal';
 import { PortalLogin } from '../components/Portal/PortalLogin';
 import { ClickerView } from '../components/Portal/ClickerView';
+import { supabase, envReady } from '../lib/supabase';
 
 interface PortalPageProps {
-  initialCode?: string;
   onExit?: () => void;
 }
 
-export function PortalPage({ initialCode, onExit }: PortalPageProps) {
+export function PortalPage({ onExit }: PortalPageProps) {
   const {
     venue,
     headcount,
     loading,
     error,
     lastAction,
-    savedCode,
+    savedVenueId,
     endSummary,
-    lookupVenueByCode,
+    loginWithPin,
+    loadVenueById,
     handleEnter,
     handleExit,
     updateSpecial,
@@ -27,10 +28,27 @@ export function PortalPage({ initialCode, onExit }: PortalPageProps) {
     disconnect,
   } = usePortal();
 
-  // Auto-lookup if initialCode provided
-  if (initialCode && !venue && !loading && !error) {
-    lookupVenueByCode(initialCode);
-  }
+  // Fetch venue list for dropdown (id + name only — no bouncer_pin)
+  const [venueList, setVenueList] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!envReady) return;
+    supabase
+      .from('venues')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name')
+      .then(({ data }) => {
+        if (data) setVenueList(data as { id: string; name: string }[]);
+      });
+  }, []);
+
+  // Auto-restore session from localStorage
+  useEffect(() => {
+    if (savedVenueId && !venue && !loading) {
+      loadVenueById(savedVenueId);
+    }
+  }, [savedVenueId, venue, loading, loadVenueById]);
 
   const handleDisconnect = useCallback(() => {
     disconnect();
@@ -53,10 +71,10 @@ export function PortalPage({ initialCode, onExit }: PortalPageProps) {
           </div>
         )}
         <PortalLogin
-          savedCode={initialCode ?? savedCode}
+          venues={venueList}
           loading={loading}
           error={error}
-          onSubmit={lookupVenueByCode}
+          onSubmit={loginWithPin}
         />
       </div>
     );

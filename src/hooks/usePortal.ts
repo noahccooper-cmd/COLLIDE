@@ -4,7 +4,7 @@ import { getNightOf } from '../lib/utils';
 import type { Venue, Headcount } from '../lib/types';
 
 const COOLDOWN_MS = 150;
-const PORTAL_CODE_KEY = 'venue_portal_code';
+const PORTAL_VENUE_KEY = 'portal_venue_id';
 
 export interface EndNightSummary {
   venueName: string;
@@ -21,7 +21,7 @@ export function usePortal() {
   const [endSummary, setEndSummary] = useState<EndNightSummary | null>(null);
   const cooldownRef = useRef(false);
 
-  const savedCode = localStorage.getItem(PORTAL_CODE_KEY) ?? '';
+  const savedVenueId = localStorage.getItem(PORTAL_VENUE_KEY) ?? '';
 
   // Real-time subscription for this venue's headcount
   useEffect(() => {
@@ -51,36 +51,76 @@ export function usePortal() {
     };
   }, [venue?.id]);
 
-  const lookupVenueByCode = useCallback(async (code: string) => {
+  // Fetch venue + headcount by ID (for persistence restore)
+  const loadVenueById = useCallback(async (venueId: string) => {
+    if (!envReady) return;
+    setLoading(true);
+    setError('');
+
+    const { data, error: err } = await supabase
+      .from('venues')
+      .select('*')
+      .eq('id', venueId)
+      .eq('is_active', true)
+      .single();
+
+    if (err || !data) {
+      // Venue no longer active or deleted — clear persistence
+      localStorage.removeItem(PORTAL_VENUE_KEY);
+      setLoading(false);
+      return;
+    }
+
+    setVenue(data as Venue);
+
+    const nightOf = getNightOf();
+    const { data: hc } = await supabase
+      .from('headcounts')
+      .select('*')
+      .eq('venue_id', data.id)
+      .eq('night_of', nightOf)
+      .single();
+
+    if (hc) {
+      setHeadcount(hc as Headcount);
+    }
+    setLoading(false);
+  }, []);
+
+  // PIN-based login: verify PIN server-side, never expose it
+  const loginWithPin = useCallback(async (venueId: string, pin: string) => {
     if (!envReady) return { error: 'Not configured' };
 
     setLoading(true);
     setError('');
     setEndSummary(null);
 
+    // Server-side PIN check — only returns data if PIN matches
     const { data, error: err } = await supabase
       .from('venues')
-      .select('*')
-      .eq('staff_code', code.toUpperCase())
+      .select('id, name, slug, city, category, address, lat, lng, image_url, cover_price, deals, hours, instagram, vibe, has_live_cam, live_cam_url, cam_coming_soon, is_active, sort_order, capacity, is_clicker_live, staff_code, phone, website, description, rating, review_count, tonight_special, special_updated_at, cover_charge, created_at')
+      .eq('id', venueId)
+      .eq('bouncer_pin', pin)
       .eq('is_active', true)
       .single();
 
     setLoading(false);
 
     if (err || !data) {
-      setError('Invalid venue code');
-      return { error: 'Invalid venue code' };
+      setError('Wrong code');
+      return { error: 'Wrong code' };
     }
 
-    setVenue(data as Venue);
-    localStorage.setItem(PORTAL_CODE_KEY, code.toUpperCase());
+    const venueData = data as Venue;
+    setVenue(venueData);
+    localStorage.setItem(PORTAL_VENUE_KEY, venueData.id);
 
     // Fetch tonight's headcount
     const nightOf = getNightOf();
     const { data: hc } = await supabase
       .from('headcounts')
       .select('*')
-      .eq('venue_id', data.id)
+      .eq('venue_id', venueData.id)
       .eq('night_of', nightOf)
       .single();
 
@@ -254,13 +294,17 @@ export function usePortal() {
       detail: { venueId: venue.id, cover_charge: null },
     }));
 
-    // 4. Update local state and show summary
+    // 4. Clear persistence — End Night returns to login
+    localStorage.removeItem(PORTAL_VENUE_KEY);
+
+    // 5. Update local state and show summary
     setHeadcount(prev => prev ? { ...prev, current_count: 0, is_live: false } : null);
     setVenue(prev => prev ? { ...prev, cover_charge: null, tonight_special: null, special_updated_at: null, is_clicker_live: false } : null);
     setEndSummary(summary);
   }, [venue, headcount]);
 
   const disconnect = useCallback(() => {
+    localStorage.removeItem(PORTAL_VENUE_KEY);
     setVenue(null);
     setHeadcount(null);
     setLastAction(null);
@@ -274,9 +318,10 @@ export function usePortal() {
     loading,
     error,
     lastAction,
-    savedCode,
+    savedVenueId,
     endSummary,
-    lookupVenueByCode,
+    loginWithPin,
+    loadVenueById,
     handleEnter,
     handleExit,
     updateSpecial,

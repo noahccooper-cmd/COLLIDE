@@ -13,7 +13,7 @@ export function useVenues(city: CityKey) {
     setError(false);
     const { data, error: err } = await supabase
       .from('venues')
-      .select('*')
+      .select('id, created_at, name, slug, city, category, address, lat, lng, image_url, cover_price, deals, hours, instagram, vibe, has_live_cam, live_cam_url, cam_coming_soon, is_active, sort_order, capacity, is_clicker_live, staff_code, phone, website, description, rating, review_count, tonight_special, special_updated_at, cover_charge')
       .eq('city', city)
       .or('is_active.eq.true,is_active.is.null')
       .order('sort_order');

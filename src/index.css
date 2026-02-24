@@ -1258,3 +1258,102 @@ body {
   background: rgba(255, 94, 26, 0.3);
   color: white;
 }
+
+/* ============================================
+   Portal — Login Screen
+   ============================================ */
+
+.portal-select-wrap {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.portal-venue-select {
+  width: 100%;
+  height: 52px;
+  padding: 0 40px 0 16px;
+  background: #111114;
+  border: 1px solid #2A2A30;
+  border-radius: 12px;
+  color: white;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.portal-venue-select:focus {
+  border-color: #FF8200;
+}
+
+.portal-venue-select option {
+  background: #111114;
+  color: white;
+}
+
+.portal-select-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #55555F;
+  pointer-events: none;
+}
+
+.portal-pin-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.portal-pin-box {
+  width: 56px;
+  height: 64px;
+  background: #111114;
+  border: 1.5px solid #2A2A30;
+  border-radius: 12px;
+  color: white;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  text-align: center;
+  outline: none;
+  caret-color: #FF8200;
+  transition: border-color 0.2s;
+}
+
+.portal-pin-box:focus {
+  border-color: #FF8200;
+}
+
+.portal-clock-in-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  background: #FF8200;
+  border: none;
+  color: white;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, opacity 0.2s;
+}
+
+.portal-clock-in-btn:active {
+  transform: scale(0.97);
+}
+
+.portal-clock-in-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
