@@ -21,7 +21,6 @@ export function useVenues(city: CityKey) {
       return;
     }
     const rows = (data as Venue[]) ?? [];
-    console.log(`[venuu] Loaded ${rows.length} venues for ${city}:`, rows.map(v => `${v.name} cover=${v.cover_charge ?? 'null'} active=${v.is_active}`));
     setVenues(rows);
     setLoading(false);
   }, [city]);
@@ -51,16 +50,13 @@ export function useVenues(city: CityKey) {
         },
         (payload) => {
           const updated = payload.new as Venue;
-          console.log('REALTIME VENUE UPDATE:', updated.name, 'cover_charge:', updated.cover_charge);
           if (updated.city !== city) return;
           setVenues(prev =>
             prev.map(v => v.id === updated.id ? { ...v, ...updated } : v)
           );
         }
       )
-      .subscribe((status) => {
-        console.log('📍 VENUES CHANNEL STATUS:', status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
@@ -68,11 +64,9 @@ export function useVenues(city: CityKey) {
   }, [city]);
 
   // Direct cover update from Portal — applies immediately into venues state
-  // Same pattern as useHeadcounts realtime: event fires → state updates → map re-renders
   useEffect(() => {
     const handler = (e: Event) => {
       const { venueId, cover_charge } = (e as CustomEvent).detail;
-      console.log('VENUES COVER UPDATE received:', venueId, 'cover:', cover_charge);
       setVenues(prev =>
         prev.map(v => v.id === venueId ? { ...v, cover_charge } : v)
       );

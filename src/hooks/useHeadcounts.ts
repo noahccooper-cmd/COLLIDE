@@ -53,7 +53,6 @@ export function useHeadcounts(city: CityKey) {
           table: 'headcounts',
         },
         (payload) => {
-          console.log('🔴 REALTIME HEADCOUNT:', payload.eventType, payload.new);
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const row = payload.new as Headcount;
             // Only process rows for our city
@@ -67,9 +66,7 @@ export function useHeadcounts(city: CityKey) {
           }
         }
       )
-      .subscribe((status) => {
-        console.log('🔴 HEADCOUNT CHANNEL STATUS:', status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);

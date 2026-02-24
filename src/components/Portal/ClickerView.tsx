@@ -46,7 +46,6 @@ export function ClickerView({
   // Sync selectedCover when venue or its cover_charge changes (re-login, refetch, realtime)
   useEffect(() => {
     const current = venue.cover_charge;
-    console.log('PORTAL COVER SYNC: venue.cover_charge =', current, 'for', venue.name);
     if (!current || current === 'FREE') {
       setSelectedCover('FREE');
     } else {

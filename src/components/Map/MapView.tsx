@@ -78,7 +78,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       console.warn('WebGL context lost — will restore');
     });
     map.getCanvas().addEventListener('webglcontextrestored', () => {
-      console.log('WEBGL CONTEXT RESTORED');
       map.triggerRepaint();
     });
 
@@ -182,7 +181,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
 
   const syncMarkers = useCallback(() => {
     if (!mapRef.current || !mapLoaded) return;
-    console.log(`[venuu] syncMarkers: ${venues.length} venues`, venues.map(v => `${v.name} (${v.lat}, ${v.lng})`));
     const currentIds = new Set(venues.map(v => v.id));
 
     markersRef.current.forEach((entry, id) => {
@@ -219,7 +217,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       coverEl.className = 'venue-cover-bubble';
       const initCover = venue.cover_charge;
       coverEl.textContent = initCover ? getCoverLabel(initCover) : 'FREE';
-      console.log('MARKER CREATED:', venue.name, 'cover_charge:', initCover, '→ bubble:', coverEl.textContent);
 
       dotEl.appendChild(coverEl);
       el.appendChild(dotEl);
@@ -293,7 +290,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
   // Mirrors the headcount pattern: state changes → effect fires → DOM updates
   useEffect(() => {
     if (!mapLoaded) return;
-    console.log('COVER SYNC: venues changed, updating', venues.length, 'bubbles');
 
     venues.forEach(venue => {
       const entry = markersRef.current.get(venue.id);
@@ -301,7 +297,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       const cover = venue.cover_charge;
       const newText = cover ? getCoverLabel(cover) : 'FREE';
       if (entry.coverEl.textContent !== newText) {
-        console.log('BUBBLE UPDATED:', venue.name, entry.coverEl.textContent, '->', newText);
         entry.coverEl.textContent = newText;
       }
     });

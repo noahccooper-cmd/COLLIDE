@@ -17,8 +17,6 @@ export function useVenueRecaps(venueId: string | null) {
       return;
     }
 
-    console.log('[recap] Fetching recaps for venue', venueId, 'day', dayOf);
-
     supabase
       .from('venue_recaps')
       .select('*')
@@ -34,7 +32,6 @@ export function useVenueRecaps(venueId: string | null) {
         const rows = (data as VenueRecap[]) ?? [];
         knownIds.current = new Set(rows.map(r => r.id));
         setRecaps(rows);
-        console.log('[recap] Loaded', rows.length, 'recaps');
       });
   }, [venueId, dayOf]);
 
@@ -55,11 +52,9 @@ export function useVenueRecaps(venueId: string | null) {
         (payload) => {
           const row = payload.new as VenueRecap;
           if (row.day_of !== dayOf) return;
-          // Skip if we already added this optimistically
           if (knownIds.current.has(row.id)) return;
           knownIds.current.add(row.id);
           setRecaps(prev => [row, ...prev]);
-          console.log('[recap] Realtime new recap from', row.username);
         }
       )
       .subscribe();
@@ -73,7 +68,6 @@ export function useVenueRecaps(venueId: string | null) {
     if (!envReady || !venueId || !body.trim() || stars < 1) return;
 
     const trimmed = body.trim().slice(0, 200);
-    console.log('[recap] Submitting:', { venue_id: venueId, username, stars, body: trimmed, day_of: dayOf });
 
     const { data, error } = await supabase
       .from('venue_recaps')
@@ -88,17 +82,14 @@ export function useVenueRecaps(venueId: string | null) {
       .single();
 
     if (error) {
-      console.error('[recap] Insert error:', error.message, error.details, error.hint);
-      alert(`Recap failed: ${error.message}`);
+      console.error('[recap] Insert error:', error.message);
       return;
     }
 
-    // Optimistic: add immediately so user sees it
     if (data) {
       const row = data as VenueRecap;
       knownIds.current.add(row.id);
       setRecaps(prev => [row, ...prev]);
-      console.log('[recap] Posted successfully, id:', row.id);
     }
   }, [venueId, dayOf]);
 

@@ -11,8 +11,11 @@ interface HeaderProps {
 
 export function Header({ city, onCityChange, totalCount, username }: HeaderProps) {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#050507] border-b border-[#2A2A30]"
-      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#050507]"
+      style={{
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+      }}>
       <div className="px-4 pt-2 pb-2 flex items-center justify-between">
         <div>
           <h1
@@ -30,20 +33,20 @@ export function Header({ city, onCityChange, totalCount, username }: HeaderProps
           <p
             style={{
               fontFamily: 'Satoshi, sans-serif',
-              color: 'rgba(255, 255, 255, 0.5)',
-              fontSize: '11px',
-              fontWeight: 400,
-              letterSpacing: '0.5px',
+              color: 'rgba(255, 255, 255, 0.4)',
+              fontSize: '10px',
+              fontWeight: 600,
+              letterSpacing: '1px',
               textTransform: 'uppercase',
               marginTop: '2px',
             }}
           >
-            Your Cheat Code for Nightlife
+            YOUR CHEAT CODE FOR NIGHTLIFE
           </p>
           <p
             style={{
               fontFamily: 'Satoshi, sans-serif',
-              fontSize: '14px',
+              fontSize: '15px',
               marginTop: '4px',
               lineHeight: 1,
             }}
@@ -51,7 +54,7 @@ export function Header({ city, onCityChange, totalCount, username }: HeaderProps
             {totalCount > 0 ? (
               <>
                 {'\uD83D\uDD25'}{' '}
-                <span style={{ color: '#fff', fontWeight: 700, fontSize: '16px' }}>
+                <span style={{ color: '#fff', fontWeight: 700 }}>
                   {totalCount}
                 </span>{' '}
                 <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
@@ -68,8 +71,8 @@ export function Header({ city, onCityChange, totalCount, username }: HeaderProps
         <div className="flex items-center gap-2">
           <CityToggle city={city} onChange={onCityChange} />
           <div
-            className="w-9 h-9 rounded-full bg-[#111114] border border-[#2A2A30] flex items-center justify-center text-[#FF5E1A] text-xs font-bold"
-            style={{ fontFamily: 'Satoshi, sans-serif' }}
+            className="w-9 h-9 rounded-full bg-[#111114] border border-[#2A2A30] flex items-center justify-center text-xs font-bold"
+            style={{ fontFamily: 'Satoshi, sans-serif', color: '#FF8200' }}
           >
             {getInitials(username)}
           </div>

@@ -38,16 +38,13 @@ export function usePortal() {
           filter: `venue_id=eq.${venue.id}`,
         },
         (payload) => {
-          console.log('🟢 PORTAL REALTIME:', payload.eventType, payload.new);
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const row = payload.new as Headcount;
             setHeadcount(row);
           }
         }
       )
-      .subscribe((status) => {
-        console.log('🟢 PORTAL CHANNEL STATUS:', status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
@@ -206,19 +203,16 @@ export function usePortal() {
   const updateCover = useCallback(async (text: string) => {
     if (!venue || !envReady) return;
     const coverText = text.trim() || null;
-    console.log('SAVING COVER:', coverText, 'for venue:', venue.id);
     const { error } = await supabase
       .from('venues')
       .update({ cover_charge: coverText })
       .eq('id', venue.id);
-    console.log('COVER SAVE RESULT:', error || 'success');
 
     setVenue(prev => prev ? { ...prev, cover_charge: coverText } : null);
 
     // Push cover update directly into useVenues state (same pattern as headcount realtime)
     // This is immediate — no async refetch, no race condition
     if (!error) {
-      console.log('DISPATCHING venues-cover-update:', venue.id, coverText);
       window.dispatchEvent(new CustomEvent('venues-cover-update', {
         detail: { venueId: venue.id, cover_charge: coverText },
       }));

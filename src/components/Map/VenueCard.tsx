@@ -12,24 +12,6 @@ interface VenueSheetProps {
   onClose: () => void;
 }
 
-/* ── Photo Placeholder (gradient, NOT brown rectangle) ── */
-
-function PhotoPlaceholder({ venue }: { venue: Venue }) {
-  const hash = venue.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  const hue = (hash * 47) % 360;
-
-  return (
-    <div
-      className="photo-placeholder"
-      style={{
-        background: `linear-gradient(135deg, hsl(${hue}, 35%, 15%) 0%, hsl(${(hue + 60) % 360}, 25%, 8%) 100%)`,
-      }}
-    >
-      <span className="placeholder-name">{venue.name}</span>
-    </div>
-  );
-}
-
 /* ── Uber deep link ── */
 
 function getUberUrl(venue: Venue): string {
@@ -91,19 +73,21 @@ function SpecialsRow({ venue }: { venue: Venue }) {
 
 /* ── Recap Card ── */
 
-function RecapCard({ recap, index }: { recap: any; index: number }) {
+function RecapCard({ recap }: { recap: any; index: number }) {
   return (
-    <div className="recap-card" style={{ zIndex: 100 - index }}>
+    <div className="recap-card">
       <div className="recap-header">
         <span className="recap-user">@{recap.username}</span>
-        <div className="recap-stars">
-          {[1, 2, 3, 4, 5].map(s => (
-            <span key={s} className={`star ${s <= recap.stars ? 'filled' : 'empty'}`}>{'\u2605'}</span>
-          ))}
-        </div>
+        <span className="recap-time">{timeAgo(recap.created_at)}</span>
+      </div>
+      <div className="recap-stars">
+        {[1, 2, 3, 4, 5].map(s => (
+          <span key={s} className={`star ${s <= recap.stars ? 'filled' : 'empty'}`}>
+            {s <= recap.stars ? '\u2605' : '\u2606'}
+          </span>
+        ))}
       </div>
       <p className="recap-body">{recap.body}</p>
-      <span className="recap-time">{timeAgo(recap.created_at)}</span>
     </div>
   );
 }
@@ -158,12 +142,12 @@ function RecapSection({ venue, username }: { venue: Venue; username: string }) {
   return (
     <div className="recap-section">
       <div className="recap-header-row">
-        <span className="recap-title">{'\u2B50'} THE RECAP</span>
-        <span className="recap-count">{recaps.length > 0 ? `${recaps.length} \u2B50` : ''}</span>
+        <span className="recap-title">RECAPS</span>
+        <span className="recap-count">{recaps.length > 0 ? `${recaps.length}` : ''}</span>
       </div>
       <div className="recap-list">
         {recaps.length === 0 ? (
-          <p className="recap-empty">No recaps yet tonight. Be the first!</p>
+          <p className="recap-empty">No recaps yet tonight</p>
         ) : (
           recaps.map((r, i) => <RecapCard key={r.id} recap={r} index={i} />)
         )}
