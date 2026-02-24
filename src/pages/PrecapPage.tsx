@@ -255,57 +255,34 @@ async function fetchRecentRecaps(venues: Venue[]): Promise<string> {
   }
 }
 
-async function callVinnyAPI(
-  systemPrompt: string,
-  messages: { role: string; content: string }[],
-): Promise<string | null> {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  if (!apiKey) {
-    console.error('VINNY: No OpenAI key found. Set VITE_OPENAI_API_KEY in .env');
+async function callVinnyAPI(messages: any[], systemPrompt: string): Promise<string | null> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('VINNY: Missing Supabase config');
     return null;
   }
+  console.log('VINNY: Calling edge function, messages:', messages.length);
 
-  console.log('VINNY API CALL:', {
-    messageCount: messages.length,
-    systemPromptLength: systemPrompt.length,
-    lastMessage: messages[messages.length - 1],
-    hasApiKey: !!apiKey,
-    apiKeyPrefix: apiKey.substring(0, 10) + '...',
-  });
-
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch(`${supabaseUrl}/functions/v1/vinny`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + apiKey,
+      'Authorization': `Bearer ${supabaseKey}`,
     },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      max_tokens: 300,
-      temperature: 0.9,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messages.map(m => ({ role: m.role, content: m.content })),
-      ],
-    }),
+    body: JSON.stringify({ messages, systemPrompt }),
   });
 
-  console.log('VINNY RESPONSE STATUS:', res.status);
-
-  if (!res.ok) {
-    const errText = await res.text();
-    console.error('VINNY API ERROR:', res.status, errText);
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error('VINNY ERROR:', response.status, errText);
     return null;
   }
 
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) {
-    console.error('VINNY: Empty response from OpenAI');
-    return null;
-  }
-  console.log('VINNY SUCCESS:', text.substring(0, 100));
-  return text;
+  const data = await response.json();
+  console.log('VINNY SUCCESS:', data.reply?.substring(0, 50));
+  return data.reply;
 }
 
 async function sendPrecapMessage(
@@ -328,11 +305,11 @@ async function sendPrecapMessage(
   }));
 
   // Try once, retry once on failure
-  const reply = await callVinnyAPI(fullPrompt, messages);
+  const reply = await callVinnyAPI(messages, fullPrompt);
   if (reply) return reply;
 
   console.error('Vinny API attempt 1 failed, retrying...');
-  const retry = await callVinnyAPI(fullPrompt, messages);
+  const retry = await callVinnyAPI(messages, fullPrompt);
   if (retry) return retry;
 
   console.error('Vinny API attempt 2 failed');
