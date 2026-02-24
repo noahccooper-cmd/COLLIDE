@@ -258,30 +258,35 @@ async function fetchRecentRecaps(venues: Venue[]): Promise<string> {
 async function callVinnyAPI(
   systemPrompt: string,
   messages: { role: string; content: string }[],
-  apiKey: string,
-): Promise<string> {
+): Promise<string | null> {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) {
+    console.error('VINNY: No OpenAI key found. Set VITE_OPENAI_API_KEY in .env');
+    return null;
+  }
+
   console.log('VINNY API CALL:', {
     messageCount: messages.length,
     systemPromptLength: systemPrompt.length,
     lastMessage: messages[messages.length - 1],
     hasApiKey: !!apiKey,
-    apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'MISSING',
+    apiKeyPrefix: apiKey.substring(0, 10) + '...',
   });
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
+      'Authorization': 'Bearer ' + apiKey,
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'gpt-4o',
       max_tokens: 300,
       temperature: 0.9,
-      system: systemPrompt,
-      messages,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages.map(m => ({ role: m.role, content: m.content })),
+      ],
     }),
   });
 
@@ -290,12 +295,15 @@ async function callVinnyAPI(
   if (!res.ok) {
     const errText = await res.text();
     console.error('VINNY API ERROR:', res.status, errText);
-    throw new Error(`API ${res.status}: ${errText}`);
+    return null;
   }
 
   const data = await res.json();
-  const text = data.content?.[0]?.text;
-  if (!text) throw new Error('Empty response');
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) {
+    console.error('VINNY: Empty response from OpenAI');
+    return null;
+  }
   console.log('VINNY SUCCESS:', text.substring(0, 100));
   return text;
 }
@@ -305,23 +313,6 @@ async function sendPrecapMessage(
   venues: Venue[],
   headcounts: Record<string, Headcount>,
 ): Promise<string> {
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-
-  // TEMP DEBUG — remove after confirming
-  console.log('ENV CHECK:', {
-    hasAnthropicKey: !!import.meta.env.VITE_ANTHROPIC_API_KEY,
-    keyLength: import.meta.env.VITE_ANTHROPIC_API_KEY?.length,
-    keyPrefix: import.meta.env.VITE_ANTHROPIC_API_KEY?.substring(0, 10),
-    allEnvKeys: Object.keys(import.meta.env),
-  });
-  console.log('API KEY CHECK:', typeof apiKey, apiKey?.length, apiKey?.substring(0, 10));
-  // END TEMP DEBUG
-
-  if (!apiKey) {
-    console.error('VINNY: No API key found. Set VITE_ANTHROPIC_API_KEY in .env');
-    return "Vinny's not wired up yet \u2014 API key missing. Check your .env file!";
-  }
-
   const liveData = buildLiveData(venues, headcounts);
   const recaps = await fetchRecentRecaps(venues);
 
@@ -337,17 +328,15 @@ async function sendPrecapMessage(
   }));
 
   // Try once, retry once on failure
-  try {
-    return await callVinnyAPI(fullPrompt, messages, apiKey);
-  } catch (err) {
-    console.error('Vinny API attempt 1 failed:', err);
-    try {
-      return await callVinnyAPI(fullPrompt, messages, apiKey);
-    } catch (err2) {
-      console.error('Vinny API attempt 2 failed:', err2);
-      return "My bad, having trouble connecting. Try again in a sec \uD83E\uDD19";
-    }
-  }
+  const reply = await callVinnyAPI(fullPrompt, messages);
+  if (reply) return reply;
+
+  console.error('Vinny API attempt 1 failed, retrying...');
+  const retry = await callVinnyAPI(fullPrompt, messages);
+  if (retry) return retry;
+
+  console.error('Vinny API attempt 2 failed');
+  return "My bad, having trouble connecting. Try again in a sec \uD83E\uDD19";
 }
 
 export function PrecapPage({ venues, headcounts, username }: PrecapPageProps) {
