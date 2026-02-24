@@ -270,23 +270,23 @@ body {
 
 .clicker-bulk {
   flex: 1;
-  max-width: 80px;
-  height: 44px;
+  min-width: 72px;
+  max-width: 90px;
+  height: 48px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   font-family: 'Satoshi', sans-serif;
-  font-size: 16px;
-  font-weight: 800;
-  color: white;
+  font-size: 18px;
+  font-weight: 700;
   cursor: pointer;
   transition: transform 0.1s;
 }
 
 .clicker-bulk:active { transform: scale(0.95); }
-.clicker-bulk.plus { background: rgba(0, 230, 118, 0.12); border: 1px solid rgba(0, 230, 118, 0.2); }
-.clicker-bulk.plus:active { background: rgba(0, 230, 118, 0.3); }
-.clicker-bulk.minus { background: rgba(255, 40, 40, 0.1); border: 1px solid rgba(255, 40, 40, 0.15); }
-.clicker-bulk.minus:active { background: rgba(255, 40, 40, 0.25); }
+.clicker-bulk.plus { background: #22C55E; color: white; }
+.clicker-bulk.plus:active { background: #1da34e; }
+.clicker-bulk.minus { background: #1A1A2E; color: #FF4444; border: 1px solid rgba(255, 68, 68, 0.2); }
+.clicker-bulk.minus:active { background: #2A1A2E; }
 
 /* ============================================
    Power T — City-Level Marker

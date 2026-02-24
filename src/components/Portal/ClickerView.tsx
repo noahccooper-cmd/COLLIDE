@@ -154,8 +154,8 @@ export function ClickerView({
           </div>
           <button
             onClick={onDisconnect}
-            className="w-full h-[52px] rounded-xl font-bold text-white text-base mt-6 active:scale-[0.98] transition-transform"
-            style={{ fontFamily: 'Satoshi, sans-serif', background: 'linear-gradient(135deg, #FF5E1A, #FF2D05)' }}
+            className="w-full rounded-xl font-bold text-white mt-6 active:scale-[0.98] transition-transform"
+            style={{ fontFamily: 'Satoshi, sans-serif', background: 'linear-gradient(135deg, #FF5E1A, #FF2D05)', height: '52px', fontSize: '16px' }}
           >
             DONE
           </button>
@@ -196,8 +196,9 @@ export function ClickerView({
           <button
             onClick={onDisconnect}
             className="p-2 rounded-lg bg-[#111114] text-[#55555F] hover:text-white transition-colors"
+            style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <LogOut size={16} strokeWidth={1.5} />
+            <LogOut size={18} strokeWidth={1.5} />
           </button>
         </div>
       </div>
@@ -226,24 +227,27 @@ export function ClickerView({
           <p className="text-[#8A8A95] text-xs font-bold tracking-wider mb-3" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             {'\uD83D\uDCB5'} COVER
           </p>
-          <div className="flex gap-2 justify-between mb-3">
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '12px' }}>
             {COVER_PRESETS.map(preset => {
               const isSelected = selectedCover === preset;
               return (
                 <button
                   key={preset}
                   onClick={() => handleCoverTap(preset)}
-                  className="flex items-center justify-center active:scale-[0.95] transition-transform"
+                  className="active:scale-[0.95] transition-transform"
                   style={{
                     fontFamily: 'Satoshi, sans-serif',
-                    width: 70,
-                    height: 40,
-                    borderRadius: 20,
+                    minWidth: '64px',
+                    height: '44px',
+                    borderRadius: '22px',
                     background: isSelected ? '#22C55E' : '#1A1A24',
                     color: isSelected ? 'white' : '#22C55E',
-                    fontWeight: 'bold',
-                    fontSize: 14,
+                    fontWeight: 700,
+                    fontSize: '16px',
                     border: isSelected ? '2px solid white' : '2px solid #22C55E',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   {preset}
@@ -262,21 +266,21 @@ export function ClickerView({
         <div className="flex gap-3">
           <button
             onClick={() => handleExit()}
-            className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-[0.97] transition-transform"
-            style={{ height: '180px', backgroundColor: '#5C1A1A' }}
+            className="flex-1 flex flex-col items-center justify-center gap-2 active:scale-[0.97] transition-transform"
+            style={{ height: '140px', backgroundColor: '#5C1A1A', borderRadius: '16px' }}
           >
-            <Minus size={64} strokeWidth={2.5} className="text-white" />
-            <span className="text-white font-black text-lg tracking-wider"
-              style={{ fontFamily: 'Satoshi, sans-serif' }}>EXIT</span>
+            <Minus size={48} strokeWidth={2.5} className="text-white" />
+            <span className="text-white tracking-wider"
+              style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '20px', fontWeight: 800 }}>EXIT</span>
           </button>
           <button
             onClick={() => handleEnter()}
-            className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-[0.97] transition-transform"
-            style={{ height: '180px', backgroundColor: '#00E676' }}
+            className="flex-1 flex flex-col items-center justify-center gap-2 active:scale-[0.97] transition-transform"
+            style={{ height: '140px', backgroundColor: '#00E676', borderRadius: '16px' }}
           >
-            <Plus size={64} strokeWidth={2.5} className="text-white" />
-            <span className="text-white font-black text-lg tracking-wider"
-              style={{ fontFamily: 'Satoshi, sans-serif' }}>ENTER</span>
+            <Plus size={48} strokeWidth={2.5} className="text-white" />
+            <span className="text-white tracking-wider"
+              style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '20px', fontWeight: 800 }}>ENTER</span>
           </button>
         </div>
 
@@ -305,15 +309,33 @@ export function ClickerView({
               <div className="flex gap-3">
                 <button
                   onClick={() => setConfirmEnd(false)}
-                  className="flex-1 h-11 rounded-xl bg-[#111114] border border-[#2A2A30] text-[#8A8A95] text-sm font-medium"
-                  style={{ fontFamily: 'Satoshi, sans-serif' }}
+                  style={{
+                    flex: 1,
+                    height: '48px',
+                    borderRadius: '12px',
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    fontFamily: 'Satoshi, sans-serif',
+                    fontSize: '16px',
+                    fontWeight: 500,
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleEndNight}
-                  className="flex-1 h-11 rounded-xl bg-[#FF2D05] text-white text-sm font-bold"
-                  style={{ fontFamily: 'Satoshi, sans-serif' }}
+                  style={{
+                    flex: 1,
+                    height: '48px',
+                    borderRadius: '12px',
+                    background: '#FF2D05',
+                    border: 'none',
+                    color: 'white',
+                    fontFamily: 'Satoshi, sans-serif',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                  }}
                 >
                   End Tracking
                 </button>
@@ -322,8 +344,18 @@ export function ClickerView({
           ) : (
             <button
               onClick={() => setConfirmEnd(true)}
-              className="w-full h-11 rounded-xl bg-[#111114] border border-[#2A2A30] text-[#55555F] text-sm font-medium hover:text-[#FF2D05] hover:border-[#FF2D0533] transition-colors"
-              style={{ fontFamily: 'Satoshi, sans-serif' }}
+              style={{
+                width: '100%',
+                height: '48px',
+                borderRadius: '12px',
+                background: 'transparent',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontFamily: 'Satoshi, sans-serif',
+                fontSize: '16px',
+                fontWeight: 500,
+                transition: 'border-color 0.2s, color 0.2s',
+              }}
             >
               End Night
             </button>
@@ -363,8 +395,14 @@ export function ClickerView({
                 value={specialText}
                 onChange={e => setSpecialText(e.target.value.slice(0, 200))}
                 placeholder="e.g. $3 wells til midnight | $20 cover til 9"
-                className="w-full h-11 px-3 bg-[#050507] border border-[#2A2A30] rounded-lg text-white text-sm outline-none focus:border-[#FF5E1A] transition-colors placeholder-[#444]"
-                style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '16px' }}
+                className="w-full bg-[#050507] border border-[#2A2A30] text-white outline-none focus:border-[#FF5E1A] transition-colors placeholder-[#444]"
+                style={{
+                  fontFamily: 'Satoshi, sans-serif',
+                  fontSize: '16px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                }}
               />
               <p className="text-[#55555F] text-[10px] mt-1 mb-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>
                 Use | to separate multiple specials
@@ -373,10 +411,16 @@ export function ClickerView({
                 <button
                   onClick={handleUpdateSpecial}
                   disabled={!specialText.trim()}
-                  className="flex-1 h-11 rounded-lg text-white text-sm font-bold active:scale-[0.98] transition-transform disabled:opacity-40"
+                  className="flex-1 active:scale-[0.98] transition-transform disabled:opacity-40"
                   style={{
                     fontFamily: 'Satoshi, sans-serif',
                     background: 'linear-gradient(135deg, #FF5E1A, #FF2D05)',
+                    height: '48px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 700,
                   }}
                 >
                   Set Special
@@ -384,8 +428,18 @@ export function ClickerView({
                 {venue.tonight_special && (
                   <button
                     onClick={handleClearSpecial}
-                    className="h-11 px-4 rounded-lg text-[#8A8A95] text-sm font-medium bg-[#1A1A22] border border-[#2A2A30] active:scale-[0.98] transition-transform"
-                    style={{ fontFamily: 'Satoshi, sans-serif' }}
+                    className="active:scale-[0.98] transition-transform"
+                    style={{
+                      height: '48px',
+                      padding: '0 16px',
+                      borderRadius: '12px',
+                      background: '#1A1A22',
+                      border: '1px solid #2A2A30',
+                      color: '#8A8A95',
+                      fontFamily: 'Satoshi, sans-serif',
+                      fontSize: '16px',
+                      fontWeight: 500,
+                    }}
                   >
                     Clear
                   </button>
