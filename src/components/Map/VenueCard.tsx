@@ -317,22 +317,21 @@ export function VenueSheet({
       {/* Close button (expanded only via CSS) */}
       <button className="sheet-close-btn" onClick={dismiss}>{'\u2715'}</button>
 
-      {/* ═══ PEEK CONTENT (always visible) ═══ */}
-      <div className="sheet-peek-content">
-        {/* Photo */}
-        <div className="sheet-photo-wrap">
-          {venue.image_url ? (
-            <img src={venue.image_url} className="sheet-photo" alt={venue.name} />
-          ) : (
-            <PhotoPlaceholder venue={venue} />
-          )}
+      {/* ═══ BANNER IMAGE (full-width, above peek content) ═══ */}
+      {venue.image_url && (
+        <div className="sheet-banner-wrap">
+          <img src={venue.image_url} className="sheet-banner-img" alt={venue.name} />
+          <div className="sheet-banner-gradient" />
           {isLive && (
             <div className="sheet-live-badge">
               <span className="ld" /> LIVE
             </div>
           )}
         </div>
+      )}
 
+      {/* ═══ PEEK CONTENT (always visible) ═══ */}
+      <div className="sheet-peek-content">
         {/* Name + Rating */}
         <div className="sheet-info">
           <div className="sheet-name-row">
