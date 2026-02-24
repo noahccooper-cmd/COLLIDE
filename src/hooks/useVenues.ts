@@ -21,6 +21,7 @@ export function useVenues(city: CityKey) {
       return;
     }
     const rows = (data as Venue[]) ?? [];
+    console.log('VENUES LOADED:', rows.map(v => v.name));
     setVenues(rows);
     setLoading(false);
   }, [city]);
