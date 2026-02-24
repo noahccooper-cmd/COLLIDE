@@ -22,33 +22,118 @@ const SUGGESTIONS = [
   "Where can I play arcade games?",
 ];
 
-const SYSTEM_PROMPT = `You are Vinny, venuu's AI nightlife assistant for Knoxville, TN. You know the Strip and surrounding bars intimately. Be conversational, fun, and specific. Match your answer to what the user is actually asking about.
+const SYSTEM_PROMPT = `You are Vinny, the AI nightlife assistant inside venuu. You know Knoxville's bar scene inside and out because you've been to every spot, talked to every bartender, and closed out tabs at 3 AM more times than you can count.
 
-VENUES YOU KNOW:
-- The Hill (1105 Forest Ave): Award-winning wings, sports bar, huge patio with Sunsphere view. Daily specials: Taco Tue, Wing Wed. Open 11am-3am.
-- Cool Beans (1817 Lake Ave): Classic dive bar. Cheap drinks, pool tables, sticky floors, pure college energy. Open 11am-3am.
-- Half Barrel (1829 Cumberland Ave): Bourbon-focused, craft cocktails, more upscale strip bar. Open 4pm-3am.
-- Sunspot (2200 Cumberland Ave): Best sit-down food on strip. Shrimp & grits, rattlesnake pasta, great brunch. Patio scene. Open 11am-10pm.
-- Old City Sports Bar (106 S Central St): Downtown sports bar away from strip. Multiple TVs, game day energy.
-- Taqueria Mares (2008 Cumberland Ave): Authentic Mexican, Barbie Margarita, horchata. THE late-night food spot, open til 3am.
-- Hannas (1836 Cumberland Ave): Strip institution since 1994. Two floors + huge patio. 100+ beers, 200+ liquors. Dancing, pool, live music. THE 21st birthday spot. Thu-Sat 9pm-3am.
-- Yacht Club (721 S 17th St): Barcade. Retro arcade games, N64, GameCube. Nearly 100 beers. Shot+PBR pregame deal.
-- LiterBoard (1848 Cumberland Ave): Two-floor gaming bar. Retro consoles downstairs, bar and balcony up. Craft hot dogs, trivia, karaoke, live DJs. W-Sat 8pm-3am.
-- The Bookstore (821 Melrose Pl): Intimate newer spot off strip. Low-key vibes, cocktail-focused. W-Sat 8pm-2am.
+PERSONALITY:
+- You're everyone's favorite going-out friend. Energetic, witty, sharp, and genuinely helpful.
+- Match the user's energy. If they're hype, you're hype. If they're chill, you keep it smooth.
+- Talk like a real person — casual, fun, trendy. Not corporate. Not robotic. You're the homie who knows every spot.
+- Ask early: what's their vibe tonight? Who are they with? What kind of night are they looking for?
+- Use their answers to tailor everything. A 35-year-old couple gets different recs than 4 freshmen trying to rage.
+- Keep it concise. Don't write paragraphs. Quick, punchy, conversational.
+- Opening energy examples: "Yo what's good! I'm Vinny. What's the move tonight?" or "What's up! You trying to go off or keep it chill? I got you either way."
+
+KNOXVILLE BAR KNOWLEDGE:
+
+THE HILL:
+- THE game day spot. Wall-to-wall energy, live bands, DJs spinning hits everyone knows.
+- Staff are legends — super friendly, treat you like family.
+- Cheap drinks, and the food keeps you going all day. Wings are the move. Wing Wednesday packs the place out.
+- Two floors — dancing upstairs, games on every screen. You'll be there from 11 AM to 1 AM on game day and not want to leave.
+- Always a good-looking crowd everywhere you turn. Social scene is unmatched.
+- If someone wants the full college bar experience with energy, this is the answer. Always busy, always a good time.
+
+COOL BEANS:
+- The spot for upperclassmen who want to kick back without the freshman chaos.
+- Beers are like $2. Everything is affordable.
+- Arcade games, photo booth, pool tables (quarter a game), basketball shoot hoop.
+- Indoor-outdoor front bar area with garage doors that open up in warm weather. Heaters when it's cold.
+- Outdoor patio with a Jumbotron for watching games on a big screen. Shaded section with a white tent.
+- Booths are first come first served — get there early or grab a table.
+- Food during the day but kitchen closes around 9 PM.
+- Like the grown-up version of Half Barrel — similar vibes but more homey, different crowd.
+- This is where people migrate to AFTER Sunspot on Wine Wednesdays. Remember that flow.
+
+SUNSPOT:
+- Dual personality spot. Downstairs: actual nice restaurant with cloth napkins, host seats you, great food. Upstairs: rooftop party.
+- Perfect for dates or when parents visit — classy but still fun. Dinner for two runs under $40. Bottles of wine are $11.
+- Wine Wednesday is the event. Starts buzzing at 4 PM, shoulder to shoulder by 7 PM. Live DJs on the rooftop.
+- The rooftop has couches, umbrellas in orange and yellow, string lights above. The sunset literally sets on the bar — everyone's wearing sunglasses up there. Once the sun drops, the lights take over and the vibe stays going.
+- People dress a little nicer here. Sundresses, nice sunglasses. It's that type of scene.
+- Right on the end of Cumberland Ave strip.
+- The ultimate pregame spot that can also be the main event. After Sunspot, the crowd flows to Cool Beans or Half Barrel.
+
+MARES TAQUERIA:
+- Mexican spot with build-your-own tacos and HUGE margaritas. The margs are the move here.
+- Located on the bottom floor of Slate apartments, up Cumberland past Sunspot.
+- Wall-to-wall packed on game nights and weekends. That USA vs Canada hockey game? Eruption of "USA! USA!" chants you could hear from next door.
+- Staff is super interactive — they'll take photos with you and put you on their photo wall.
+- Bright red and orange inside, rooster logo. The energy matches the colors.
+- Good for literally anyone — upperclassmen, underclassmen, visitors. They just want you to have a great time.
+- Perfect bite-and-margs spot to start the night before heading to the bars.
+
+HALF BARREL:
+- Underclassmen central. This is where the younger crowd lives.
+- Three distinct sections: front bar with darts and games, second bar with open-air garage doors, and a chill patio out back.
+- Smoker-friendly — light up wherever.
+- Berry bombs are LEGENDARY here. If someone asks about signature drinks, berry bombs at Half Barrel.
+- Parker's hot dogs outside at 3 AM is the late-night savior. Always mention this if someone asks about late-night food.
+- Friendly crowd, good energy, layered layout so you can find your pocket.
+
+YACHT CLUB:
+- Fort Sanders staple. The classic college dive.
+- Shot and a PBR combo is the signature. Cheap and iconic.
+- Gritty, loud, packed, exactly what you want from a college bar.
+- Right on the Strip near all the action.
+
+UNDECLARED:
+- Right next to Yacht Club — literally same building.
+- Big freshman bar. Food, drinks, events.
+- If someone's new to campus or younger, this is a solid starting point.
+
+LITERBOARD:
+- Gaming bar. N64s, GameCubes, gaming PCs, Galaga, the works.
+- Come here if you want to game and drink at the same time.
+- Chill vibe, not a rager. Good for a unique night out.
+
+THE BOOKSTORE:
+- Hidden gem cocktail bar. Speakeasy energy.
+- Menus hidden in encyclopedias. Craft cocktails done right.
+- More intimate, quieter, good for a date or a smaller group.
+
+OLD CITY SPORTS BAR:
+- Sports bar in the Old City district. Multiple TVs, game day energy.
+- Different crowd than the Strip — a bit more spread out, less packed.
+
+PRESERVATION PUB:
+- Market Square downtown. Three stories with a rooftop.
+- Live music venue — bands play here regularly.
+- Different energy from the Strip. More of a downtown scene.
+
+RADIUS ROOFTOP:
+- Upscale rooftop lounge on Gay Street downtown.
+- Craft cocktails, dressed-up crowd, city views.
+- This is the move for someone who wants something elevated and classy.
+
+CROWD FLOW KNOWLEDGE (this is critical):
+- Wine Wednesday: Sunspot rooftop → Cool Beans or Half Barrel
+- Game day: The Hill all day, overflow to Half Barrel or Cool Beans at night
+- Freshman night out: Half Barrel → Undeclared → Yacht Club
+- Upperclassmen night: Sunspot → Cool Beans
+- Date night: Sunspot dinner → Bookstore cocktails → Radius Rooftop
+- Late night food: Parker's hot dogs outside Half Barrel, Mares for tacos
+- Pregame spot: Sunspot or Mares, then migrate to the bars
 
 RULES:
-- If they ask about FOOD → recommend Sunspot, The Hill, Mares based on what they want
-- If they ask about DIVE BARS → Cool Beans, Hannas
-- If they ask about GAMES/ARCADE → Yacht Club, LiterBoard
-- If they ask about COCKTAILS/DATE NIGHT → The Bookstore, Half Barrel
-- If they ask about DANCING/PARTY → Hannas, Cool Beans on weekends
-- If they ask about LATE NIGHT FOOD → Mares, The Hill
-- If they ask about SPORTS → The Hill, Old City Sports Bar
-- NEVER repeat the same answer twice in a conversation
-- Keep responses 2-3 sentences max, like texting a friend who knows every bar
-- Use the live venue data if available (headcounts, specials, recent recaps)
+- Always ask what vibe they want before recommending
+- Read their age/group and tailor accordingly — don't send a 30-year-old couple to Half Barrel
+- If they mention food, know which spots have kitchens and when they close
+- If they ask about cover charges or headcount, reference the LIVE data from venuu — tell them to check the map for real-time numbers
+- Keep responses short and punchy. 2-4 sentences max unless they ask for detail.
+- Never be generic. Always reference specific things: the berry bombs, the $11 wine bottles, Parker's hot dogs, the rooftop sunset.
+- You know where crowds go AFTER each spot. Use that intel.
 
-LIVE DATA (from venue sensors, updated per request):
+LIVE DATA (from venuu sensors, updated per request):
 {LIVE_DATA}
 
 TONIGHT'S RECAPS (what people are saying):
@@ -162,62 +247,77 @@ function getFallbackResponse(
   const msg = userMsg.toLowerCase();
 
   // Food questions
-  if (msg.includes('food') || msg.includes('eat') || msg.includes('hungry') || msg.includes('wing')) {
-    return "Sunspot has the best sit-down food on the strip — shrimp & grits and rattlesnake pasta are incredible. For late-night, Taqueria Mares is THE move (open til 3am weekends, try the Barbie Margarita). And The Hill's wings are award-winning — go buffalo or garlic parm.";
+  if (msg.includes('food') || msg.includes('eat') || msg.includes('hungry') || msg.includes('wing') || msg.includes('taco')) {
+    return "Wing Wednesday at The Hill is PACKED for a reason — wings are the move there. Mares has build-your-own tacos and huge margs, perfect pre-bar fuel. Late night? Parker's hot dogs outside Half Barrel at 3 AM will save your life.";
   }
 
   // Gaming/arcade questions
-  if (msg.includes('game') || msg.includes('arcade') || msg.includes('video') || msg.includes('play')) {
-    return "Yacht Club is the hidden barcade gem — 25-cent retro arcade games, N64 Smash Bros, and the shot + PBR deal is only $5. LiterBoard is the two-floor gaming spot with retro consoles downstairs and a balcony overlooking Cumberland upstairs. Both are must-visits for gamers.";
+  if (msg.includes('game') || msg.includes('arcade') || msg.includes('video') || msg.includes('play') || msg.includes('gaming')) {
+    return "LiterBoard is the gaming bar — N64s, GameCubes, gaming PCs, Galaga, the works. Chill vibe, not a rager. Yacht Club's also got the shot + PBR combo if you want something grittier. Both solid for a unique night.";
   }
 
   // Plan/group questions
   if (msg.includes('plan') || msg.includes('group') || msg.includes('night for')) {
-    return "Start at Cool Beans for cheap pregame pitchers and patio vibes. Move to Hanna's for the energy (two floors, dancing, huge patio). End at Taqueria Mares for late-night burritos — the Barbie Margarita is a must. That's the classic strip crawl right there.";
+    return "Bet! Start at Mares for tacos and margs to fuel up, hit Cool Beans for $2 beers and the patio Jumbotron, then close it out wherever the energy takes you. Parker's hot dogs outside Half Barrel at 3 AM for the save. Classic strip crawl.";
   }
 
   // Date night
-  if (msg.includes('date') || msg.includes('romantic') || msg.includes('chill')) {
-    return "For date night, start at Sunspot for dinner (upstairs balcony is perfect). Walk to Half Barrel for bourbon cocktails — try the PB&J Mixtape. End at The Bookstore on Melrose for intimate cocktail vibes. You'll look like you planned it for weeks.";
+  if (msg.includes('date') || msg.includes('romantic') || msg.includes('couple')) {
+    return "Date night? Start at Sunspot — dinner for two under $40, $11 wine bottles, the sunset hits the rooftop perfectly. Walk to The Bookstore for speakeasy cocktails (menus hidden in encyclopedias). If you want to level up, Radius Rooftop downtown for city views.";
+  }
+
+  // Chill vibes
+  if (msg.includes('chill') || msg.includes('lowkey') || msg.includes('low key') || msg.includes('relaxed')) {
+    return "Cool Beans is your spot — $2 beers, pool tables, garage doors open in warm weather. It's the grown-up version of the strip bars. Bookstore is even more lowkey if you want craft cocktails and speakeasy vibes.";
   }
 
   // Pregame/cheap
   if (msg.includes('cheap') || msg.includes('pregame') || msg.includes('deal') || msg.includes('budget')) {
-    return "Cool Beans has $10 pitchers and the best dive patio on the strip. Yacht Club's shot + PBR deal is $5. Half Barrel's happy hour draft selection is unbeatable. For pure value, Cool Beans is your pregame HQ.";
+    return "Cool Beans is pregame HQ — $2 beers, quarter pool tables, arcade games. Yacht Club's shot + PBR combo is iconic. Half Barrel's berry bombs are legendary if you want something with more kick. You won't break the bank at any of these.";
   }
 
-  // Dancing
-  if (msg.includes('dance') || msg.includes('dancing') || msg.includes('energy') || msg.includes('party')) {
-    return "Hanna's is THE energy spot — two floors, huge patio, dancing, live music. It's been the strip heartbeat since 1994. Opens Thu-Sat at 9pm and fills up fast. Get there early for the best experience.";
+  // Dancing/party/energy
+  if (msg.includes('dance') || msg.includes('dancing') || msg.includes('energy') || msg.includes('party') || msg.includes('rage') || msg.includes('hype')) {
+    return "The Hill is where the energy LIVES — two floors, DJs spinning hits, the crowd is always good-looking and going off. Game days it's wall-to-wall from 11 AM. If you want to rage, that's the answer. Always busy, always a good time.";
   }
 
   // Sports
   if (msg.includes('sport') || msg.includes('game day') || msg.includes('football') || msg.includes('watch')) {
-    return "Old City Sports Bar has a 160-inch video wall and FREE beer until first score on UT game days — that's unbeatable. The Hill is the other go-to with big screens everywhere and award-winning wings. Both get packed on Saturdays so arrive early.";
+    return "The Hill is THE game day spot — you'll be there from 11 AM to 1 AM and not want to leave. Games on every screen, live bands, DJs. Old City Sports Bar is the other move with a huge video wall. Both get packed so show up early!";
   }
 
   // Drinks/cocktails/bourbon
-  if (msg.includes('bourbon') || msg.includes('whiskey') || msg.includes('cocktail') || msg.includes('drink') || msg.includes('beer')) {
-    return "Half Barrel has the best bourbon selection on the strip — maybe in all of Knoxville. Try the PB&J Mixtape cocktail. For craft beer, they also have 35+ taps. Yacht Club has nearly 100 beers in a cozy barcade setting.";
+  if (msg.includes('bourbon') || msg.includes('whiskey') || msg.includes('cocktail') || msg.includes('drink') || msg.includes('beer') || msg.includes('marg')) {
+    return "Berry bombs at Half Barrel are LEGENDARY — that's the signature. Mares has huge margs that'll sneak up on you. Bookstore does craft cocktails right with speakeasy energy. And Cool Beans? $2 beers all day. Depends on your vibe!";
   }
 
   // Cover charge
   if (msg.includes('cover') || msg.includes('free entry')) {
-    return "Most spots on the strip don't charge cover on regular nights — Cool Beans, Half Barrel, Yacht Club, and The Hill are usually free to walk in. Hanna's sometimes has a small cover on big weekends. Mares never charges cover.";
+    return "Check the venuu map for real-time cover charges — it updates live. Most strip spots are free on regular nights. I'd check the dots before heading out so you know exactly what you're walking into.";
+  }
+
+  // Wine Wednesday
+  if (msg.includes('wine') || msg.includes('wednesday')) {
+    return "Wine Wednesday at Sunspot is THE event. $11 bottles, rooftop DJs, shoulder to shoulder by 7 PM. The sunset hits the bar perfectly — everyone's in sundresses and sunglasses up there. After Sunspot, the crowd flows to Cool Beans. That's the move.";
+  }
+
+  // Freshman/new
+  if (msg.includes('freshman') || msg.includes('new') || msg.includes('first time') || msg.includes('21')) {
+    return "Welcome to the strip! Half Barrel → Undeclared → Yacht Club is the freshman flow. Berry bombs at Half Barrel to start, Undeclared for the scene, Yacht Club for the shot + PBR combo to close it out. Parker's hot dogs at 3 AM. You'll thank me later.";
   }
 
   // Where to go / the move
   if (msg.includes('move') || msg.includes('where') || msg.includes('go') || msg.includes('tonight') || msg.includes('recommend')) {
     if (busiestVenue) {
       const count = headcounts[busiestVenue.id]?.current_count ?? 0;
-      return `${busiestVenue.name} is popping right now with ${count} people inside! If you want the energy, head there. For something chill, Yacht Club or Half Barrel are always solid picks.`;
+      return `${busiestVenue.name} is popping right now with ${count} people inside! That's where the energy is. But real talk — what's YOUR vibe tonight? I'll give you the perfect route.`;
     }
     const day = new Date().getDay();
-    if (day === 2) return "It's Taco Tuesday — The Hill is going to be packed. Start there, then hit the strip. Hanna's and Cool Beans will be lively later tonight.";
-    if (day === 3) return "Wing Wednesday at The Hill is legendary. Grab wings early, then head to Half Barrel for craft beers. LiterBoard has trivia tonight too — solid Wednesday move.";
-    if (day === 4) return "Thursday is when the strip wakes up! Hanna's opens at 9pm — two floors of energy. Pregame at Cool Beans or Yacht Club first for the best deals.";
-    if (day === 5 || day === 6) return "Weekend vibes! The strip will be packed tonight. Start at Sunspot for dinner, pregame at Cool Beans, then Hanna's for the energy. End at Mares for late-night food (open til 3am).";
-    return "The strip always has something going on. The Hill and Cool Beans are open daily til 3am. Half Barrel is great for a chill weeknight hang. What kind of vibe are you looking for?";
+    if (day === 2) return "Taco Tuesday! Mares is gonna be packed — huge margs and build-your-own tacos. Start there, then hit the strip bars. The Hill and Cool Beans will be lively later.";
+    if (day === 3) return "Wine Wednesday! Sunspot rooftop is THE move — $11 bottles, DJs, sunset vibes. Get there by 5 to grab a spot. After that, the crowd flows to Cool Beans. Wing Wednesday at The Hill is also going off.";
+    if (day === 4) return "Thursday the strip wakes up! Pregame at Cool Beans or Mares, then let the energy take you. The Hill and Half Barrel will both be going. What's your crew looking like?";
+    if (day === 5 || day === 6) return "Weekend vibes! Start at Sunspot or Mares to fuel up, hit Cool Beans for the patio, then wherever the energy takes you. Parker's hot dogs outside Half Barrel at 3 AM is the closer. What kind of night you going for?";
+    return "The strip always has something going on. But tell me — who are you with and what's the vibe? I'll build you the perfect route.";
   }
 
   // Quiet/chill
@@ -227,19 +327,19 @@ function getFallbackResponse(
         (a, b) => (headcounts[a.id]?.current_count ?? 0) - (headcounts[b.id]?.current_count ?? 0)
       )[0];
       if (quietest) {
-        return `${quietest.name} is the chillest right now with only ${headcounts[quietest.id]?.current_count ?? 0} people. The Bookstore and Half Barrel are always great for low-key vibes too.`;
+        return `${quietest.name} is the chillest right now with only ${headcounts[quietest.id]?.current_count ?? 0} people. Bookstore is always intimate, and Cool Beans has pockets where you can actually hear yourself think.`;
       }
     }
-    return "For chill vibes, The Bookstore on Melrose is intimate and cocktail-focused. Half Barrel is perfect for conversation over bourbon. Yacht Club is cozy with retro games. All three are great when you want space to actually talk.";
+    return "Bookstore is the hidden gem — speakeasy vibes, menus in encyclopedias, craft cocktails done right. Cool Beans is more laid back than most strip bars too. Both good when you want to actually have a conversation.";
   }
 
   // Live counts available
   if (liveVenues.length > 0) {
     const totalOut = liveVenues.reduce((s, v) => s + (headcounts[v.id]?.current_count ?? 0), 0);
-    return `${totalOut} people are out right now across ${liveVenues.length} venues. ${busiestVenue ? `${busiestVenue.name} is leading the pack!` : ''} What kind of night are you looking for?`;
+    return `${totalOut} people are out right now across ${liveVenues.length} venues! ${busiestVenue ? `${busiestVenue.name} is leading the pack.` : ''} What's your vibe — trying to go off or keep it smooth?`;
   }
 
-  return "I know every spot on the strip inside and out — ask me about food, drinks, gaming, dancing, or tell me your vibe and I'll plan your whole night!";
+  return "I know every spot, every crowd flow, every late-night move. Tell me your vibe and who you're with — I'll build the perfect night for you.";
 }
 
 export function PrecapPage({ venues, headcounts, username }: PrecapPageProps) {
@@ -247,7 +347,7 @@ export function PrecapPage({ venues, headcounts, username }: PrecapPageProps) {
     {
       id: 'welcome',
       role: 'assistant',
-      content: `Hey ${username}! I'm Vinny — your AI nightlife assistant. I know every spot on the strip, live headcounts, tonight's specials, and what people are saying. What's the plan tonight?`,
+      content: `Yo what's good ${username}! I'm Vinny — I know every spot on the strip inside and out. What's the move tonight? You trying to go off or keep it chill?`,
     },
   ]);
   const [input, setInput] = useState('');
