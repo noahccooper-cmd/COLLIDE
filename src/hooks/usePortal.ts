@@ -176,6 +176,11 @@ export function usePortal() {
         peak_count: result.peak ?? prev.peak_count,
       } : null);
 
+      // Push headcount update directly into useHeadcounts state (same pattern as cover charge)
+      window.dispatchEvent(new CustomEvent('headcount-update', {
+        detail: { venueId: venue.id, currentCount: result.new_count, isLive: true },
+      }));
+
       supabase.from('clicker_logs').insert({
         venue_id: venue.id,
         staff_id: null,
@@ -215,6 +220,11 @@ export function usePortal() {
         ...prev,
         current_count: result.new_count,
       } : null);
+
+      // Push headcount update directly into useHeadcounts state (same pattern as cover charge)
+      window.dispatchEvent(new CustomEvent('headcount-update', {
+        detail: { venueId: venue.id, currentCount: result.new_count, isLive: true },
+      }));
 
       supabase.from('clicker_logs').insert({
         venue_id: venue.id,
@@ -287,11 +297,12 @@ export function usePortal() {
       })
       .eq('id', venue.id);
 
-    console.log('NIGHT ENDED for venue:', venue.id);
-
-    // 3. Dispatch cover update so map immediately shows FREE
+    // 3. Dispatch updates so map immediately reflects end-of-night
     window.dispatchEvent(new CustomEvent('venues-cover-update', {
       detail: { venueId: venue.id, cover_charge: null },
+    }));
+    window.dispatchEvent(new CustomEvent('headcount-update', {
+      detail: { venueId: venue.id, currentCount: 0, isLive: false },
     }));
 
     // 4. Clear persistence — End Night returns to login

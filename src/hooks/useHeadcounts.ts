@@ -74,6 +74,34 @@ export function useHeadcounts(city: CityKey) {
     };
   }, [city]);
 
+  // Listen for direct headcount updates from Portal (same pattern as cover charge sync)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { venueId, currentCount, isLive } = (e as CustomEvent).detail;
+      setHeadcounts(prev => {
+        const existing = prev[venueId];
+        if (!existing) return prev;
+        return {
+          ...prev,
+          [venueId]: {
+            ...existing,
+            current_count: currentCount,
+            is_live: isLive,
+            updated_at: new Date().toISOString(),
+            peak_count: Math.max(existing.peak_count, currentCount),
+          },
+        };
+      });
+
+      // Trigger dot pulse
+      setPulsedVenueId(venueId);
+      if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
+      pulseTimeoutRef.current = setTimeout(() => setPulsedVenueId(null), 600);
+    };
+    window.addEventListener('headcount-update', handler);
+    return () => window.removeEventListener('headcount-update', handler);
+  }, []);
+
   const getVenueHeadcount = useCallback((venueId: string) => {
     return headcounts[venueId] ?? null;
   }, [headcounts]);
