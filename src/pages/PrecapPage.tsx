@@ -260,6 +260,14 @@ async function callVinnyAPI(
   messages: { role: string; content: string }[],
   apiKey: string,
 ): Promise<string> {
+  console.log('VINNY API CALL:', {
+    messageCount: messages.length,
+    systemPromptLength: systemPrompt.length,
+    lastMessage: messages[messages.length - 1],
+    hasApiKey: !!apiKey,
+    apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'MISSING',
+  });
+
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -277,14 +285,18 @@ async function callVinnyAPI(
     }),
   });
 
+  console.log('VINNY RESPONSE STATUS:', res.status);
+
   if (!res.ok) {
     const errText = await res.text();
+    console.error('VINNY API ERROR:', res.status, errText);
     throw new Error(`API ${res.status}: ${errText}`);
   }
 
   const data = await res.json();
   const text = data.content?.[0]?.text;
   if (!text) throw new Error('Empty response');
+  console.log('VINNY SUCCESS:', text.substring(0, 100));
   return text;
 }
 
@@ -296,7 +308,8 @@ async function sendPrecapMessage(
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
 
   if (!apiKey) {
-    return "My bad, having trouble connecting. Try again in a sec \uD83E\uDD19";
+    console.error('VINNY: No API key found. Set VITE_ANTHROPIC_API_KEY in .env');
+    return "Vinny's not wired up yet \u2014 API key missing. Check your .env file!";
   }
 
   const liveData = buildLiveData(venues, headcounts);
@@ -305,6 +318,8 @@ async function sendPrecapMessage(
   const fullPrompt = SYSTEM_PROMPT
     .replace('{LIVE_DATA}', liveData)
     .replace('{RECAPS}', recaps);
+
+  console.log('VINNY SYSTEM PROMPT LENGTH:', fullPrompt.length, 'chars');
 
   const messages = history.map(m => ({
     role: m.role as 'user' | 'assistant',
