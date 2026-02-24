@@ -307,6 +307,16 @@ async function sendPrecapMessage(
 ): Promise<string> {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
 
+  // TEMP DEBUG — remove after confirming
+  console.log('ENV CHECK:', {
+    hasAnthropicKey: !!import.meta.env.VITE_ANTHROPIC_API_KEY,
+    keyLength: import.meta.env.VITE_ANTHROPIC_API_KEY?.length,
+    keyPrefix: import.meta.env.VITE_ANTHROPIC_API_KEY?.substring(0, 10),
+    allEnvKeys: Object.keys(import.meta.env),
+  });
+  console.log('API KEY CHECK:', typeof apiKey, apiKey?.length, apiKey?.substring(0, 10));
+  // END TEMP DEBUG
+
   if (!apiKey) {
     console.error('VINNY: No API key found. Set VITE_ANTHROPIC_API_KEY in .env');
     return "Vinny's not wired up yet \u2014 API key missing. Check your .env file!";
