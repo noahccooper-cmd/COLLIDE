@@ -229,18 +229,34 @@ export function usePortal() {
       peakTime: headcount?.updated_at ?? new Date().toISOString(),
     };
 
+    // 1. Reset headcount to 0 and mark not live
     await supabase
       .from('headcounts')
-      .update({ is_live: false })
+      .update({ current_count: 0, is_live: false })
       .eq('venue_id', venue.id)
       .eq('night_of', nightOf);
 
+    // 2. Clear cover charge, tonight's special, and mark clicker not live
     await supabase
       .from('venues')
-      .update({ is_clicker_live: false })
+      .update({
+        is_clicker_live: false,
+        cover_charge: null,
+        tonight_special: null,
+        special_updated_at: null,
+      })
       .eq('id', venue.id);
 
-    setHeadcount(prev => prev ? { ...prev, is_live: false } : null);
+    console.log('NIGHT ENDED for venue:', venue.id);
+
+    // 3. Dispatch cover update so map immediately shows FREE
+    window.dispatchEvent(new CustomEvent('venues-cover-update', {
+      detail: { venueId: venue.id, cover_charge: null },
+    }));
+
+    // 4. Update local state and show summary
+    setHeadcount(prev => prev ? { ...prev, current_count: 0, is_live: false } : null);
+    setVenue(prev => prev ? { ...prev, cover_charge: null, tonight_special: null, special_updated_at: null, is_clicker_live: false } : null);
     setEndSummary(summary);
   }, [venue, headcount]);
 

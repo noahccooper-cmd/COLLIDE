@@ -53,6 +53,11 @@ export function ClickerView({
       setSelectedCover(match ?? 'FREE');
     }
   }, [venue.id, venue.cover_charge]);
+
+  // Sync specialText when venue changes (re-login after End Night)
+  useEffect(() => {
+    setSpecialText(venue.tonight_special ?? '');
+  }, [venue.id, venue.tonight_special]);
   const count = headcount?.current_count ?? 0;
   const peak = headcount?.peak_count ?? 0;
   const isLive = headcount?.is_live ?? false;
