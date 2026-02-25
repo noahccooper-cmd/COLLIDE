@@ -33,19 +33,6 @@ export function Header({ city, onCityChange, totalCount, username }: HeaderProps
           <p
             style={{
               fontFamily: 'Satoshi, sans-serif',
-              color: 'rgba(255, 255, 255, 0.4)',
-              fontSize: '10px',
-              fontWeight: 600,
-              letterSpacing: '1px',
-              textTransform: 'uppercase',
-              marginTop: '2px',
-            }}
-          >
-            YOUR CHEAT CODE FOR NIGHTLIFE
-          </p>
-          <p
-            style={{
-              fontFamily: 'Satoshi, sans-serif',
               fontSize: '15px',
               marginTop: '4px',
               lineHeight: 1,
