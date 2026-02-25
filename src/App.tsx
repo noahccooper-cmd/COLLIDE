@@ -15,20 +15,16 @@ export default function App() {
   const [username, setUsername] = useState<string | null>(
     () => localStorage.getItem('venue_username')
   );
-  const [splashDone, setSplashDone] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const { city, switchCity } = useCity();
-  const { venues, loading: venuesLoading, error: venuesError, refetch: refetchVenues } = useVenues(city);
+  const { venues, error: venuesError, refetch: refetchVenues } = useVenues(city);
   const { headcounts, pulsedVenueId } = useHeadcounts(city);
 
-  // Splash: dismiss after 1.5s OR when venues load, whichever comes first
+  // Splash: always show for 2.5s, then fade out over 500ms (CSS transition)
   useEffect(() => {
-    const timer = setTimeout(() => setSplashDone(true), 1500);
+    const timer = setTimeout(() => setShowSplash(false), 2500);
     return () => clearTimeout(timer);
   }, []);
-
-  useEffect(() => {
-    if (!venuesLoading && venues.length > 0) setSplashDone(true);
-  }, [venuesLoading, venues.length]);
 
   // Build counts map from headcounts (portal data only)
   const counts = useMemo(() => {
@@ -80,16 +76,6 @@ export default function App() {
   // Username onboarding — first open
   if (!username) {
     return <UsernameScreen onComplete={setUsername} />;
-  }
-
-  // Splash screen
-  if (!splashDone) {
-    return (
-      <div className="splash-screen">
-        <h1 className="splash-logo">venuu</h1>
-        <p className="splash-tagline">Your Cheat Code for Nightlife</p>
-      </div>
-    );
   }
 
   // Connection error — venues failed to load
@@ -153,6 +139,18 @@ export default function App() {
       </div>
 
       <BottomNav active={tab} onChange={setTab} />
+
+      {/* Splash overlay — fades out after 2.5s */}
+      <div
+        className="splash-screen"
+        style={{
+          opacity: showSplash ? 1 : 0,
+          pointerEvents: showSplash ? 'all' : 'none',
+        }}
+      >
+        <h1 className="splash-logo">venuu</h1>
+        <p className="splash-tagline">Your Cheat Code for Nightlife</p>
+      </div>
     </div>
   );
 }

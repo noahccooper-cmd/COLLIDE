@@ -48,13 +48,13 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  animation: splash-fade-in 400ms ease-out;
+  transition: opacity 0.5s ease;
 }
 
 .splash-logo {
   font-family: 'Satoshi', sans-serif;
-  font-size: 42px;
-  font-weight: 900;
+  font-size: 48px;
+  font-weight: 800;
   color: #FF8200;
   letter-spacing: 0.06em;
   margin: 0;
@@ -62,17 +62,12 @@ body {
 
 .splash-tagline {
   font-family: 'Satoshi', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.4);
   margin-top: 8px;
   letter-spacing: 1px;
   text-transform: uppercase;
-}
-
-@keyframes splash-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 /* ============================================
