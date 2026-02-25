@@ -323,6 +323,8 @@ export function PrecapPage({ venues, headcounts, username }: PrecapPageProps) {
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
 
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
       scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -332,6 +334,25 @@ export function PrecapPage({ venues, headcounts, username }: PrecapPageProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping, scrollToBottom]);
+
+  // visualViewport API — slide input above the iOS / mobile keyboard
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const onViewportChange = () => {
+      const offset = window.innerHeight - viewport.height - viewport.offsetTop;
+      setKeyboardOffset(Math.max(0, offset));
+      scrollToBottom();
+    };
+
+    viewport.addEventListener('resize', onViewportChange);
+    viewport.addEventListener('scroll', onViewportChange);
+    return () => {
+      viewport.removeEventListener('resize', onViewportChange);
+      viewport.removeEventListener('scroll', onViewportChange);
+    };
+  }, [scrollToBottom]);
 
   const handleSend = useCallback(async (text?: string) => {
     const msg = (text ?? input).trim();
@@ -366,8 +387,16 @@ export function PrecapPage({ venues, headcounts, username }: PrecapPageProps) {
     handleSend(suggestion);
   }, [handleSend]);
 
+  // When keyboard is open, override the bottom position so the input
+  // sits directly above the keyboard instead of above the (now-hidden) nav.
+  const pageStyle = keyboardOffset > 0
+    ? { bottom: `${keyboardOffset}px` }
+    : undefined;
+
+  const showSend = input.trim().length > 0;
+
   return (
-    <div className="precap-page">
+    <div className="precap-page" style={pageStyle}>
       {/* Header */}
       <div className="precap-header">
         <span className="precap-header-icon">{'\u2728'}</span>
@@ -417,21 +446,21 @@ export function PrecapPage({ venues, headcounts, username }: PrecapPageProps) {
         )}
       </div>
 
-      {/* Input */}
+      {/* Input — iMessage-style bar */}
       <div className="precap-input-row">
         <input
           ref={inputRef}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSend()}
-          placeholder="Ask about tonight..."
+          placeholder="Ask Venny anything..."
           className="precap-input"
           maxLength={300}
         />
         <button
           onClick={() => handleSend()}
-          disabled={!input.trim() || isTyping}
-          className="precap-send"
+          disabled={isTyping}
+          className={`precap-send${showSend ? '' : ' hidden'}`}
         >
           {'\u2191'}
         </button>

@@ -1054,10 +1054,11 @@ body {
   position: absolute;
   inset: 0;
   top: 108px;
-  bottom: 60px;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   background: #050507;
+  transition: bottom 0.1s ease-out;
 }
 
 .precap-header {
@@ -1203,32 +1204,33 @@ body {
   transform: scale(0.97);
 }
 
-/* Input row */
+/* Input row — iMessage-style bar */
 .precap-input-row {
   display: flex;
-  gap: 8px;
-  padding: 10px 16px;
-  border-top: 1px solid #2A2A30;
-  background: #050507;
+  align-items: center;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(20, 20, 30, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   flex-shrink: 0;
 }
 
 .precap-input {
   flex: 1;
-  height: 48px;
-  border-radius: 24px;
-  background: #111114;
-  border: 1px solid #2A2A30;
-  padding: 0 18px;
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  padding: 0 16px;
   color: white;
   font-family: 'Satoshi', sans-serif;
   font-size: 16px;
   outline: none;
-  transition: border-color 0.2s;
 }
 
-.precap-input::placeholder { color: #55555F; }
-.precap-input:focus { border-color: rgba(255, 130, 0, 0.4); }
+.precap-input::placeholder { color: rgba(255, 255, 255, 0.3); }
+.precap-input:focus { outline: none; }
 
 .precap-send {
   width: 40px;
@@ -1243,13 +1245,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.1s, opacity 0.2s;
+  transition: transform 0.1s, opacity 0.15s;
   flex-shrink: 0;
-  align-self: center;
+  margin-left: 8px;
 }
 
 .precap-send:active { transform: scale(0.92); }
-.precap-send:disabled { opacity: 0.3; cursor: default; }
+.precap-send.hidden { opacity: 0; pointer-events: none; width: 0; margin: 0; padding: 0; overflow: hidden; }
 
 /* ============================================
    Selection
