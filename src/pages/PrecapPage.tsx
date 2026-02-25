@@ -378,7 +378,7 @@ export function PrecapPage({ venues, headcounts, username }: PrecapPageProps) {
       {/* Header */}
       <div className="precap-header">
         <span className="precap-header-icon">{'\u2728'}</span>
-        <span className="precap-header-title">Precap</span>
+        <span className="precap-header-title">Venny {'\uD83D\uDD25'}</span>
         <span className="precap-header-sub">AI Nightlife Assistant</span>
       </div>
 
