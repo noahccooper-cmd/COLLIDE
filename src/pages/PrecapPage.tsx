@@ -260,7 +260,6 @@ async function callVinnyAPI(messages: any[], systemPrompt: string): Promise<stri
   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error('VINNY: Missing Supabase config');
     return null;
   }
 
@@ -274,8 +273,6 @@ async function callVinnyAPI(messages: any[], systemPrompt: string): Promise<stri
   });
 
   if (!response.ok) {
-    const errText = await response.text();
-    console.error('VINNY ERROR:', response.status, errText);
     return null;
   }
 
@@ -295,8 +292,6 @@ async function sendPrecapMessage(
     .replace('{LIVE_DATA}', liveData)
     .replace('{RECAPS}', recaps);
 
-  console.log('VINNY SYSTEM PROMPT LENGTH:', fullPrompt.length, 'chars');
-
   const messages = history.map(m => ({
     role: m.role as 'user' | 'assistant',
     content: m.content,
@@ -306,11 +301,9 @@ async function sendPrecapMessage(
   const reply = await callVinnyAPI(messages, fullPrompt);
   if (reply) return reply;
 
-  console.error('Vinny API attempt 1 failed, retrying...');
   const retry = await callVinnyAPI(messages, fullPrompt);
   if (retry) return retry;
 
-  console.error('Vinny API attempt 2 failed');
   return "My bad, having trouble connecting. Try again in a sec \uD83E\uDD19";
 }
 

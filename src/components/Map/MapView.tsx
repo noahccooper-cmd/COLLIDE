@@ -69,13 +69,9 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     map.dragRotate.disable();
     map.touchZoomRotate.disableRotation();
 
-    /* ── Debug: catch WebGL crashes ── */
-    map.on('error', (e: any) => {
-      console.error('MAP ERROR:', e.error?.message || e);
-    });
+    map.on('error', () => {});
     map.getCanvas().addEventListener('webglcontextlost', (e) => {
-      e.preventDefault(); // Prevent permanent loss
-      console.warn('WebGL context lost — will restore');
+      e.preventDefault();
     });
     map.getCanvas().addEventListener('webglcontextrestored', () => {
       map.triggerRepaint();
@@ -183,11 +179,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
     if (!mapRef.current || !mapLoaded) return;
     const currentIds = new Set(venues.map(v => v.id));
 
-    console.log('SYNC MARKERS — venues count:', venues.length, 'existing markers:', markersRef.current.size);
-    venues.forEach(v => {
-      console.log('MARKER:', v.name, 'id:', v.id, 'lat:', v.lat, 'lng:', v.lng, 'hasMarker:', markersRef.current.has(v.id));
-    });
-
     markersRef.current.forEach((entry, id) => {
       if (!currentIds.has(id)) {
         entry.marker.remove();
@@ -252,9 +243,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
         marker, el, dotEl, countEl, labelEl, liveEl, coverEl,
         currentTier: 'dot-t0', currentCount: 0,
       });
-      console.log('MARKER CREATED:', venue.name, 'at', [venue.lng, venue.lat], 'visible:', markersVisibleRef.current);
     });
-    console.log('SYNC MARKERS DONE — total markers:', markersRef.current.size);
   }, [venues, mapLoaded]);
 
   useEffect(() => { syncMarkers(); }, [syncMarkers]);
