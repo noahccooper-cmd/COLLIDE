@@ -263,7 +263,6 @@ async function callVinnyAPI(messages: any[], systemPrompt: string): Promise<stri
     console.error('VINNY: Missing Supabase config');
     return null;
   }
-  console.log('VINNY: Calling edge function, messages:', messages.length);
 
   const response = await fetch(`${supabaseUrl}/functions/v1/vinny`, {
     method: 'POST',
@@ -281,7 +280,6 @@ async function callVinnyAPI(messages: any[], systemPrompt: string): Promise<stri
   }
 
   const data = await response.json();
-  console.log('VINNY SUCCESS:', data.reply?.substring(0, 50));
   return data.reply;
 }
 
