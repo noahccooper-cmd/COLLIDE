@@ -98,7 +98,7 @@ export function usePortal() {
     // Server-side PIN check — only returns data if PIN matches
     const { data, error: err } = await supabase
       .from('venues')
-      .select('id, name, slug, city, category, address, lat, lng, image_url, cover_price, deals, hours, instagram, vibe, has_live_cam, live_cam_url, cam_coming_soon, is_active, sort_order, capacity, is_clicker_live, staff_code, phone, website, description, rating, review_count, tonight_special, special_updated_at, cover_charge, created_at')
+      .select('id, name, slug, city, category, address, lat, lng, image_url, cover_price, deals, hours, instagram, vibe, has_live_cam, live_cam_url, cam_coming_soon, is_active, sort_order, capacity, is_clicker_live, staff_code, phone, website, description, rating, review_count, tonight_special, special_updated_at, special, cover_charge, created_at')
       .eq('id', venueId)
       .eq('bouncer_pin', pin)
       .eq('is_active', true)

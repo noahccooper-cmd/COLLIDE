@@ -138,12 +138,37 @@ body {
 }
 
 /* ============================================
+   Venue Marker — Special Banner (ORANGE)
+   ============================================ */
+
+.venue-special {
+  position: absolute;
+  top: 32px;
+  left: 0;
+  transform: translateX(-50%);
+  background: #FF8200;
+  color: white;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 2px;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ============================================
    Venue Marker — Live Badge (GREEN)
    ============================================ */
 
 .venue-live-badge {
   position: absolute;
-  top: 34px;                    /* fixed offset below label */
+  top: 48px;                    /* fixed offset below special banner */
   left: 0;
   transform: translateX(-50%);
   display: flex;
