@@ -169,7 +169,7 @@ export function ClickerView({
 
   return (
     <div className={`min-h-screen bg-[#050507] flex flex-col ${flashClass}`}
-      style={{ overscrollBehavior: 'none', touchAction: 'manipulation' }}>
+      style={{ overscrollBehavior: 'none', touchAction: 'manipulation', overflowY: 'auto' }}>
       {/* Header */}
       <div className="px-5 pt-4 pb-3 flex items-center justify-between"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}>
