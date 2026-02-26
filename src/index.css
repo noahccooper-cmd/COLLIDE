@@ -726,6 +726,18 @@ body {
   white-space: nowrap;
 }
 
+.special-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #FF8200;
+  border-radius: 8px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
 .tonight-banner {
   padding: 6px 16px 0;
   overflow: hidden;

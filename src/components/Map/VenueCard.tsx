@@ -347,6 +347,15 @@ export function VenueSheet({
           </span>
         </div>
 
+        {/* Special pill (from Portal bouncer) */}
+        {venue.special && (
+          <div className="cover-banner">
+            <span className="special-pill">
+              {'\uD83C\uDF89'} {venue.special}
+            </span>
+          </div>
+        )}
+
         {/* Tonight's Specials Banner (visible in peek) */}
         <TonightBanner venue={venue} />
 
