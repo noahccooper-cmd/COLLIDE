@@ -171,8 +171,8 @@ export function ClickerView({
     <div className={`min-h-screen bg-[#050507] flex flex-col ${flashClass}`}
       style={{ overscrollBehavior: 'none', touchAction: 'manipulation', overflowY: 'auto' }}>
       {/* Header */}
-      <div className="px-5 pt-4 pb-3 flex items-center justify-between"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}>
+      <div className="px-5 pt-3 pb-2 flex items-center justify-between"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)' }}>
         <div>
           <h1 className="text-white font-black text-lg tracking-[0.05em]"
             style={{ fontFamily: 'Satoshi, sans-serif' }}>
@@ -208,10 +208,10 @@ export function ClickerView({
       </div>
 
       {/* Count Display */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="flex flex-col items-center justify-center px-6" style={{ padding: '12px 24px' }}>
         <div key={bumpKey} className="count-bump">
           <span className="text-white font-black leading-none"
-            style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '96px' }}>
+            style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '64px' }}>
             {formatCount(count)}
           </span>
         </div>
@@ -219,19 +219,19 @@ export function ClickerView({
           inside right now
         </p>
         {peak > 0 && headcount?.updated_at && (
-          <p className="text-[#55555F] text-xs mt-3" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+          <p className="text-[#55555F] text-xs mt-1" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             Peak: {formatCount(peak)} at {formatTime(headcount.updated_at)}
           </p>
         )}
       </div>
 
       {/* Cover Charge — instant save on tap */}
-      <div className="px-4 pb-2">
-        <div className="p-4 bg-[#111114] border border-[#2A2A30] rounded-xl">
+      <div className="px-4 pb-1">
+        <div className="bg-[#111114] border border-[#2A2A30] rounded-xl" style={{ padding: '10px 16px' }}>
           <p className="text-[#8A8A95] text-xs font-bold tracking-wider mb-3" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             {'\uD83D\uDCB5'} COVER
           </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '8px' }}>
             {COVER_PRESETS.map(preset => {
               const isSelected = selectedCover === preset;
               return (
@@ -241,9 +241,9 @@ export function ClickerView({
                   className="active:scale-[0.95] transition-transform"
                   style={{
                     fontFamily: 'Satoshi, sans-serif',
-                    minWidth: '64px',
-                    height: '44px',
-                    borderRadius: '22px',
+                    minWidth: '60px',
+                    height: '40px',
+                    borderRadius: '20px',
                     background: isSelected ? '#22C55E' : '#1A1A24',
                     color: isSelected ? 'white' : '#22C55E',
                     fontWeight: 700,
@@ -266,25 +266,25 @@ export function ClickerView({
       </div>
 
       {/* Main Buttons */}
-      <div className="px-4 pb-3">
+      <div className="px-4 pb-2">
         <div className="flex gap-3">
           <button
             onClick={() => handleExit()}
-            className="flex-1 flex flex-col items-center justify-center gap-2 active:scale-[0.97] transition-transform"
-            style={{ height: '140px', backgroundColor: '#5C1A1A', borderRadius: '16px' }}
+            className="flex-1 flex flex-col items-center justify-center gap-1 active:scale-[0.97] transition-transform"
+            style={{ height: '100px', backgroundColor: '#5C1A1A', borderRadius: '16px' }}
           >
-            <Minus size={48} strokeWidth={2.5} className="text-white" />
+            <Minus size={32} strokeWidth={2.5} className="text-white" />
             <span className="text-white tracking-wider"
-              style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '20px', fontWeight: 800 }}>EXIT</span>
+              style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '18px', fontWeight: 800 }}>EXIT</span>
           </button>
           <button
             onClick={() => handleEnter()}
-            className="flex-1 flex flex-col items-center justify-center gap-2 active:scale-[0.97] transition-transform"
-            style={{ height: '140px', backgroundColor: '#00E676', borderRadius: '16px' }}
+            className="flex-1 flex flex-col items-center justify-center gap-1 active:scale-[0.97] transition-transform"
+            style={{ height: '100px', backgroundColor: '#00E676', borderRadius: '16px' }}
           >
-            <Plus size={48} strokeWidth={2.5} className="text-white" />
+            <Plus size={32} strokeWidth={2.5} className="text-white" />
             <span className="text-white tracking-wider"
-              style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '20px', fontWeight: 800 }}>ENTER</span>
+              style={{ fontFamily: 'Satoshi, sans-serif', fontSize: '18px', fontWeight: 800 }}>ENTER</span>
           </button>
         </div>
 
@@ -304,7 +304,7 @@ export function ClickerView({
         )}
 
         {/* End Night */}
-        <div className="mt-4">
+        <div className="mt-3">
           {confirmEnd ? (
             <div className="flex flex-col gap-2">
               <p className="text-[#8A8A95] text-sm text-center" style={{ fontFamily: 'Satoshi, sans-serif' }}>
@@ -367,14 +367,14 @@ export function ClickerView({
         </div>
 
         {/* Tonight's Special */}
-        <div style={{ marginTop: '24px', padding: '0 16px 24px' }}>
+        <div style={{ marginTop: '14px', padding: '0 0 20px' }}>
           <div style={{
             fontSize: '11px',
             fontWeight: 600,
             color: 'rgba(255,255,255,0.4)',
             letterSpacing: '1px',
             textTransform: 'uppercase',
-            marginBottom: '10px',
+            marginBottom: '8px',
           }}>
             {'\uD83C\uDF89'} TONIGHT'S SPECIAL
           </div>
@@ -385,23 +385,23 @@ export function ClickerView({
             placeholder="e.g. $3 wells til midnight"
             style={{
               width: '100%',
-              height: '48px',
+              height: '44px',
               borderRadius: '12px',
               background: 'rgba(255,255,255,0.05)',
               border: '1px solid rgba(255,255,255,0.15)',
               padding: '0 16px',
-              fontSize: '16px',
+              fontSize: '15px',
               color: 'white',
               outline: 'none',
               boxSizing: 'border-box' as const,
-              marginBottom: '10px',
+              marginBottom: '8px',
             }}
           />
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={handleSetSpecial}
               style={{
-                flex: 1,
+                flex: 3,
                 height: '44px',
                 borderRadius: '12px',
                 background: '#FF8200',
@@ -417,7 +417,7 @@ export function ClickerView({
             <button
               onClick={handleClearSpecial}
               style={{
-                width: '70px',
+                flex: 1,
                 height: '44px',
                 borderRadius: '12px',
                 background: 'transparent',
@@ -437,7 +437,7 @@ export function ClickerView({
               fontSize: '13px',
               fontWeight: 600,
               textAlign: 'center',
-              marginTop: '8px',
+              marginTop: '6px',
             }}>
               {specialConfirm}
             </div>
