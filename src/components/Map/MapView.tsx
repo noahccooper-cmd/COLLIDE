@@ -13,7 +13,6 @@ interface MarkerEntry {
   labelEl: HTMLDivElement;
   liveEl: HTMLDivElement;
   coverEl: HTMLDivElement;
-  specialEl: HTMLDivElement;
   currentTier: string;
   currentCount: number;
 }
@@ -205,16 +204,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       labelEl.className = 'venue-label';
       labelEl.textContent = getShortName(venue.name);
 
-      const specialEl = document.createElement('div');
-      specialEl.className = 'venue-special';
-      const initSpecial = venue.special;
-      if (initSpecial) {
-        specialEl.textContent = initSpecial.length > 25 ? initSpecial.slice(0, 25) + '...' : initSpecial;
-        specialEl.style.display = 'block';
-      } else {
-        specialEl.style.display = 'none';
-      }
-
       const liveEl = document.createElement('div');
       liveEl.className = 'venue-live-badge';
       liveEl.innerHTML = '<span class="blink"></span>LIVE';
@@ -228,7 +217,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       dotEl.appendChild(coverEl);
       el.appendChild(dotEl);
       el.appendChild(labelEl);
-      el.appendChild(specialEl);
       el.appendChild(liveEl);
 
       el.addEventListener('click', (e) => {
@@ -252,7 +240,7 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       wrapperEl.style.willChange = 'transform';
 
       markersRef.current.set(venue.id, {
-        marker, el, dotEl, countEl, labelEl, liveEl, coverEl, specialEl,
+        marker, el, dotEl, countEl, labelEl, liveEl, coverEl,
         currentTier: 'dot-t0', currentCount: 0,
       });
     });
@@ -306,26 +294,6 @@ export function MapView({ city, venues, counts, liveVenueIds, pulsedVenueId, onV
       const newText = cover ? getCoverLabel(cover) : 'FREE';
       if (entry.coverEl.textContent !== newText) {
         entry.coverEl.textContent = newText;
-      }
-    });
-  }, [venues, mapLoaded]);
-
-  // ── Special banner sync — show/hide when venue.special changes ──
-  useEffect(() => {
-    if (!mapLoaded) return;
-
-    venues.forEach(venue => {
-      const entry = markersRef.current.get(venue.id);
-      if (!entry) return;
-      const special = venue.special;
-      if (special) {
-        const text = special.length > 25 ? special.slice(0, 25) + '...' : special;
-        if (entry.specialEl.textContent !== text) {
-          entry.specialEl.textContent = text;
-        }
-        entry.specialEl.style.display = 'block';
-      } else {
-        entry.specialEl.style.display = 'none';
       }
     });
   }, [venues, mapLoaded]);
