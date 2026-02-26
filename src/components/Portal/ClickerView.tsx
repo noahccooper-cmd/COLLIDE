@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Minus, Plus, LogOut } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import { formatCount, formatTime } from '../../lib/utils';
 import type { Venue, Headcount } from '../../lib/types';
 import type { EndNightSummary } from '../../hooks/usePortal';
@@ -12,7 +13,6 @@ interface ClickerViewProps {
   onEnter: (count?: number) => Promise<void>;
   onExit: (count?: number) => Promise<void>;
   onEndNight: () => Promise<void>;
-  onUpdateSpecial: (text: string) => Promise<void>;
   onUpdateCover: (text: string) => Promise<void>;
   onDisconnect: () => void;
 }
@@ -27,15 +27,14 @@ export function ClickerView({
   onEnter,
   onExit,
   onEndNight,
-  onUpdateSpecial,
   onUpdateCover,
   onDisconnect,
 }: ClickerViewProps) {
   const [flashClass, setFlashClass] = useState('');
   const [bumpKey, setBumpKey] = useState(0);
   const [confirmEnd, setConfirmEnd] = useState(false);
-  const [specialText, setSpecialText] = useState(venue.tonight_special ?? '');
-  const [specialStatus, setSpecialStatus] = useState<string | null>(null);
+  const [specialText, setSpecialText] = useState('');
+  const [specialConfirm, setSpecialConfirm] = useState('');
   const [selectedCover, setSelectedCover] = useState<string>(() => {
     const current = venue.cover_charge;
     if (!current || current === 'FREE') return 'FREE';
@@ -54,10 +53,19 @@ export function ClickerView({
     }
   }, [venue.id, venue.cover_charge]);
 
-  // Sync specialText when venue changes (re-login after End Night)
+  // Load current special on mount
   useEffect(() => {
-    setSpecialText(venue.tonight_special ?? '');
-  }, [venue.id, venue.tonight_special]);
+    const loadSpecial = async () => {
+      const { data } = await supabase
+        .from('venues')
+        .select('special')
+        .eq('id', venue.id)
+        .single();
+      if (data?.special) setSpecialText(data.special);
+    };
+    loadSpecial();
+  }, [venue.id]);
+
   const count = headcount?.current_count ?? 0;
   const peak = headcount?.peak_count ?? 0;
   const isLive = headcount?.is_live ?? false;
@@ -97,42 +105,31 @@ export function ClickerView({
     await onEndNight();
   }, [onEndNight]);
 
-  const handleUpdateSpecial = useCallback(async () => {
+  const handleSetSpecial = useCallback(async () => {
     if (!specialText.trim()) return;
-    await onUpdateSpecial(specialText);
-    setSpecialStatus('Special set ✓');
-    setTimeout(() => setSpecialStatus(null), 2000);
-  }, [specialText, onUpdateSpecial]);
+    await supabase
+      .from('venues')
+      .update({ special: specialText.trim() })
+      .eq('id', venue.id);
+    setSpecialConfirm('Special set ✓');
+    setTimeout(() => setSpecialConfirm(''), 2000);
+  }, [specialText, venue.id]);
 
   const handleClearSpecial = useCallback(async () => {
-    await onUpdateSpecial('');
+    await supabase
+      .from('venues')
+      .update({ special: null })
+      .eq('id', venue.id);
     setSpecialText('');
-    setSpecialStatus('Special cleared');
-    setTimeout(() => setSpecialStatus(null), 2000);
-  }, [onUpdateSpecial]);
+    setSpecialConfirm('Special cleared');
+    setTimeout(() => setSpecialConfirm(''), 2000);
+  }, [venue.id]);
 
   const handleCoverTap = useCallback(async (preset: string) => {
     setSelectedCover(preset);
     if (navigator.vibrate) navigator.vibrate(40);
     await onUpdateCover(preset);
   }, [onUpdateCover]);
-
-  // Auto-clear special at 6am
-  useEffect(() => {
-    const scheduleAutoClear = () => {
-      const now = new Date();
-      const sixAm = new Date(now);
-      sixAm.setHours(6, 0, 0, 0);
-      if (now >= sixAm) sixAm.setDate(sixAm.getDate() + 1);
-      const ms = sixAm.getTime() - now.getTime();
-      return setTimeout(() => {
-        onUpdateSpecial('');
-        setSpecialText('');
-      }, ms);
-    };
-    const timer = scheduleAutoClear();
-    return () => clearTimeout(timer);
-  }, [onUpdateSpecial]);
 
   // Show end-of-night summary
   if (endSummary) {
@@ -369,88 +366,81 @@ export function ClickerView({
           )}
         </div>
 
-        {/* Tonight's Special input */}
-        <div className="mt-4 mb-2 p-4 bg-[#111114] border border-[#2A2A30] rounded-xl"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
-          <p style={{
-            fontFamily: 'Satoshi, sans-serif',
+        {/* Tonight's Special */}
+        <div style={{ marginTop: '24px', padding: '0 16px 24px' }}>
+          <div style={{
             fontSize: '11px',
-            fontWeight: 700,
-            color: 'rgba(255, 255, 255, 0.4)',
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.4)',
             letterSpacing: '1px',
             textTransform: 'uppercase',
             marginBottom: '10px',
           }}>
             {'\uD83C\uDF89'} TONIGHT'S SPECIAL
-          </p>
+          </div>
           <input
+            type="text"
             value={specialText}
-            onChange={e => setSpecialText(e.target.value.slice(0, 200))}
+            onChange={(e) => setSpecialText(e.target.value)}
             placeholder="e.g. $3 wells til midnight"
             style={{
-              fontFamily: 'Satoshi, sans-serif',
               width: '100%',
               height: '48px',
               borderRadius: '12px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.15)',
               padding: '0 16px',
               fontSize: '16px',
               color: 'white',
               outline: 'none',
-              boxSizing: 'border-box',
+              boxSizing: 'border-box' as const,
+              marginBottom: '10px',
             }}
           />
-          <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
-              onClick={handleUpdateSpecial}
-              disabled={!specialText.trim()}
-              className="active:scale-[0.98] transition-transform disabled:opacity-40"
+              onClick={handleSetSpecial}
               style={{
-                fontFamily: 'Satoshi, sans-serif',
                 flex: 1,
                 height: '44px',
                 borderRadius: '12px',
                 background: '#FF8200',
-                border: 'none',
                 color: 'white',
-                fontSize: '14px',
                 fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
+                fontSize: '14px',
+                border: 'none',
+                cursor: 'pointer',
               }}
             >
               SET SPECIAL
             </button>
             <button
               onClick={handleClearSpecial}
-              className="active:scale-[0.98] transition-transform"
               style={{
-                fontFamily: 'Satoshi, sans-serif',
                 width: '70px',
                 height: '44px',
                 borderRadius: '12px',
                 background: 'transparent',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                color: 'rgba(255, 255, 255, 0.5)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: 'rgba(255,255,255,0.5)',
                 fontSize: '14px',
-                fontWeight: 500,
+                fontWeight: 600,
+                cursor: 'pointer',
               }}
             >
               CLEAR
             </button>
           </div>
-          {specialStatus && (
-            <p style={{
-              fontFamily: 'Satoshi, sans-serif',
+          {specialConfirm && (
+            <div style={{
+              color: '#22C55E',
               fontSize: '13px',
               fontWeight: 600,
-              color: specialStatus.includes('✓') ? '#00E676' : 'rgba(255, 255, 255, 0.4)',
               textAlign: 'center',
-              marginTop: '10px',
+              marginTop: '8px',
             }}>
-              {specialStatus}
-            </p>
+              {specialConfirm}
+            </div>
           )}
         </div>
       </div>

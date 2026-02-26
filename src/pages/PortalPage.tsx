@@ -22,7 +22,6 @@ export function PortalPage({ onExit }: PortalPageProps) {
     loadVenueById,
     handleEnter,
     handleExit,
-    updateSpecial,
     updateCover,
     endNight,
     disconnect,
@@ -89,7 +88,6 @@ export function PortalPage({ onExit }: PortalPageProps) {
       onEnter={handleEnter}
       onExit={handleExit}
       onEndNight={endNight}
-      onUpdateSpecial={updateSpecial}
       onUpdateCover={updateCover}
       onDisconnect={handleDisconnect}
     />
