@@ -35,7 +35,7 @@ export function ClickerView({
   const [bumpKey, setBumpKey] = useState(0);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [specialText, setSpecialText] = useState(venue.tonight_special ?? '');
-  const [specialSaved, setSpecialSaved] = useState(false);
+  const [specialStatus, setSpecialStatus] = useState<string | null>(null);
   const [selectedCover, setSelectedCover] = useState<string>(() => {
     const current = venue.cover_charge;
     if (!current || current === 'FREE') return 'FREE';
@@ -100,13 +100,15 @@ export function ClickerView({
   const handleUpdateSpecial = useCallback(async () => {
     if (!specialText.trim()) return;
     await onUpdateSpecial(specialText);
-    setSpecialSaved(true);
-    setTimeout(() => setSpecialSaved(false), 3000);
+    setSpecialStatus('Special set ✓');
+    setTimeout(() => setSpecialStatus(null), 2000);
   }, [specialText, onUpdateSpecial]);
 
   const handleClearSpecial = useCallback(async () => {
     await onUpdateSpecial('');
     setSpecialText('');
+    setSpecialStatus('Special cleared');
+    setTimeout(() => setSpecialStatus(null), 2000);
   }, [onUpdateSpecial]);
 
   const handleCoverTap = useCallback(async (preset: string) => {
@@ -370,87 +372,85 @@ export function ClickerView({
         {/* Tonight's Special input */}
         <div className="mt-4 mb-2 p-4 bg-[#111114] border border-[#2A2A30] rounded-xl"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
-          <p className="text-[#8A8A95] text-xs font-bold tracking-wider mb-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+          <p style={{
+            fontFamily: 'Satoshi, sans-serif',
+            fontSize: '11px',
+            fontWeight: 700,
+            color: 'rgba(255, 255, 255, 0.4)',
+            letterSpacing: '1px',
+            textTransform: 'uppercase',
+            marginBottom: '10px',
+          }}>
             {'\uD83C\uDF89'} TONIGHT'S SPECIAL
           </p>
-          {venue.tonight_special && !specialSaved ? (
-            <div className="mb-3">
-              <div className="flex flex-wrap gap-2 mb-2">
-                {venue.tonight_special.split('|').map((s, i) => (
-                  <span key={i} className="px-3 py-1.5 rounded-full text-white text-sm font-medium"
-                    style={{ fontFamily: 'Satoshi, sans-serif', background: 'rgba(255, 94, 26, 0.25)', border: '1px solid rgba(255, 94, 26, 0.4)' }}>
-                    {s.trim()}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
-          {specialSaved ? (
-            <div className="flex items-center gap-2 py-3 justify-center">
-              <span className="text-[#00E676] text-sm font-bold" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-                {'\u2705'} Special set!
-              </span>
-              <span className="text-[#8A8A95] text-xs" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-                {specialText}
-              </span>
-            </div>
-          ) : (
-            <>
-              <input
-                value={specialText}
-                onChange={e => setSpecialText(e.target.value.slice(0, 200))}
-                placeholder="e.g. $3 wells til midnight | $20 cover til 9"
-                className="w-full bg-[#050507] border border-[#2A2A30] text-white outline-none focus:border-[#FF5E1A] transition-colors placeholder-[#444]"
-                style={{
-                  fontFamily: 'Satoshi, sans-serif',
-                  fontSize: '16px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  padding: '12px 16px',
-                }}
-              />
-              <p className="text-[#55555F] text-[10px] mt-1 mb-2" style={{ fontFamily: 'Satoshi, sans-serif' }}>
-                Use | to separate multiple specials
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleUpdateSpecial}
-                  disabled={!specialText.trim()}
-                  className="flex-1 active:scale-[0.98] transition-transform disabled:opacity-40"
-                  style={{
-                    fontFamily: 'Satoshi, sans-serif',
-                    background: 'linear-gradient(135deg, #FF5E1A, #FF2D05)',
-                    height: '48px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    color: 'white',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                  }}
-                >
-                  Set Special
-                </button>
-                {venue.tonight_special && (
-                  <button
-                    onClick={handleClearSpecial}
-                    className="active:scale-[0.98] transition-transform"
-                    style={{
-                      height: '48px',
-                      padding: '0 16px',
-                      borderRadius: '12px',
-                      background: '#1A1A22',
-                      border: '1px solid #2A2A30',
-                      color: '#8A8A95',
-                      fontFamily: 'Satoshi, sans-serif',
-                      fontSize: '16px',
-                      fontWeight: 500,
-                    }}
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-            </>
+          <input
+            value={specialText}
+            onChange={e => setSpecialText(e.target.value.slice(0, 200))}
+            placeholder="e.g. $3 wells til midnight"
+            style={{
+              fontFamily: 'Satoshi, sans-serif',
+              width: '100%',
+              height: '48px',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              padding: '0 16px',
+              fontSize: '16px',
+              color: 'white',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+          <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+            <button
+              onClick={handleUpdateSpecial}
+              disabled={!specialText.trim()}
+              className="active:scale-[0.98] transition-transform disabled:opacity-40"
+              style={{
+                fontFamily: 'Satoshi, sans-serif',
+                flex: 1,
+                height: '44px',
+                borderRadius: '12px',
+                background: '#FF8200',
+                border: 'none',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              SET SPECIAL
+            </button>
+            <button
+              onClick={handleClearSpecial}
+              className="active:scale-[0.98] transition-transform"
+              style={{
+                fontFamily: 'Satoshi, sans-serif',
+                width: '70px',
+                height: '44px',
+                borderRadius: '12px',
+                background: 'transparent',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '14px',
+                fontWeight: 500,
+              }}
+            >
+              CLEAR
+            </button>
+          </div>
+          {specialStatus && (
+            <p style={{
+              fontFamily: 'Satoshi, sans-serif',
+              fontSize: '13px',
+              fontWeight: 600,
+              color: specialStatus.includes('✓') ? '#00E676' : 'rgba(255, 255, 255, 0.4)',
+              textAlign: 'center',
+              marginTop: '10px',
+            }}>
+              {specialStatus}
+            </p>
           )}
         </div>
       </div>
