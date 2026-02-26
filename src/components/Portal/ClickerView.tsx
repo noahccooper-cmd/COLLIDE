@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Minus, Plus, LogOut } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { formatCount, formatTime } from '../../lib/utils';
+import { formatCount, formatTime, timeAgo } from '../../lib/utils';
 import type { Venue, Headcount } from '../../lib/types';
 import type { EndNightSummary } from '../../hooks/usePortal';
 
@@ -35,6 +35,9 @@ export function ClickerView({
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [specialText, setSpecialText] = useState('');
   const [specialConfirm, setSpecialConfirm] = useState('');
+  const [broadcastText, setBroadcastText] = useState('');
+  const [broadcastConfirm, setBroadcastConfirm] = useState('');
+  const [updates, setUpdates] = useState<{ id: string; venue_id: string; venue_name: string; message: string; created_at: string }[]>([]);
   const [selectedCover, setSelectedCover] = useState<string>(() => {
     const current = venue.cover_charge;
     if (!current || current === 'FREE') return 'FREE';
@@ -130,6 +133,48 @@ export function ClickerView({
     if (navigator.vibrate) navigator.vibrate(40);
     await onUpdateCover(preset);
   }, [onUpdateCover]);
+
+  const handleSendUpdate = useCallback(async () => {
+    if (!broadcastText.trim()) return;
+    await supabase.from('venue_updates').insert({
+      venue_id: venue.id,
+      venue_name: venue.name,
+      message: broadcastText.trim(),
+    });
+    setBroadcastText('');
+    setBroadcastConfirm('Sent \u2713');
+    setTimeout(() => setBroadcastConfirm(''), 2000);
+  }, [broadcastText, venue.id, venue.name]);
+
+  // Fetch active venue updates + realtime subscription
+  useEffect(() => {
+    const fetchUpdates = async () => {
+      const { data } = await supabase
+        .from('venue_updates')
+        .select('id, venue_id, venue_name, message, created_at')
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (data) setUpdates(data);
+    };
+    fetchUpdates();
+
+    const channel = supabase
+      .channel(`venue-updates-rt-${Date.now()}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'venue_updates' },
+        (payload) => {
+          const row = payload.new as { id: string; venue_id: string; venue_name: string; message: string; created_at: string; expires_at: string };
+          if (new Date(row.expires_at) > new Date()) {
+            setUpdates(prev => [row, ...prev].slice(0, 10));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   // Show end-of-night summary
   if (endSummary) {
@@ -440,6 +485,111 @@ export function ClickerView({
               marginTop: '6px',
             }}>
               {specialConfirm}
+            </div>
+          )}
+        </div>
+
+        {/* Broadcast */}
+        <div style={{ marginTop: '14px', padding: '0 0 24px' }}>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.4)',
+            letterSpacing: '1px',
+            textTransform: 'uppercase',
+            marginBottom: '8px',
+          }}>
+            {'\uD83D\uDCE3'} BROADCAST
+          </div>
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              value={broadcastText}
+              onChange={(e) => setBroadcastText(e.target.value.slice(0, 140))}
+              placeholder="e.g. Cover just dropped to FREE! Come thru"
+              maxLength={140}
+              style={{
+                width: '100%',
+                height: '44px',
+                borderRadius: '12px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                padding: '0 50px 0 16px',
+                fontSize: '15px',
+                color: 'white',
+                outline: 'none',
+                boxSizing: 'border-box' as const,
+              }}
+            />
+            <span style={{
+              position: 'absolute',
+              right: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: '11px',
+              color: broadcastText.length > 120 ? '#FF8200' : 'rgba(255,255,255,0.25)',
+              fontWeight: 600,
+              pointerEvents: 'none',
+            }}>
+              {140 - broadcastText.length}
+            </span>
+          </div>
+          <button
+            onClick={handleSendUpdate}
+            style={{
+              width: '100%',
+              height: '44px',
+              borderRadius: '12px',
+              background: '#FF8200',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: '14px',
+              border: 'none',
+              cursor: 'pointer',
+              marginTop: '8px',
+            }}
+          >
+            SEND UPDATE
+          </button>
+          {broadcastConfirm && (
+            <div style={{
+              color: '#22C55E',
+              fontSize: '13px',
+              fontWeight: 600,
+              textAlign: 'center',
+              marginTop: '6px',
+            }}>
+              {broadcastConfirm}
+            </div>
+          )}
+
+          {/* Live feed */}
+          {updates.length > 0 && (
+            <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {updates.map(u => (
+                <div
+                  key={u.id}
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderLeft: u.venue_id === venue.id ? '3px solid #FF8200' : '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '10px',
+                    padding: '8px 12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'white', fontFamily: 'Satoshi, sans-serif' }}>
+                      {u.venue_name}
+                    </span>
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>
+                      {timeAgo(u.created_at)}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: '1.3' }}>
+                    {u.message}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
         </div>

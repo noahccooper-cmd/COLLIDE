@@ -297,3 +297,23 @@ UPDATE venues SET staff_code = 'BADMK1' WHERE slug = 'bad-monkey-tampa';
 UPDATE venues SET staff_code = 'GASP01' WHERE slug = 'gaspars-tampa';
 UPDATE venues SET staff_code = 'ROCKB1' WHERE slug = 'rock-brothers-tampa';
 UPDATE venues SET staff_code = 'AMSCL1' WHERE slug = 'american-social-tampa';
+
+-- ============================================
+-- venue_updates table (bouncer broadcasts, auto-expire)
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS venue_updates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  venue_id UUID NOT NULL REFERENCES venues(id) ON DELETE CASCADE,
+  venue_name TEXT NOT NULL,
+  message TEXT NOT NULL CHECK (char_length(message) <= 140),
+  expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '4 hours')
+);
+
+CREATE INDEX IF NOT EXISTS idx_venue_updates_expires ON venue_updates(expires_at DESC);
+
+ALTER TABLE venue_updates ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN CREATE POLICY "read_venue_updates" ON venue_updates FOR SELECT USING (true); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "insert_venue_updates" ON venue_updates FOR INSERT WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE venue_updates; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
