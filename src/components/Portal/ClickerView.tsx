@@ -489,7 +489,8 @@ export function ClickerView({
           )}
         </div>
 
-        {/* Broadcast */}
+        {/* Broadcast — only visible when clocked in */}
+        {isLive && (
         <div style={{ marginTop: '14px', padding: '0 0 24px' }}>
           <div style={{
             fontSize: '11px',
@@ -593,6 +594,7 @@ export function ClickerView({
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

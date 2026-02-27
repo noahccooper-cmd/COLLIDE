@@ -18,7 +18,10 @@ interface TheDropProps {
 export function TheDrop({ venues, onFlyTo }: TheDropProps) {
   const [updates, setUpdates] = useState<VenueUpdate[]>([]);
   const [open, setOpen] = useState(false);
-  const feedRef = useRef<HTMLDivElement>(null);
+  const [closing, setClosing] = useState(false);
+  const [flash, setFlash] = useState(false);
+  const prevCountRef = useRef(0);
+  const pillRef = useRef<HTMLButtonElement>(null);
 
   // Fetch active updates + realtime subscription
   useEffect(() => {
@@ -29,7 +32,10 @@ export function TheDrop({ venues, onFlyTo }: TheDropProps) {
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
         .limit(15);
-      if (data) setUpdates(data);
+      if (data) {
+        setUpdates(data);
+        prevCountRef.current = data.length;
+      }
     };
     fetchUpdates();
 
@@ -50,21 +56,47 @@ export function TheDrop({ venues, onFlyTo }: TheDropProps) {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  // Flash pill when count increases (new update arrives)
+  useEffect(() => {
+    if (updates.length > prevCountRef.current && prevCountRef.current >= 0) {
+      setFlash(true);
+      const t = setTimeout(() => setFlash(false), 600);
+      prevCountRef.current = updates.length;
+      return () => clearTimeout(t);
+    }
+    prevCountRef.current = updates.length;
+  }, [updates.length]);
+
   const handlePillClick = useCallback(() => {
-    setOpen(prev => !prev);
-  }, []);
+    if (open) {
+      // Start close animation
+      setClosing(true);
+      setTimeout(() => {
+        setOpen(false);
+        setClosing(false);
+      }, 150);
+    } else {
+      setOpen(true);
+    }
+  }, [open]);
 
   const handleUpdateClick = useCallback((venueId: string) => {
     const v = venues.find(x => x.id === venueId);
-    if (v) {
-      onFlyTo(v.lng, v.lat);
-    }
-    setOpen(false);
+    if (v) onFlyTo(v.lng, v.lat);
+    setClosing(true);
+    setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+    }, 150);
   }, [venues, onFlyTo]);
 
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
-      setOpen(false);
+      setClosing(true);
+      setTimeout(() => {
+        setOpen(false);
+        setClosing(false);
+      }, 150);
     }
   }, []);
 
@@ -86,8 +118,9 @@ export function TheDrop({ venues, onFlyTo }: TheDropProps) {
         pointerEvents: 'none',
       }}>
         <button
+          ref={pillRef}
           onClick={handlePillClick}
-          className={hasUpdates ? 'drop-pill-glow' : ''}
+          className={`${hasUpdates ? 'drop-pill-glow' : ''} ${flash ? 'drop-pill-flash' : ''}`}
           style={{
             pointerEvents: 'auto',
             display: 'flex',
@@ -113,6 +146,7 @@ export function TheDrop({ venues, onFlyTo }: TheDropProps) {
       {open && (
         <div
           onClick={handleBackdropClick}
+          className={closing ? 'drop-backdrop-out' : 'drop-backdrop-in'}
           style={{
             position: 'absolute',
             inset: 0,
@@ -122,7 +156,7 @@ export function TheDrop({ venues, onFlyTo }: TheDropProps) {
           }}
         >
           <div
-            ref={feedRef}
+            className={closing ? 'drop-feed-out' : 'drop-feed-in'}
             style={{
               position: 'absolute',
               top: '40px',
