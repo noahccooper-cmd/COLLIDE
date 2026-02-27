@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { MapView } from '../components/Map/MapView';
 import { VenueSheet } from '../components/Map/VenueCard';
+import { TheDrop } from '../components/Map/TheDrop';
 import type { Venue, Headcount } from '../lib/types';
 import type { CityKey } from '../lib/constants';
 
@@ -59,8 +60,20 @@ export function TonightPage({
     }
   }, [selectedVenue]);
 
+  const handleFlyTo = useCallback((lng: number, lat: number) => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo({
+        center: [lng, lat],
+        zoom: Math.max(mapInstanceRef.current.getZoom(), 15),
+        duration: 600,
+        essential: true,
+      });
+    }
+  }, []);
+
   return (
     <div className="absolute inset-0" style={{ top: '80px', bottom: '60px' }}>
+      <TheDrop venues={venues} onFlyTo={handleFlyTo} />
       <MapView
         city={city}
         venues={venues}
