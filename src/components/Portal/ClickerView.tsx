@@ -142,7 +142,7 @@ export function ClickerView({
       message: broadcastText.trim(),
     });
     setBroadcastText('');
-    setBroadcastConfirm('Sent \u2713');
+    setBroadcastConfirm('Dropped \u2713');
     setTimeout(() => setBroadcastConfirm(''), 2000);
   }, [broadcastText, venue.id, venue.name]);
 
@@ -214,7 +214,7 @@ export function ClickerView({
 
   return (
     <div className={`min-h-screen bg-[#050507] flex flex-col ${flashClass}`}
-      style={{ overscrollBehavior: 'none', touchAction: 'manipulation', overflowY: 'auto' }}>
+      style={{ overscrollBehavior: 'none', touchAction: 'manipulation', overflowY: 'auto', paddingBottom: '120px' }}>
       {/* Header */}
       <div className="px-5 pt-3 pb-2 flex items-center justify-between"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)' }}>
@@ -489,7 +489,7 @@ export function ClickerView({
           )}
         </div>
 
-        {/* Broadcast — only visible when clocked in */}
+        {/* The Drop — only visible when clocked in */}
         {isLive && (
         <div style={{ marginTop: '14px', padding: '0 0 24px' }}>
           <div style={{
@@ -500,7 +500,7 @@ export function ClickerView({
             textTransform: 'uppercase',
             marginBottom: '8px',
           }}>
-            {'\uD83D\uDCE3'} BROADCAST
+            {'\uD83D\uDD25'} THE DROP
           </div>
           <div style={{ position: 'relative' }}>
             <input
@@ -550,7 +550,7 @@ export function ClickerView({
               marginTop: '8px',
             }}
           >
-            SEND UPDATE
+            DROP IT
           </button>
           {broadcastConfirm && (
             <div style={{
