@@ -489,8 +489,7 @@ export function ClickerView({
           )}
         </div>
 
-        {/* The Drop — only visible when clocked in */}
-        {isLive && (
+        {/* The Drop */}
         <div style={{ marginTop: '14px', padding: '0 0 24px' }}>
           <div style={{
             fontSize: '11px',
@@ -594,7 +593,6 @@ export function ClickerView({
             </div>
           )}
         </div>
-        )}
       </div>
     </div>
   );
