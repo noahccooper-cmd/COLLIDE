@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Minus, Plus, LogOut } from 'lucide-react';
+import { Minus, Plus, LogOut, ChevronDown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { formatCount, formatTime, timeAgo } from '../../lib/utils';
-import type { Venue, Headcount } from '../../lib/types';
+import type { Venue, Headcount, VenueRecap } from '../../lib/types';
 import type { EndNightSummary } from '../../hooks/usePortal';
 
 interface ClickerViewProps {
@@ -38,6 +38,8 @@ export function ClickerView({
   const [broadcastText, setBroadcastText] = useState('');
   const [broadcastConfirm, setBroadcastConfirm] = useState('');
   const [updates, setUpdates] = useState<{ id: string; venue_id: string; venue_name: string; message: string; created_at: string }[]>([]);
+  const [recaps, setRecaps] = useState<VenueRecap[]>([]);
+  const [recapsOpen, setRecapsOpen] = useState(false);
   const [selectedCover, setSelectedCover] = useState<string>(() => {
     const current = venue.cover_charge;
     if (!current || current === 'FREE') return 'FREE';
@@ -67,6 +69,20 @@ export function ClickerView({
       if (data?.special) setSpecialText(data.special);
     };
     loadSpecial();
+  }, [venue.id]);
+
+  // Fetch all recaps for this venue
+  useEffect(() => {
+    const loadRecaps = async () => {
+      const { data } = await supabase
+        .from('venue_recaps')
+        .select('*')
+        .eq('venue_id', venue.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (data) setRecaps(data as VenueRecap[]);
+    };
+    loadRecaps();
   }, [venue.id]);
 
   const count = headcount?.current_count ?? 0;
@@ -490,7 +506,7 @@ export function ClickerView({
         </div>
 
         {/* The Drop */}
-        <div style={{ marginTop: '14px', padding: '0 0 24px' }}>
+        <div style={{ marginTop: '14px', padding: '0 0 14px' }}>
           <div style={{
             fontSize: '11px',
             fontWeight: 600,
@@ -591,6 +607,84 @@ export function ClickerView({
                 </div>
               ))}
             </div>
+          )}
+        </div>
+
+        {/* Recaps */}
+        <div style={{ marginTop: '14px', padding: '0 0 24px' }}>
+          <button
+            onClick={() => setRecapsOpen(prev => !prev)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              marginBottom: recapsOpen ? '10px' : 0,
+            }}
+          >
+            <span style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.4)',
+              letterSpacing: '1px',
+              textTransform: 'uppercase' as const,
+            }}>
+              {'\u2B50'} RECAPS ({recaps.length})
+            </span>
+            <ChevronDown
+              size={14}
+              style={{
+                color: 'rgba(255,255,255,0.4)',
+                transition: 'transform 0.2s',
+                transform: recapsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              }}
+            />
+          </button>
+
+          {recapsOpen && (
+            recaps.length === 0 ? (
+              <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', fontFamily: 'Satoshi, sans-serif' }}>
+                No recaps yet.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {recaps.map(r => (
+                  <div
+                    key={r.id}
+                    style={{
+                      background: '#0A0A0F',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '10px',
+                      padding: '10px 12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'white', fontFamily: 'Satoshi, sans-serif' }}>
+                        {r.username}
+                      </span>
+                      <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>
+                        {timeAgo(r.created_at)}
+                      </span>
+                    </div>
+                    <div style={{ marginBottom: '4px' }}>
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <span key={i} style={{ fontSize: '14px', color: i < r.stars ? '#FF8200' : '#2A2A30' }}>
+                          {'\u2605'}
+                        </span>
+                      ))}
+                    </div>
+                    {r.body && (
+                      <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: '1.4', fontFamily: 'Satoshi, sans-serif' }}>
+                        {r.body}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )
           )}
         </div>
       </div>
