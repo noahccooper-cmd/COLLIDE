@@ -7,13 +7,16 @@ interface VenueOption {
 }
 
 interface PortalLoginProps {
+  cities: string[];
+  selectedCity: string | null;
+  onCityChange: (city: string) => void;
   venues: VenueOption[];
   loading: boolean;
   error: string;
   onSubmit: (venueId: string, pin: string) => Promise<{ error: string | null }>;
 }
 
-export function PortalLogin({ venues, loading, error, onSubmit }: PortalLoginProps) {
+export function PortalLogin({ cities, selectedCity, onCityChange, venues, loading, error, onSubmit }: PortalLoginProps) {
   const [selectedVenueId, setSelectedVenueId] = useState('');
   const [digits, setDigits] = useState(['', '', '', '']);
   const [shaking, setShaking] = useState(false);
@@ -80,12 +83,32 @@ export function PortalLogin({ venues, loading, error, onSubmit }: PortalLoginPro
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* City Selector */}
+          <div className="portal-select-wrap">
+            <select
+              value={selectedCity ?? ''}
+              onChange={e => {
+                onCityChange(e.target.value);
+                setSelectedVenueId('');
+              }}
+              className="portal-venue-select"
+            >
+              <option value="">Select your city...</option>
+              {cities.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <ChevronDown size={18} className="portal-select-icon" />
+          </div>
+
           {/* Venue Selector */}
           <div className="portal-select-wrap">
             <select
               value={selectedVenueId}
               onChange={e => setSelectedVenueId(e.target.value)}
+              disabled={!selectedCity}
               className="portal-venue-select"
+              style={!selectedCity ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
             >
               <option value="">Select your venue...</option>
               {venues.map(v => (

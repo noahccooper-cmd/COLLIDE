@@ -27,20 +27,27 @@ export function PortalPage({ onExit }: PortalPageProps) {
     disconnect,
   } = usePortal();
 
-  // Fetch venue list for dropdown (id + name only — no bouncer_pin)
-  const [venueList, setVenueList] = useState<{ id: string; name: string }[]>([]);
+  // Fetch venue list for dropdown (id + name + city — no bouncer_pin)
+  const [venueList, setVenueList] = useState<{ id: string; name: string; city: string }[]>([]);
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
   useEffect(() => {
     if (!envReady) return;
     supabase
       .from('venues')
-      .select('id, name')
+      .select('id, name, city')
       .eq('is_active', true)
       .order('name')
       .then(({ data }) => {
-        if (data) setVenueList(data as { id: string; name: string }[]);
+        if (data) setVenueList(data as { id: string; name: string; city: string }[]);
       });
   }, []);
+
+  // Derive distinct sorted cities and filtered venues from venueList
+  const cities = [...new Set(venueList.map(v => v.city))].sort();
+  const filteredVenues = selectedCity
+    ? venueList.filter(v => v.city === selectedCity)
+    : [];
 
   // Auto-restore session from localStorage
   useEffect(() => {
@@ -70,7 +77,10 @@ export function PortalPage({ onExit }: PortalPageProps) {
           </div>
         )}
         <PortalLogin
-          venues={venueList}
+          cities={cities}
+          selectedCity={selectedCity}
+          onCityChange={setSelectedCity}
+          venues={filteredVenues}
           loading={loading}
           error={error}
           onSubmit={loginWithPin}
