@@ -1,4 +1,22 @@
+const defaultCountLabel = (count: number) =>
+  count === 0
+    ? 'See who\u2019s going out tonight'
+    : `${count.toLocaleString()} people out right now`;
+
 export const CITIES = {
+  austin: {
+    name: 'Austin',
+    state: 'TX',
+    dbName: 'Austin, TX',
+    school: 'Texas',
+    mascot: 'Longhorns',
+    schoolAbbr: 'UT',
+    schoolColor: '#BF5700',
+    schoolTextColor: '#FFFFFF',
+    center: { lat: 30.2672, lng: -97.7431 },
+    zoom: 14,
+    countLabel: defaultCountLabel,
+  },
   knoxville: {
     name: 'Knoxville',
     state: 'TN',
@@ -10,6 +28,19 @@ export const CITIES = {
       count === 0
         ? 'See who\u2019s going out tonight'
         : `${count.toLocaleString()} people out right now`,
+  },
+  norman: {
+    name: 'Norman',
+    state: 'OK',
+    dbName: 'Norman, OK',
+    school: 'Oklahoma',
+    mascot: 'Sooners',
+    schoolAbbr: 'OU',
+    schoolColor: '#841617',
+    schoolTextColor: '#FFFFFF',
+    center: { lat: 35.2226, lng: -97.4395 },
+    zoom: 15,
+    countLabel: defaultCountLabel,
   },
   tampa: {
     name: 'Tampa',
