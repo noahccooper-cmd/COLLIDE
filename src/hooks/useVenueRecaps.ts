@@ -68,10 +68,13 @@ export function useVenueRecaps(venueId: string | null) {
     if (!envReady || !venueId || !body.trim() || stars < 1) return;
 
     const trimmed = body.trim().slice(0, 200);
+    const optimisticId = crypto.randomUUID();
+    knownIds.current.add(optimisticId);
 
     const { data, error } = await supabase
       .from('venue_recaps')
       .insert({
+        id: optimisticId,
         venue_id: venueId,
         username,
         body: trimmed,
